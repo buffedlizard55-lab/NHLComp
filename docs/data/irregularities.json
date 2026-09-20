@@ -1,7 +1,7 @@
 [
  {
-  "id": 6,
-  "ts_utc": "2026-09-20T19:53:40Z",
+  "id": 2,
+  "ts_utc": "2026-09-20T20:12:00Z",
   "kind": "duplicate_game",
   "severity": "warn",
   "entity_type": "game",
@@ -14,8 +14,8 @@
   "resolved_at": null
  },
  {
-  "id": 7,
-  "ts_utc": "2026-09-20T19:53:40Z",
+  "id": 3,
+  "ts_utc": "2026-09-20T20:12:00Z",
   "kind": "duplicate_game",
   "severity": "warn",
   "entity_type": "game",
@@ -28,36 +28,8 @@
   "resolved_at": null
  },
  {
-  "id": 2,
-  "ts_utc": "2026-09-20T19:53:33Z",
-  "kind": "unmatched_market",
-  "severity": "warn",
-  "entity_type": "quote",
-  "entity_id": "KXNHLGAME-26SEP22UTALA",
-  "detail": "kalshi KXNHLGAME-26SEP22UTALA could not be matched to an NHL game (2026-09-22 ('UTA', 'LAK'))",
-  "sources": null,
-  "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
- },
- {
-  "id": 4,
-  "ts_utc": "2026-09-20T19:53:33Z",
-  "kind": "unmatched_market",
-  "severity": "warn",
-  "entity_type": "quote",
-  "entity_id": "KXNHLGAME-26SEP20UTACOL",
-  "detail": "kalshi KXNHLGAME-26SEP20UTACOL could not be matched to an NHL game (2026-09-20 ('UTA', 'COL'))",
-  "sources": null,
-  "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
- },
- {
   "id": 1,
-  "ts_utc": "2026-09-20T19:52:52Z",
+  "ts_utc": "2026-09-20T20:11:13Z",
   "kind": "unknown_team",
   "severity": "error",
   "entity_type": "game",

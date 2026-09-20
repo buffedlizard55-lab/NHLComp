@@ -1,9 +1,9 @@
 NHLComp competition status
   strategies: 19  bets: 12  settled: 12  open: 0
-  pnl: -101.05  staked: 598.52  roi: -0.1688  win rate: 0.5833
+  pnl: -68.22  staked: 613.98  roi: -0.1111  win rate: 0.5833
 
 leaderboard
-    1. NHL_ELO_ML_009               n=3    pnl=    36.9 roi=0.1558 dd=-80.79 wr_ci=[0.2077, 0.9385]
+    1. NHL_ELO_ML_009               n=3    pnl=   42.55 roi=0.1766 dd=-80.79 wr_ci=[0.2077, 0.9385]
     2. NHL_GEN_HOME_STREAK_LOSSES_001 n=1    pnl=   22.54 roi=1.1277 dd=0.0 wr_ci=[0.2065, 1.0]
     3. NHL_B2B_FADE_001             n=0    pnl=       0 roi=None dd=0.0 wr_ci=[0.0, 0.0]
     4. NHL_B2B_HOME_FADE_002        n=0    pnl=       0 roi=None dd=0.0 wr_ci=[0.0, 0.0]
@@ -18,9 +18,9 @@ leaderboard
    13. NHL_PACE_MISMATCH_005        n=0    pnl=       0 roi=None dd=0.0 wr_ci=[0.0, 0.0]
    14. NHL_REST_EDGE_006            n=0    pnl=       0 roi=None dd=0.0 wr_ci=[0.0, 0.0]
    15. NHL_ROADTRIP_END_004         n=0    pnl=       0 roi=None dd=0.0 wr_ci=[0.0, 0.0]
-   16. NHL_GEN_AWAY_GAMES_LAST_7_001 n=3    pnl=  -33.29 roi=-0.2687 dd=-80.35 wr_ci=[0.2077, 0.9385]
-   17. NHL_GEN_HOME_EXP_GOALS_002   n=3    pnl=  -33.29 roi=-0.2687 dd=-80.35 wr_ci=[0.2077, 0.9385]
+   16. NHL_GEN_AWAY_GAMES_LAST_7_001 n=3    pnl=   -19.7 roi=-0.1521 dd=-77.92 wr_ci=[0.2077, 0.9385]
+   17. NHL_GEN_HOME_EXP_GOALS_002   n=3    pnl=   -19.7 roi=-0.1521 dd=-77.92 wr_ci=[0.2077, 0.9385]
    18. NHL_GEN_AWAY_STREAK_LOSSES_002 n=1    pnl=  -46.96 roi=-1.0 dd=-46.96 wr_ci=[0.0, 0.7935]
    19. NHL_POISSON_ML_008           n=1    pnl=  -46.96 roi=-1.0 dd=-46.96 wr_ci=[0.0, 0.7935]
 
-open irregularities: 5
+open irregularities: 3
