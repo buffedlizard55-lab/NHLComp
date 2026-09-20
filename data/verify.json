@@ -1,0 +1,25 @@
+{
+ "games": {
+  "missing_start": 0,
+  "missing_result": 0,
+  "tied_final": 0,
+  "impossible_score": 0,
+  "duplicate": 2,
+  "bad_season": 0
+ },
+ "bets": {
+  "impossible_odds": 0,
+  "missing_timestamp": 0,
+  "bad_pnl": 0,
+  "duplicate_bet": 0,
+  "stake_exceeds_bankroll": 0,
+  "unmapped": 0
+ },
+ "quotes": {
+  "crossed_book": 0,
+  "impossible_price": 0,
+  "zero_liquidity": 0,
+  "missing_ts": 0
+ },
+ "open_irregularities": 4
+}

@@ -1,0 +1,10 @@
+# local databases and the HTTP response cache are regenerable, never source
+data/*.db
+data/*.db-*
+data/cache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/

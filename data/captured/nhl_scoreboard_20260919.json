@@ -1,0 +1,329 @@
+{
+ "_capture": {
+  "source": "https://api-web.nhle.com/v1/scoreboard/2026-09-19",
+  "captured_utc": "2026-09-20",
+  "note": "PARTIAL - only the first chunk of a 12-chunk response was captured; 6 complete game records retained verbatim, the truncated 7th dropped",
+  "complete": false
+ },
+ "focusedDate": "2026-09-19",
+ "focusedDateCount": 9,
+ "gamesByDate": [
+  {
+   "date": "2026-09-19",
+   "games": [
+    {
+     "id": 2026010001,
+     "season": 20262027,
+     "gameType": 1,
+     "gameDate": "2026-09-19",
+     "gameCenterLink": "/gamecenter/dal-vs-stl/2026-09-19/2026010001",
+     "venue": {
+      "default": "Enterprise Center"
+     },
+     "startTimeUTC": "2026-09-19T23:00:00Z",
+     "easternUTCOffset": "-04:00",
+     "venueUTCOffset": "-05:00",
+     "tvBroadcasts": [],
+     "gameState": "FINAL",
+     "gameScheduleState": "OK",
+     "awayTeam": {
+      "id": 25,
+      "name": {
+       "default": "Dallas Stars"
+      },
+      "commonName": {
+       "default": "Stars"
+      },
+      "placeNameWithPreposition": {
+       "default": "Dallas"
+      },
+      "abbrev": "DAL",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/DAL_light.svg",
+      "score": 2
+     },
+     "homeTeam": {
+      "id": 19,
+      "name": {
+       "default": "St. Louis Blues"
+      },
+      "commonName": {
+       "default": "Blues"
+      },
+      "placeNameWithPreposition": {
+       "default": "St. Louis"
+      },
+      "abbrev": "STL",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/STL_light.svg",
+      "score": 1
+     },
+     "period": 3,
+     "periodDescriptor": {
+      "number": 3,
+      "periodType": "REG",
+      "maxRegulationPeriods": 3
+     }
+    },
+    {
+     "id": 2026010006,
+     "season": 20262027,
+     "gameType": 1,
+     "gameDate": "2026-09-19",
+     "gameCenterLink": "/gamecenter/mtl-vs-tor/2026-09-19/2026010006",
+     "venue": {
+      "default": "Scotiabank Arena"
+     },
+     "startTimeUTC": "2026-09-19T23:00:00Z",
+     "easternUTCOffset": "-04:00",
+     "venueUTCOffset": "-04:00",
+     "tvBroadcasts": [],
+     "gameState": "FINAL",
+     "gameScheduleState": "OK",
+     "awayTeam": {
+      "id": 8,
+      "name": {
+       "default": "Montréal Canadiens"
+      },
+      "commonName": {
+       "default": "Canadiens"
+      },
+      "placeNameWithPreposition": {
+       "default": "Montréal"
+      },
+      "abbrev": "MTL",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/MTL_light.svg",
+      "score": 4
+     },
+     "homeTeam": {
+      "id": 10,
+      "name": {
+       "default": "Toronto Maple Leafs"
+      },
+      "commonName": {
+       "default": "Maple Leafs"
+      },
+      "placeNameWithPreposition": {
+       "default": "Toronto"
+      },
+      "abbrev": "TOR",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/TOR_light.svg",
+      "score": 1
+     },
+     "period": 3,
+     "periodDescriptor": {
+      "number": 3,
+      "periodType": "REG",
+      "maxRegulationPeriods": 3
+     }
+    },
+    {
+     "id": 2026010007,
+     "season": 20262027,
+     "gameType": 1,
+     "gameDate": "2026-09-19",
+     "gameCenterLink": "/gamecenter/tor-vs-mtl/2026-09-19/2026010007",
+     "venue": {
+      "default": "Centre Bell"
+     },
+     "startTimeUTC": "2026-09-19T23:00:00Z",
+     "easternUTCOffset": "-04:00",
+     "venueUTCOffset": "-04:00",
+     "tvBroadcasts": [],
+     "gameState": "FINAL",
+     "gameScheduleState": "OK",
+     "awayTeam": {
+      "id": 10,
+      "name": {
+       "default": "Toronto Maple Leafs"
+      },
+      "commonName": {
+       "default": "Maple Leafs"
+      },
+      "placeNameWithPreposition": {
+       "default": "Toronto"
+      },
+      "abbrev": "TOR",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/TOR_light.svg",
+      "score": 3
+     },
+     "homeTeam": {
+      "id": 8,
+      "name": {
+       "default": "Montréal Canadiens"
+      },
+      "commonName": {
+       "default": "Canadiens"
+      },
+      "placeNameWithPreposition": {
+       "default": "Montréal"
+      },
+      "abbrev": "MTL",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/MTL_light.svg",
+      "score": 4
+     },
+     "period": 4,
+     "periodDescriptor": {
+      "number": 4,
+      "periodType": "OT",
+      "maxRegulationPeriods": 3
+     }
+    },
+    {
+     "id": 2026010003,
+     "season": 20262027,
+     "gameType": 1,
+     "gameDate": "2026-09-19",
+     "gameCenterLink": "/gamecenter/wpg-vs-edm/2026-09-19/2026010003",
+     "venue": {
+      "default": "Rogers Place"
+     },
+     "startTimeUTC": "2026-09-20T00:00:00Z",
+     "easternUTCOffset": "-04:00",
+     "venueUTCOffset": "-06:00",
+     "tvBroadcasts": [],
+     "gameState": "FINAL",
+     "gameScheduleState": "OK",
+     "awayTeam": {
+      "id": 52,
+      "name": {
+       "default": "Winnipeg Jets"
+      },
+      "commonName": {
+       "default": "Jets"
+      },
+      "placeNameWithPreposition": {
+       "default": "Winnipeg"
+      },
+      "abbrev": "WPG",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/WPG_light.svg",
+      "score": 2
+     },
+     "homeTeam": {
+      "id": 22,
+      "name": {
+       "default": "Edmonton Oilers"
+      },
+      "commonName": {
+       "default": "Oilers"
+      },
+      "placeNameWithPreposition": {
+       "default": "Edmonton"
+      },
+      "abbrev": "EDM",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/EDM_light.svg",
+      "score": 5
+     },
+     "period": 3,
+     "periodDescriptor": {
+      "number": 3,
+      "periodType": "REG",
+      "maxRegulationPeriods": 3
+     }
+    },
+    {
+     "id": 2026010004,
+     "season": 20262027,
+     "gameType": 1,
+     "gameDate": "2026-09-19",
+     "gameCenterLink": "/gamecenter/chi-vs-min/2026-09-19/2026010004",
+     "venue": {
+      "default": "Grand Casino Arena"
+     },
+     "startTimeUTC": "2026-09-20T00:00:00Z",
+     "easternUTCOffset": "-04:00",
+     "venueUTCOffset": "-05:00",
+     "tvBroadcasts": [],
+     "gameState": "FINAL",
+     "gameScheduleState": "OK",
+     "awayTeam": {
+      "id": 16,
+      "name": {
+       "default": "Chicago Blackhawks"
+      },
+      "commonName": {
+       "default": "Blackhawks"
+      },
+      "placeNameWithPreposition": {
+       "default": "Chicago"
+      },
+      "abbrev": "CHI",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/CHI_light.svg",
+      "score": 2
+     },
+     "homeTeam": {
+      "id": 30,
+      "name": {
+       "default": "Minnesota Wild"
+      },
+      "commonName": {
+       "default": "Wild"
+      },
+      "placeNameWithPreposition": {
+       "default": "Minnesota"
+      },
+      "abbrev": "MIN",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/MIN_light.svg",
+      "score": 3
+     },
+     "period": 4,
+     "periodDescriptor": {
+      "number": 4,
+      "periodType": "OT",
+      "maxRegulationPeriods": 3
+     }
+    },
+    {
+     "id": 2026010002,
+     "season": 20262027,
+     "gameType": 1,
+     "gameDate": "2026-09-19",
+     "gameCenterLink": "/gamecenter/vgk-vs-lak/2026-09-19/2026010002",
+     "venue": {
+      "default": "Toyota Arena"
+     },
+     "startTimeUTC": "2026-09-20T01:00:00Z",
+     "easternUTCOffset": "-04:00",
+     "venueUTCOffset": "-07:00",
+     "tvBroadcasts": [],
+     "gameState": "FINAL",
+     "gameScheduleState": "OK",
+     "awayTeam": {
+      "id": 54,
+      "name": {
+       "default": "Vegas Golden Knights"
+      },
+      "commonName": {
+       "default": "Golden Knights"
+      },
+      "placeNameWithPreposition": {
+       "default": "Vegas"
+      },
+      "abbrev": "VGK",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/VGK_light.svg",
+      "score": 4
+     },
+     "homeTeam": {
+      "id": 26,
+      "name": {
+       "default": "Los Angeles Kings"
+      },
+      "commonName": {
+       "default": "Kings"
+      },
+      "placeNameWithPreposition": {
+       "default": "Los Angeles"
+      },
+      "abbrev": "LAK",
+      "logo": "https://assets.nhle.com/logos/nhl/svg/LAK_light.svg",
+      "score": 2
+     },
+     "period": 3,
+     "periodDescriptor": {
+      "number": 3,
+      "periodType": "REG",
+      "maxRegulationPeriods": 3
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,58 @@
+[
+ {
+  "id": 3,
+  "ts_utc": "2026-09-20T20:36:27Z",
+  "kind": "duplicate_game",
+  "severity": "warn",
+  "entity_type": "game",
+  "entity_id": "2024-09-22:13:18",
+  "detail": "2024-09-22 18@13 appears 2 times",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 4,
+  "ts_utc": "2026-09-20T20:36:27Z",
+  "kind": "duplicate_game",
+  "severity": "warn",
+  "entity_type": "game",
+  "entity_id": "2025-09-21:18:13",
+  "detail": "2025-09-21 13@18 appears 2 times",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 2,
+  "ts_utc": "2026-09-20T20:36:26Z",
+  "kind": "unmapped_injury",
+  "severity": "warn",
+  "entity_type": "dataset",
+  "entity_id": "injuries",
+  "detail": "11 injury entr(ies) could not be mapped to a team id: Adam Gaudette (SJ), Cam Lund (SJ), Dominic James (TB), Jan Jenik (LA), Johnathan Kovacevic (NJ), Kevin Fiala (LA), Kyle Keyser (SJ), Mats Zuccarello (LA) ...",
+  "sources": "espn.nhl_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 1,
+  "ts_utc": "2026-09-20T20:35:45Z",
+  "kind": "unknown_team",
+  "severity": "error",
+  "entity_type": "game",
+  "entity_id": "2024010106",
+  "detail": "game 2024010106 on 2024-09-27 references team id(s) [7509] which are not in the teams table; game skipped rather than attached to a guessed franchise",
+  "sources": "nhl.api_web",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ }
+]
