@@ -24,26 +24,70 @@ season's points percentage — never the current season's final standings.</p>
 
 <h2>3. Backtest versus forward test</h2>
 <p>The distinction is never blurred. A run is labelled <b>BACKTEST</b> only when the price it used
-was genuinely quoted in the past. Because Kalshi's candle endpoint returned HTTP 404 and its
-<code>previous_*</code> fields have no documented timestamp, price-based backtests carry
-<code>verification_status=single_source_timing_unverified</code>. Everything priced from a live
-quote is <b>FORWARD TEST</b> and settles later.</p>
-<p>Where no price feed exists at all, the backtest reports <i>predictive accuracy only</i> —
-hit rate, lift over base rate, log loss and Brier score — and stores
-<code>data_sufficient=0</code> with this caveat:</p>
+was genuinely quoted in the past <i>with a timestamp</i>. Kalshi publishes hourly candlesticks for
+every contract (live tier for recent contracts, <code>/historical</code> tier for contracts settled
+before the cutoff); the <b>closing price</b> used here is the last hourly candle ending at or before
+the NHL scheduled start, and the <code>open</code>, <code>T-24h</code>, <code>T-6h</code> and
+<code>T-1h</code> candles give line movement. Such rows carry
+<code>verification_status=kalshi_candle_close</code>. A few early rows were priced from Kalshi's
+undocumented <code>previous_yes_ask</code> before the candle history was recovered; they keep the
+label <code>single_source_timing_unverified</code> permanently. Everything priced from a live quote
+is <b>FORWARD TEST</b> and settles later from the official NHL result. No sportsbook history exists
+in this system, so no backtest is ever claimed against sportsbook odds.</p>
+<p>Two backtests are reported per strategy and never combined: an <i>accuracy</i> backtest on every
+decided game (hit rate, lift over base rate, log loss, Brier; <code>data_sufficient=0</code>, no
+P&amp;L) and a <i>priced</i> backtest on the games whose Kalshi closing candle was recovered (flat
+1-unit stakes at the offer, net of the exchange fee, on the whole window and on chronological
+train / validation / test splits). The accuracy backtest carries this caveat:</p>
 <div class="note caveat">No verified historical betting-price feed is available, so this run measures predictive accuracy only. PnL, ROI and CLV are deliberately not computed -- doing so would require inventing historical odds. Profit is measured by the forward test instead.</div>
+
+<h2>3a. Data labels</h2>
+<ul>
+<li><b>SOURCE DATA</b> — NHL schedule/results, stats REST per-game team and goalie lines, Kalshi
+quotes, settlements and candlesticks, the NHL partner-feed (DraftKings) odds, EDGE snapshots.</li>
+<li><b>DERIVED</b> — every feature (rest days, rolling PP%/PK%, shot share, PDO, starter save
+percentage, line movement, vig), every price point picked from a candle, every P&amp;L figure.</li>
+<li><b>MODEL OUTPUT</b> — Poisson / Elo / logistic probabilities and any edge computed from them;
+also any third-party model number (e.g. xG) should one ever be ingested.</li>
+<li><b>ASSUMPTION</b> — recorded where used: the post-game goalie log identifies the starter for a
+<i>past</i> game (starters are announced pre-game, but this system did not observe the announcement);
+the fee model is Kalshi's published general schedule (M = 1 for KXNHLGAME); no slippage beyond the
+single quoted level.</li>
+<li><b>UNVERIFIED</b> — anything flagged in the Verification queue, and every strategy still
+carrying a <code>blocked_reason</code>.</li>
+</ul>
 
 <h2>4. Execution model</h2>
 <p>Buys happen at the <b>offer</b>, never the mid. Size is capped by the quoted
 <code>yes_ask_size_fp</code>; if the desired stake needs more contracts than are offered the order
 is partially filled and the remainder is recorded as unfilled. A missing or zero-size offer means
 no bet. Slippage is stored as 0 because only one book level is available — that is a limitation of
-the data, recorded rather than papered over.</p>
+the data, recorded rather than papered over. <b>Fees:</b> Kalshi's general taker fee,
+<code>round up(0.07 × C × P × (1 − P))</code> per the fee schedule effective 2026-07-07
+(KXNHLGAME is not on the non-standard list, so the multiplier is 1), is charged on every simulated
+fill and deducted from the settled P&amp;L; the fee is stored on each bet row.</p>
 
-<h2>5. Staking</h2>
-<p>Fractional Kelly, capped, with open exposure reserved from the bankroll so a strategy cannot
-over-commit. Aggressive staking is permitted by design — the drawdown, volatility and
-losing-streak columns exist so the risk is visible, not so it is suppressed.</p>
+<h2>5. Staking and bankrolls</h2>
+<p>Model-based strategies use fractional Kelly, capped, with open exposure reserved from the
+bankroll so a strategy cannot over-commit. Market-structure rules (no model of their own) stake a
+flat fraction. Each strategy version has its own virtual bankroll; <b>only FORWARD TEST results move
+it</b> — BACKTEST P&amp;L is reported separately and never funds a forward stake. Aggressive staking is
+permitted by design — the drawdown, volatility and losing-streak columns exist so the risk is
+visible, not so it is suppressed.</p>
+
+<h2>5a. Strategy versions and lifecycle</h2>
+<p>A strategy is identified by <code>(strategy_id, version)</code>. Changing a rule creates a new
+version; the old one is set to <code>retired</code> with the reason, and its bets stay in the
+ledger. Lifecycle states: candidate → active → paused / retired / rejected, each transition logged
+in <code>strategy_lifecycle</code> with evidence. Blocked categories (no verified input yet) are
+registered with an explicit <code>blocked_reason</code> and stay in
+<code>WAITING FOR OTHER INFORMATION</code> rather than betting on an assumption.</p>
+
+<h2>5b. Sportsbook reference</h2>
+<p>The NHL partner feed publishes DraftKings moneylines for the current slate. They are stored as
+published (American odds), de-vigged proportionally, and attached to forward signals as a
+<i>reference</i> — Kalshi remains the execution venue. Because the feed has no history, the
+book-vs-exchange strategy is forward-test only and says so.</p>
 
 <h2>6. Statistics</h2>
 <p>Win rate is always shown with a 95% Wilson interval and a sample size. The discovery engine
@@ -58,23 +102,33 @@ ASSUMPTION or UNVERIFIED. Bets are append-only; corrections go through
 <code>amend_bet</code>, which writes a before/after audit row.</p>
 
 <h2>8. Current state</h2>
-<p>30 strategies · 13 simulated bets · 13 settled ·
-0 open · P&amp;L -112.34 · ROI -17.0%.</p>
+<p>46 strategies. FORWARD TEST: 0 simulated bets · 0
+settled · 0 open · P&amp;L 0.00 · ROI —. BACKTEST (reported
+separately, never merged): 3266 priced wagers · P&amp;L 2,367.83 · ROI
+2.2%.</p>
 
 <h2>9. Known limitations</h2>
 <ul>
-<li>No verified historical sportsbook odds. Closing-line value is measured against Kalshi only.</li>
+<li>No verified historical sportsbook odds. Closing-line value is measured against the Kalshi
+closing candle only; the DraftKings reference exists only from the day collection started.</li>
+<li>The Kalshi closing candle is hourly: "close" means the last candle ending at or before the
+scheduled start, so it may include trades from the final minutes before puck drop. Kalshi's NHL
+books are thin outside the playoffs; the candle's <code>yes_ask</code> is a price, not a
+guarantee of size, and the fee model assumes the general schedule.</li>
+<li>Starting goalies for <i>upcoming</i> games have no verified pre-game source, so goalie-gated
+strategies forward-test only when a starter becomes known; their backtests rely on the post-game
+log (an explicit ASSUMPTION).</li>
 <li>Arena latitude/longitude is unavailable: the legacy NHL venue host could not be reached, so
 travel is derived from published venue UTC offsets rather than invented coordinates.</li>
-<li>Goalie announcements, line combinations and EDGE tracking are not ingested at scale, so
-goaltending, line-matchup and tracking strategies are hypotheses awaiting forward tests rather
-than tested results.</li>
-<li>Preseason Kalshi markets are thin; several contracts show zero size on both sides and are
-recorded as <code>insufficient_liquidity</code> instead of being traded.</li>
-<li>No intraday price history, so no live/in-game or line-movement backtest is attempted.</li>
+<li>Line combinations, goalie announcements and player props have no verified feed. EDGE tracking
+is snapshotted forward only (season-to-date aggregates, no per-game history).</li>
+<li>Preseason Kalshi markets are thin; contracts with zero size on both sides are recorded as
+<code>insufficient_liquidity</code> instead of being traded.</li>
+<li>In-game candles (60/120 minutes after the start) are stored for research; the pipeline runs on
+a batch schedule and cannot execute during a game, so no in-game bet is simulated.</li>
 </ul>
 </main>
 <footer>NHLComp · paper-trading research platform · no real money is ever wagered ·
-generated 2026-09-20T20:38:13Z from the SQLite ledger. Every figure is read from the database;
+generated 2026-09-20T23:29:58Z from the SQLite ledger. Every figure is read from the database;
 values that could not be verified from a source are shown as — with a caveat.</footer>
 </body></html>

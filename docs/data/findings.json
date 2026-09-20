@@ -1,14 +1,5 @@
 [
  {
-  "finding_id": "FIND_MODEL_COMPARE",
-  "created_at": "2026-09-20T20:38:09Z",
-  "title": "Out-of-sample model comparison (held-out chronological window)",
-  "body": "Poisson, Elo, a 4-feature logistic model and a home-ice constant were compared on the same held-out window. Lower log loss is better. A complex model is only kept if it beats the constant.",
-  "evidence": "{\"poisson\": {\"n\": 0, \"log_loss\": null, \"brier\": null}, \"elo\": {\"n\": 0, \"log_loss\": null, \"brier\": null}, \"logistic\": {\"n\": 0, \"log_loss\": null, \"brier\": null}, \"home_ice_constant\": {\"n\": 0, \"log_loss\": null, \"brier\": null}}",
-  "confidence": "medium",
-  "kind": "model_evaluation"
- },
- {
   "finding_id": "FIND_FAIL_3621160254",
   "created_at": "2026-09-20T20:38:09Z",
   "title": "No reproducible edge: rest_diff <= -1.0 (away)",
@@ -198,20 +189,1199 @@
   "kind": "rejection"
  },
  {
+  "finding_id": "FIND_MODEL_COMPARE",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Out-of-sample model comparison (held-out chronological window)",
+  "body": "Poisson, Elo, a 4-feature logistic model and a home-ice constant were compared on the same held-out window. Lower log loss is better. A complex model is only kept if it beats the constant.",
+  "evidence": "{\"poisson\": {\"n\": 525, \"log_loss\": 0.68403, \"brier\": 0.24547}, \"elo\": {\"n\": 525, \"log_loss\": 0.68961, \"brier\": 0.24705}, \"logistic\": {\"n\": 525, \"log_loss\": 0.68693, \"brier\": 0.24689}, \"home_ice_constant\": {\"n\": 525, \"log_loss\": 0.69219, \"brier\": 0.24952}}",
+  "confidence": "medium",
+  "kind": "model_evaluation"
+ },
+ {
+  "finding_id": "FIND_FAIL_b7e41f33b245",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: mkt_close_home_mid <= 0.4 (home)",
+  "body": "Train hit rate 0.500 (lift -0.057, n=22) did not reproduce on validation (0.414, lift -0.104, n=29). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [22, 0.5], \"valid\": [29, 0.4138], \"priced\": [22, 0.3252, 29, 0.0822], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_477a39b6d0ed",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: mkt_close_home_mid <= 0.45 (home)",
+  "body": "Train hit rate 0.490 (lift -0.067, n=51) did not reproduce on validation (0.455, lift -0.063, n=101). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [51, 0.4902], \"valid\": [101, 0.4554], \"priced\": [51, 0.185, 101, 0.0552], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_078395030482",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: away_rest_days >= 2.5 (away)",
+  "body": "Train hit rate 0.479 (lift +0.036, n=386) did not reproduce on validation (0.495, lift +0.013, n=105). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [386, 0.4793], \"valid\": [105, 0.4952], \"priced\": [70, 0.1061, 105, 0.0237], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_f15950ece886",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: mkt_close_home_mid >= 0.55 (away)",
+  "body": "Train hit rate 0.411 (lift -0.032, n=124) did not reproduce on validation (0.433, lift -0.048, n=233). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [124, 0.4113], \"valid\": [233, 0.4335], \"priced\": [124, 0.016, 233, 0.0456], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_ea141e38b146",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: mkt_close_home_mid >= 0.45 (away)",
+  "body": "Train hit rate 0.460 (lift +0.017, n=211) did not reproduce on validation (0.471, lift -0.011, n=429). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [211, 0.4597], \"valid\": [429, 0.4709], \"priced\": [211, 0.0118, 429, 0.0184], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_aa7e0cb359a5",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: mkt_move6_home >= 0.015 (away)",
+  "body": "Train hit rate 0.304 (lift -0.139, n=23) did not reproduce on validation (0.453, lift -0.029, n=53). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [23, 0.3043], \"valid\": [53, 0.4528], \"priced\": [23, -0.4045, 53, 0.0105], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_510e16063428",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: diff_pdo_l10 <= -0.03 (home)",
+  "body": "Train hit rate 0.578 (lift +0.021, n=424) did not reproduce on validation (0.531, lift +0.013, n=143). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [424, 0.5778], \"valid\": [143, 0.5315], \"priced\": [67, -0.0441, 143, 0.0032], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_5f35088e380e",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: mkt_close_home_mid <= 0.65 (away)",
+  "body": "Train hit rate 0.485 (lift +0.042, n=235) did not reproduce on validation (0.500, lift +0.018, n=480). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [235, 0.4851], \"valid\": [480, 0.5], \"priced\": [235, -0.0273, 480, 0.0016], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_3b1e55899c4c",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: mkt_move24_home >= -0.04 (away)",
+  "body": "Train hit rate 0.471 (lift +0.028, n=257) did not reproduce on validation (0.486, lift +0.004, n=496). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [257, 0.4708], \"valid\": [496, 0.4859], \"priced\": [257, -0.0225, 496, 0.0006], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_7aafe1c680fd",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home <= 0.015 (away)",
+  "body": "Hit-rate lift train +0.039 / valid +0.007, but buying at the Kalshi closing offer returned -0.001 on train (n=247) and -0.001 on validation (n=493). The market already prices this situation.",
+  "evidence": "{\"train\": [247, 0.4818], \"valid\": [493, 0.4888], \"priced\": [247, -0.0005, 493, -0.0011], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_d6da1dee0213",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_road_trip_len >= 3.0 (home)",
+  "body": "Hit-rate lift train +0.044 / valid +0.024, but buying at the Kalshi closing offer returned -0.069 on train (n=36) and -0.002 on validation (n=83). The market already prices this situation.",
+  "evidence": "{\"train\": [246, 0.6016], \"valid\": [83, 0.5422], \"priced\": [36, -0.0691, 83, -0.0021], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_53085dd1905b",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_vig <= 0.02 (away)",
+  "body": "Hit-rate lift train +0.024 / valid +0.003, but buying at the Kalshi closing offer returned -0.033 on train (n=255) and -0.003 on validation (n=511). The market already prices this situation.",
+  "evidence": "{\"train\": [255, 0.4667], \"valid\": [511, 0.4853], \"priced\": [255, -0.0329, 511, -0.0032], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_d20111cc19c2",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.4 (away)",
+  "body": "Hit-rate lift train +0.020 / valid -0.006, but buying at the Kalshi closing offer returned -0.015 on train (n=242) and -0.005 on validation (n=496). The market already prices this situation.",
+  "evidence": "{\"train\": [242, 0.4628], \"valid\": [496, 0.4758], \"priced\": [242, -0.0147, 496, -0.0048], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_aedb20ab2d20",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_rest_days <= 1.5 (home)",
+  "body": "Hit-rate lift train +0.080 / valid +0.057, but buying at the Kalshi closing offer returned +0.178 on train (n=48) and -0.005 on validation (n=113). The market already prices this situation.",
+  "evidence": "{\"train\": [325, 0.6369], \"valid\": [113, 0.5752], \"priced\": [48, 0.178, 113, -0.005], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_d9991c3afcc8",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home <= -0.015 (away)",
+  "body": "Hit-rate lift train -0.043 / valid +0.029, but buying at the Kalshi closing offer returned -0.243 on train (n=35) and -0.006 on validation (n=94). The market already prices this situation.",
+  "evidence": "{\"train\": [35, 0.4], \"valid\": [94, 0.5106], \"priced\": [35, -0.2433, 94, -0.0059], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_e447a192521b",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_exp_goals <= 3.2 (away)",
+  "body": "Hit-rate lift train +0.021 / valid +0.025, but buying at the Kalshi closing offer returned -0.081 on train (n=209) and -0.006 on validation (n=414). The market already prices this situation.",
+  "evidence": "{\"train\": [1128, 0.4637], \"valid\": [414, 0.5072], \"priced\": [209, -0.0807, 414, -0.0062], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_b0c8343d242d",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_pk_pct_l10 >= 0.8 (home)",
+  "body": "Hit-rate lift train +0.029 / valid +0.031, but buying at the Kalshi closing offer returned -0.028 on train (n=114) and -0.007 on validation (n=284). The market already prices this situation.",
+  "evidence": "{\"train\": [716, 0.5866], \"valid\": [284, 0.5493], \"priced\": [114, -0.0275, 284, -0.0074], \"family\": \"special_teams\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_2a7a3e0f3478",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home >= -0.03 (away)",
+  "body": "Hit-rate lift train +0.024 / valid +0.001, but buying at the Kalshi closing offer returned -0.028 on train (n=259) and -0.007 on validation (n=518). The market already prices this situation.",
+  "evidence": "{\"train\": [259, 0.4672], \"valid\": [518, 0.4826], \"priced\": [259, -0.028, 518, -0.0075], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_ea290c1dbca4",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home >= -0.03 (away)",
+  "body": "Hit-rate lift train -0.000 / valid -0.004, but buying at the Kalshi closing offer returned -0.035 on train (n=192) and -0.008 on validation (n=488). The market already prices this situation.",
+  "evidence": "{\"train\": [192, 0.4427], \"valid\": [488, 0.4775], \"priced\": [192, -0.0347, 488, -0.0076], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_f9d2fd6842b5",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.35 (away)",
+  "body": "Hit-rate lift train +0.028 / valid -0.002, but buying at the Kalshi closing offer returned -0.016 on train (n=255) and -0.009 on validation (n=517). The market already prices this situation.",
+  "evidence": "{\"train\": [255, 0.4706], \"valid\": [517, 0.4797], \"priced\": [255, -0.0164, 517, -0.0093], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_6d249370380d",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.6 (away)",
+  "body": "Hit-rate lift train -0.049 / valid -0.107, but buying at the Kalshi closing offer returned +0.043 on train (n=71) and -0.009 on validation (n=120). The market already prices this situation.",
+  "evidence": "{\"train\": [71, 0.3944], \"valid\": [120, 0.375], \"priced\": [71, 0.0431, 120, -0.0094], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_0136ab8c8daf",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: home_g3_in_4+home_g5_in_7 >= 2 (away)",
+  "body": "Train hit rate 0.470 (lift +0.027, n=117) did not reproduce on validation (0.500, lift +0.018, n=78). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [117, 0.4701], \"valid\": [78, 0.5], \"priced\": [17, 0.1138, 78, -0.0106], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_1fc161d9c353",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home >= -0.06 (away)",
+  "body": "Hit-rate lift train +0.017 / valid -0.004, but buying at the Kalshi closing offer returned -0.014 on train (n=209) and -0.011 on validation (n=508). The market already prices this situation.",
+  "evidence": "{\"train\": [209, 0.4593], \"valid\": [508, 0.4783], \"priced\": [209, -0.0139, 508, -0.0107], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_32b4202c0bb0",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_vig <= 0.04 (away)",
+  "body": "Hit-rate lift train +0.027 / valid +0.000, but buying at the Kalshi closing offer returned -0.027 on train (n=262) and -0.011 on validation (n=525). The market already prices this situation.",
+  "evidence": "{\"train\": [262, 0.4695], \"valid\": [525, 0.4819], \"priced\": [262, -0.0267, 525, -0.0108], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_2c01e927e1f3",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home <= 0.03 (away)",
+  "body": "Hit-rate lift train +0.027 / valid -0.000, but buying at the Kalshi closing offer returned -0.027 on train (n=262) and -0.011 on validation (n=523). The market already prices this situation.",
+  "evidence": "{\"train\": [262, 0.4695], \"valid\": [523, 0.4818], \"priced\": [262, -0.0267, 523, -0.011], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_bb618980dee3",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home <= 0.06 (away)",
+  "body": "Hit-rate lift train +0.067 / valid +0.035, but buying at the Kalshi closing offer returned -0.021 on train (n=153) and -0.011 on validation (n=145). The market already prices this situation.",
+  "evidence": "{\"train\": [153, 0.5098], \"valid\": [145, 0.5172], \"priced\": [153, -0.0214, 145, -0.0111], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_ef8a08ed9767",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home >= 0.06 (away)",
+  "body": "Hit-rate lift train -0.023 / valid -0.013, but buying at the Kalshi closing offer returned -0.014 on train (n=112) and -0.011 on validation (n=388). The market already prices this situation.",
+  "evidence": "{\"train\": [112, 0.4196], \"valid\": [388, 0.4691], \"priced\": [112, -0.0142, 388, -0.0113], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_4b459af8566a",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_shot_share_l10 <= 0.5 (away)",
+  "body": "Hit-rate lift train +0.042 / valid +0.018, but buying at the Kalshi closing offer returned -0.093 on train (n=146) and -0.012 on validation (n=272). The market already prices this situation.",
+  "evidence": "{\"train\": [806, 0.4851], \"valid\": [272, 0.5], \"priced\": [146, -0.0932, 272, -0.0117], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_4aadc4eb6471",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home <= -0.06 (home)",
+  "body": "Hit-rate lift train -0.076 / valid -0.068, but buying at the Kalshi closing offer returned +0.005 on train (n=54) and -0.013 on validation (n=20). The market already prices this situation.",
+  "evidence": "{\"train\": [54, 0.4815], \"valid\": [20, 0.45], \"priced\": [54, 0.0048, 20, -0.0127], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_7e170988306e",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home <= 0.04 (away)",
+  "body": "Hit-rate lift train +0.024 / valid -0.001, but buying at the Kalshi closing offer returned -0.034 on train (n=257) and -0.013 on validation (n=514). The market already prices this situation.",
+  "evidence": "{\"train\": [257, 0.4669], \"valid\": [514, 0.4805], \"priced\": [257, -0.0338, 514, -0.0135], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_73108649c507",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid <= 0.6 (away)",
+  "body": "Hit-rate lift train +0.049 / valid +0.030, but buying at the Kalshi closing offer returned -0.063 on train (n=193) and -0.014 on validation (n=406). The market already prices this situation.",
+  "evidence": "{\"train\": [193, 0.4922], \"valid\": [406, 0.5123], \"priced\": [193, -0.0629, 406, -0.0137], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_8b24285c6623",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_rest_days <= 1.5 (away)",
+  "body": "Hit-rate lift train +0.033 / valid +0.011, but buying at the Kalshi closing offer returned -0.143 on train (n=26) and -0.016 on validation (n=67). The market already prices this situation.",
+  "evidence": "{\"train\": [147, 0.4762], \"valid\": [67, 0.4925], \"priced\": [26, -0.1431, 67, -0.016], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_96ba85203d1f",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: away_g3_in_4+home_g5_in_7 >= 2 (away)",
+  "body": "Train hit rate 0.507 (lift +0.064, n=71) did not reproduce on validation (0.483, lift +0.001, n=58). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [71, 0.507], \"valid\": [58, 0.4828], \"priced\": [9, 0.2393, 58, -0.0177], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_4327ebc4a5d3",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home <= 0.02 (away)",
+  "body": "Hit-rate lift train +0.029 / valid -0.001, but buying at the Kalshi closing offer returned -0.033 on train (n=231) and -0.018 on validation (n=474). The market already prices this situation.",
+  "evidence": "{\"train\": [231, 0.4719], \"valid\": [474, 0.481], \"priced\": [231, -0.0333, 474, -0.0179], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_3ecfe9ec48e4",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home >= 0.03 (away)",
+  "body": "Hit-rate lift train -0.018 / valid -0.012, but buying at the Kalshi closing offer returned -0.025 on train (n=139) and -0.019 on validation (n=430). The market already prices this situation.",
+  "evidence": "{\"train\": [139, 0.4245], \"valid\": [430, 0.4698], \"priced\": [139, -0.0253, 430, -0.0189], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_0761e5d5d51f",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_road_trip_len >= 4.0 (home)",
+  "body": "Hit-rate lift train +0.022 / valid +0.027, but buying at the Kalshi closing offer returned -0.184 on train (n=22) and -0.019 on validation (n=55). The market already prices this situation.",
+  "evidence": "{\"train\": [133, 0.5789], \"valid\": [55, 0.5455], \"priced\": [22, -0.1842, 55, -0.0192], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_c27572017069",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_starter_starts_l7d >= 3.0 (home)",
+  "body": "Hit-rate lift train +0.040 / valid -0.000, but buying at the Kalshi closing offer returned +0.098 on train (n=24) and -0.019 on validation (n=56). The market already prices this situation.",
+  "evidence": "{\"train\": [139, 0.5971], \"valid\": [56, 0.5179], \"priced\": [24, 0.0984, 56, -0.0192], \"family\": \"goalie\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_5b63c671e49a",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home >= -0.015 (away)",
+  "body": "Hit-rate lift train +0.042 / valid -0.009, but buying at the Kalshi closing offer returned +0.015 on train (n=233) and -0.023 on validation (n=455). The market already prices this situation.",
+  "evidence": "{\"train\": [233, 0.485], \"valid\": [455, 0.4725], \"priced\": [233, 0.0148, 455, -0.0227], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_7549b92c9c61",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_prev_so >= 1 (away)",
+  "body": "Hit-rate lift train +0.057 / valid +0.009, but buying at the Kalshi closing offer returned -0.022 on train (n=21) and -0.025 on validation (n=53). The market already prices this situation.",
+  "evidence": "{\"train\": [94, 0.5], \"valid\": [53, 0.4906], \"priced\": [21, -0.0216, 53, -0.0246], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_067316309a37",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid <= 0.55 (home)",
+  "body": "Hit-rate lift train -0.075 / valid -0.038, but buying at the Kalshi closing offer returned +0.007 on train (n=139) and -0.026 on validation (n=296). The market already prices this situation.",
+  "evidence": "{\"train\": [139, 0.482], \"valid\": [296, 0.4797], \"priced\": [139, 0.0073, 296, -0.0265], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_43cb4f5f7622",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home >= 0.02 (home)",
+  "body": "Hit-rate lift train +0.023 / valid +0.039, but buying at the Kalshi closing offer returned -0.011 on train (n=50) and -0.027 on validation (n=88). The market already prices this situation.",
+  "evidence": "{\"train\": [50, 0.58], \"valid\": [88, 0.5568], \"priced\": [50, -0.0108, 88, -0.027], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_81faba464bfd",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_streak_losses >= 2.0 (home)",
+  "body": "Hit-rate lift train +0.024 / valid +0.040, but buying at the Kalshi closing offer returned +0.041 on train (n=68) and -0.028 on validation (n=138). The market already prices this situation.",
+  "evidence": "{\"train\": [401, 0.581], \"valid\": [138, 0.558], \"priced\": [68, 0.0407, 138, -0.0277], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_e09e0a61b399",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: rest_diff <= -1.0 (away)",
+  "body": "Hit-rate lift train +0.060 / valid +0.018, but buying at the Kalshi closing offer returned -0.307 on train (n=33) and -0.034 on validation (n=54). The market already prices this situation.",
+  "evidence": "{\"train\": [187, 0.5027], \"valid\": [54, 0.5], \"priced\": [33, -0.3066, 54, -0.0337], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_1d0c01fde48f",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_shot_share_l10 >= 0.53 (home)",
+  "body": "Hit-rate lift train +0.104 / valid +0.077, but buying at the Kalshi closing offer returned +0.177 on train (n=43) and -0.038 on validation (n=121). The market already prices this situation.",
+  "evidence": "{\"train\": [337, 0.6617], \"valid\": [121, 0.595], \"priced\": [43, 0.1774, 121, -0.0377], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_0f8e901bccec",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.65 (home)",
+  "body": "Hit-rate lift train +0.121 / valid +0.178, but buying at the Kalshi closing offer returned -0.047 on train (n=28) and -0.041 on validation (n=46). The market already prices this situation.",
+  "evidence": "{\"train\": [28, 0.6786], \"valid\": [46, 0.6957], \"priced\": [28, -0.0468, 46, -0.0411], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_ed428abd92cf",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_vig >= 0.02 (home)",
+  "body": "Hit-rate lift train -0.031 / valid +0.016, but buying at the Kalshi closing offer returned -0.064 on train (n=114) and -0.042 on validation (n=191). The market already prices this situation.",
+  "evidence": "{\"train\": [114, 0.5263], \"valid\": [191, 0.534], \"priced\": [114, -0.0638, 191, -0.0416], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_88d439fd4529",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_shot_share_l10 <= 0.5 (home)",
+  "body": "Hit-rate lift train +0.034 / valid +0.040, but buying at the Kalshi closing offer returned -0.080 on train (n=126) and -0.042 on validation (n=274). The market already prices this situation.",
+  "evidence": "{\"train\": [773, 0.5912], \"valid\": [274, 0.5584], \"priced\": [126, -0.0797, 274, -0.0421], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_a1602e14c791",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: diff_shot_share_l10 <= -0.04 (away)",
+  "body": "Hit-rate lift train +0.079 / valid +0.042, but buying at the Kalshi closing offer returned -0.245 on train (n=60) and -0.043 on validation (n=126). The market already prices this situation.",
+  "evidence": "{\"train\": [370, 0.5216], \"valid\": [126, 0.5238], \"priced\": [60, -0.2454, 126, -0.0429], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_725629a0c68a",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: diff_shot_share_l10 >= 0.02 (home)",
+  "body": "Hit-rate lift train +0.095 / valid +0.070, but buying at the Kalshi closing offer returned -0.023 on train (n=69) and -0.046 on validation (n=192). The market already prices this situation.",
+  "evidence": "{\"train\": [532, 0.6523], \"valid\": [192, 0.5885], \"priced\": [69, -0.0234, 192, -0.0463], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_403d105f44ad",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home >= -0.02 (home)",
+  "body": "Hit-rate lift train -0.032 / valid +0.021, but buying at the Kalshi closing offer returned -0.055 on train (n=221) and -0.047 on validation (n=393). The market already prices this situation.",
+  "evidence": "{\"train\": [221, 0.5249], \"valid\": [393, 0.5394], \"priced\": [221, -0.0552, 393, -0.0474], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_e8103a4741a6",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_games_last_7 >= 4.0 (home)",
+  "body": "Hit-rate lift train +0.024 / valid +0.010, but buying at the Kalshi closing offer returned +0.021 on train (n=155) and -0.049 on validation (n=392). The market already prices this situation.",
+  "evidence": "{\"train\": [1016, 0.5807], \"valid\": [392, 0.5281], \"priced\": [155, 0.0207, 392, -0.0486], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_18144480f740",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: diff_shot_share_l10 >= -0.02 (home)",
+  "body": "Hit-rate lift train +0.039 / valid +0.037, but buying at the Kalshi closing offer returned -0.097 on train (n=171) and -0.050 on validation (n=346). The market already prices this situation.",
+  "evidence": "{\"train\": [995, 0.596], \"valid\": [346, 0.5549], \"priced\": [171, -0.0974, 346, -0.0499], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_748e5588f2b2",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_exp_goals >= 3.2 (home)",
+  "body": "Hit-rate lift train +0.067 / valid +0.095, but buying at the Kalshi closing offer returned -0.194 on train (n=52) and -0.051 on validation (n=111). The market already prices this situation.",
+  "evidence": "{\"train\": [426, 0.6244], \"valid\": [111, 0.6126], \"priced\": [52, -0.194, 111, -0.0515], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_02a2d350db68",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home >= -0.02 (away)",
+  "body": "Hit-rate lift train +0.032 / valid -0.021, but buying at the Kalshi closing offer returned +0.007 on train (n=221) and -0.052 on validation (n=393). The market already prices this situation.",
+  "evidence": "{\"train\": [221, 0.4751], \"valid\": [393, 0.4606], \"priced\": [221, 0.0072, 393, -0.0517], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_012bcb205da5",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: diff_shot_share_l10 >= 0.04 (home)",
+  "body": "Hit-rate lift train +0.115 / valid +0.090, but buying at the Kalshi closing offer returned +0.113 on train (n=45) and -0.053 on validation (n=120). The market already prices this situation.",
+  "evidence": "{\"train\": [339, 0.6726], \"valid\": [120, 0.6083], \"priced\": [45, 0.1134, 120, -0.0526], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_52f2391d606f",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: diff_starter_sv_pct_l10 >= 0.02 (home)",
+  "body": "Hit-rate lift train +0.025 / valid +0.024, but buying at the Kalshi closing offer returned -0.119 on train (n=64) and -0.053 on validation (n=142). The market already prices this situation.",
+  "evidence": "{\"train\": [347, 0.5821], \"valid\": [142, 0.5423], \"priced\": [64, -0.1186, 142, -0.053], \"family\": \"goalie\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_6820e802ab91",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid <= 0.55 (away)",
+  "body": "Hit-rate lift train +0.075 / valid +0.038, but buying at the Kalshi closing offer returned -0.072 on train (n=139) and -0.054 on validation (n=296). The market already prices this situation.",
+  "evidence": "{\"train\": [139, 0.518], \"valid\": [296, 0.5203], \"priced\": [139, -0.0721, 296, -0.0543], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_1333926b68b7",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_road_trip_len >= 3.0 (home)",
+  "body": "Hit-rate lift train +0.023 / valid +0.011, but buying at the Kalshi closing offer returned -0.069 on train (n=81) and -0.058 on validation (n=189). The market already prices this situation.",
+  "evidence": "{\"train\": [476, 0.5798], \"valid\": [189, 0.5291], \"priced\": [81, -0.069, 189, -0.0581], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_05902bc4bec2",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home >= -0.015 (home)",
+  "body": "Hit-rate lift train -0.042 / valid +0.009, but buying at the Kalshi closing offer returned -0.079 on train (n=233) and -0.058 on validation (n=455). The market already prices this situation.",
+  "evidence": "{\"train\": [233, 0.515], \"valid\": [455, 0.5275], \"priced\": [233, -0.0785, 455, -0.0582], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_2d63adecccf5",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid <= 0.6 (home)",
+  "body": "Hit-rate lift train -0.049 / valid -0.030, but buying at the Kalshi closing offer returned -0.006 on train (n=193) and -0.059 on validation (n=406). The market already prices this situation.",
+  "evidence": "{\"train\": [193, 0.5078], \"valid\": [406, 0.4877], \"priced\": [193, -0.0058, 406, -0.0588], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_a0b3fa50e676",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: away_g4_in_6+home_g5_in_7 >= 2 (away)",
+  "body": "Train hit rate 0.500 (lift +0.057, n=64) did not reproduce on validation (0.464, lift -0.018, n=56). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [64, 0.5], \"valid\": [56, 0.4643], \"priced\": [7, 0.2723, 56, -0.0592], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_f3b367012d57",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home <= 0.02 (home)",
+  "body": "Hit-rate lift train -0.029 / valid +0.001, but buying at the Kalshi closing offer returned -0.031 on train (n=231) and -0.059 on validation (n=474). The market already prices this situation.",
+  "evidence": "{\"train\": [231, 0.5281], \"valid\": [474, 0.519], \"priced\": [231, -0.031, 474, -0.0594], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_ef5cd146b51d",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home >= 0.03 (home)",
+  "body": "Hit-rate lift train +0.018 / valid +0.012, but buying at the Kalshi closing offer returned -0.028 on train (n=139) and -0.061 on validation (n=430). The market already prices this situation.",
+  "evidence": "{\"train\": [139, 0.5755], \"valid\": [430, 0.5302], \"priced\": [139, -0.0282, 430, -0.061], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_9907db3d74ef",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home <= 0.04 (home)",
+  "body": "Hit-rate lift train -0.024 / valid +0.001, but buying at the Kalshi closing offer returned -0.030 on train (n=257) and -0.062 on validation (n=514). The market already prices this situation.",
+  "evidence": "{\"train\": [257, 0.5331], \"valid\": [514, 0.5195], \"priced\": [257, -0.0303, 514, -0.0617], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_36e0d43efacb",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home >= -0.06 (home)",
+  "body": "Hit-rate lift train -0.017 / valid +0.004, but buying at the Kalshi closing offer returned -0.052 on train (n=209) and -0.063 on validation (n=508). The market already prices this situation.",
+  "evidence": "{\"train\": [209, 0.5407], \"valid\": [508, 0.5217], \"priced\": [209, -0.0523, 508, -0.0633], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_a779004dfb1b",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home <= 0.03 (home)",
+  "body": "Hit-rate lift train -0.027 / valid +0.000, but buying at the Kalshi closing offer returned -0.037 on train (n=262) and -0.064 on validation (n=523). The market already prices this situation.",
+  "evidence": "{\"train\": [262, 0.5305], \"valid\": [523, 0.5182], \"priced\": [262, -0.0367, 523, -0.0639], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_193cd505f92d",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_vig <= 0.04 (home)",
+  "body": "Hit-rate lift train -0.027 / valid +0.000, but buying at the Kalshi closing offer returned -0.037 on train (n=262) and -0.064 on validation (n=525). The market already prices this situation.",
+  "evidence": "{\"train\": [262, 0.5305], \"valid\": [525, 0.5181], \"priced\": [262, -0.0367, 525, -0.0644], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_2977e48e8e47",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home <= 0.06 (home)",
+  "body": "Hit-rate lift train -0.067 / valid -0.035, but buying at the Kalshi closing offer returned -0.042 on train (n=153) and -0.065 on validation (n=145). The market already prices this situation.",
+  "evidence": "{\"train\": [153, 0.4902], \"valid\": [145, 0.4828], \"priced\": [153, -0.0415, 145, -0.0649], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_7bf889ed69ea",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_vig >= 0.02 (away)",
+  "body": "Hit-rate lift train +0.031 / valid -0.016, but buying at the Kalshi closing offer returned +0.017 on train (n=114) and -0.065 on validation (n=191). The market already prices this situation.",
+  "evidence": "{\"train\": [114, 0.4737], \"valid\": [191, 0.466], \"priced\": [114, 0.0168, 191, -0.0653], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_380edea47257",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home >= 0.06 (home)",
+  "body": "Hit-rate lift train +0.023 / valid +0.013, but buying at the Kalshi closing offer returned -0.043 on train (n=112) and -0.066 on validation (n=388). The market already prices this situation.",
+  "evidence": "{\"train\": [112, 0.5804], \"valid\": [388, 0.5309], \"priced\": [112, -0.0435, 388, -0.0662], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_3aa141312915",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_streak_wins >= 3.0 (home)",
+  "body": "Hit-rate lift train +0.049 / valid +0.037, but buying at the Kalshi closing offer returned +0.097 on train (n=34) and -0.066 on validation (n=63). The market already prices this situation.",
+  "evidence": "{\"train\": [193, 0.6062], \"valid\": [63, 0.5556], \"priced\": [34, 0.0973, 63, -0.0663], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_ea557ba4585a",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.35 (home)",
+  "body": "Hit-rate lift train -0.028 / valid +0.002, but buying at the Kalshi closing offer returned -0.057 on train (n=255) and -0.067 on validation (n=517). The market already prices this situation.",
+  "evidence": "{\"train\": [255, 0.5294], \"valid\": [517, 0.5203], \"priced\": [255, -0.0567, 517, -0.0666], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_a22ec5740ade",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home >= 0.02 (away)",
+  "body": "Hit-rate lift train -0.023 / valid -0.039, but buying at the Kalshi closing offer returned -0.064 on train (n=50) and -0.067 on validation (n=88). The market already prices this situation.",
+  "evidence": "{\"train\": [50, 0.42], \"valid\": [88, 0.4432], \"priced\": [50, -0.0642, 88, -0.0669], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_085f633d0752",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home >= -0.03 (home)",
+  "body": "Hit-rate lift train +0.000 / valid +0.004, but buying at the Kalshi closing offer returned -0.029 on train (n=192) and -0.067 on validation (n=488). The market already prices this situation.",
+  "evidence": "{\"train\": [192, 0.5573], \"valid\": [488, 0.5225], \"priced\": [192, -0.0295, 488, -0.0671], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_7ce515e516ef",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home >= -0.03 (home)",
+  "body": "Hit-rate lift train -0.024 / valid -0.001, but buying at the Kalshi closing offer returned -0.035 on train (n=259) and -0.068 on validation (n=518). The market already prices this situation.",
+  "evidence": "{\"train\": [259, 0.5328], \"valid\": [518, 0.5174], \"priced\": [259, -0.0345, 518, -0.0679], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_578735046b47",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid <= 0.65 (home)",
+  "body": "Hit-rate lift train -0.042 / valid -0.018, but buying at the Kalshi closing offer returned -0.033 on train (n=235) and -0.069 on validation (n=480). The market already prices this situation.",
+  "evidence": "{\"train\": [235, 0.5149], \"valid\": [480, 0.5], \"priced\": [235, -0.0333, 480, -0.0686], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_1ed941e238e6",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_vig <= 0.02 (home)",
+  "body": "Hit-rate lift train -0.024 / valid -0.003, but buying at the Kalshi closing offer returned -0.033 on train (n=255) and -0.070 on validation (n=511). The market already prices this situation.",
+  "evidence": "{\"train\": [255, 0.5333], \"valid\": [511, 0.5147], \"priced\": [255, -0.0327, 511, -0.0697], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_b2a7c1c1894f",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home <= -0.03 (home)",
+  "body": "Hit-rate lift train -0.111 / valid -0.089, but buying at the Kalshi closing offer returned -0.084 on train (n=74) and -0.072 on validation (n=42). The market already prices this situation.",
+  "evidence": "{\"train\": [74, 0.4459], \"valid\": [42, 0.4286], \"priced\": [74, -0.0843, 42, -0.0721], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_6029eff9bef3",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.4 (home)",
+  "body": "Hit-rate lift train -0.020 / valid +0.006, but buying at the Kalshi closing offer returned -0.058 on train (n=242) and -0.073 on validation (n=496). The market already prices this situation.",
+  "evidence": "{\"train\": [242, 0.5372], \"valid\": [496, 0.5242], \"priced\": [242, -0.0578, 496, -0.0729], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_12c70854b2a8",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home <= 0.015 (home)",
+  "body": "Hit-rate lift train -0.039 / valid -0.007, but buying at the Kalshi closing offer returned -0.056 on train (n=247) and -0.075 on validation (n=493). The market already prices this situation.",
+  "evidence": "{\"train\": [247, 0.5182], \"valid\": [493, 0.5112], \"priced\": [247, -0.0558, 493, -0.0749], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_cc2b5a1613eb",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home <= -0.06 (away)",
+  "body": "Hit-rate lift train +0.076 / valid +0.068, but buying at the Kalshi closing offer returned -0.063 on train (n=54) and -0.075 on validation (n=20). The market already prices this situation.",
+  "evidence": "{\"train\": [54, 0.5185], \"valid\": [20, 0.55], \"priced\": [54, -0.063, 20, -0.0751], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_3838aecaca80",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.6 (home)",
+  "body": "Hit-rate lift train +0.049 / valid +0.107, but buying at the Kalshi closing offer returned -0.103 on train (n=71) and -0.077 on validation (n=120). The market already prices this situation.",
+  "evidence": "{\"train\": [71, 0.6056], \"valid\": [120, 0.625], \"priced\": [71, -0.1026, 120, -0.0775], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_fbf6d57858a0",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home >= -0.04 (home)",
+  "body": "Hit-rate lift train -0.028 / valid -0.004, but buying at the Kalshi closing offer returned -0.041 on train (n=257) and -0.078 on validation (n=496). The market already prices this situation.",
+  "evidence": "{\"train\": [257, 0.5292], \"valid\": [496, 0.5141], \"priced\": [257, -0.041, 496, -0.0776], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_210c20aea711",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home >= 0.015 (home)",
+  "body": "Hit-rate lift train +0.139 / valid +0.029, but buying at the Kalshi closing offer returned +0.177 on train (n=23) and -0.078 on validation (n=53). The market already prices this situation.",
+  "evidence": "{\"train\": [23, 0.6957], \"valid\": [53, 0.5472], \"priced\": [23, 0.1771, 53, -0.0781], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_58f8a62563a2",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move24_home <= -0.02 (home)",
+  "body": "Hit-rate lift train -0.065 / valid -0.032, but buying at the Kalshi closing offer returned -0.055 on train (n=61) and -0.079 on validation (n=179). The market already prices this situation.",
+  "evidence": "{\"train\": [61, 0.4918], \"valid\": [179, 0.486], \"priced\": [61, -0.055, 179, -0.0787], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_f35e5d6d34ba",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: diff_shot_share_l10 >= -0.04 (home)",
+  "body": "Hit-rate lift train +0.029 / valid +0.013, but buying at the Kalshi closing offer returned -0.110 on train (n=201) and -0.081 on validation (n=399). The market already prices this situation.",
+  "evidence": "{\"train\": [1183, 0.5858], \"valid\": [399, 0.5313], \"priced\": [201, -0.1097, 399, -0.0811], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_9e6a8022d960",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: away_g3_in_4+away_prev_so >= 2 (away)",
+  "body": "Train hit rate 0.468 (lift +0.025, n=47) did not reproduce on validation (0.478, lift -0.004, n=23). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [47, 0.4681], \"valid\": [23, 0.4783], \"priced\": [14, -0.1199, 23, -0.0833], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_9c3d1d429f27",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_shot_share_l10 <= 0.47 (away)",
+  "body": "Hit-rate lift train +0.084 / valid -0.003, but buying at the Kalshi closing offer returned -0.016 on train (n=57) and -0.086 on validation (n=121). The market already prices this situation.",
+  "evidence": "{\"train\": [355, 0.5268], \"valid\": [121, 0.4793], \"priced\": [57, -0.0156, 121, -0.0857], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_5c072c3eba09",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move6_home <= -0.015 (home)",
+  "body": "Hit-rate lift train +0.043 / valid -0.029, but buying at the Kalshi closing offer returned +0.179 on train (n=35) and -0.086 on validation (n=94). The market already prices this situation.",
+  "evidence": "{\"train\": [35, 0.6], \"valid\": [94, 0.4894], \"priced\": [35, 0.1795, 94, -0.0862], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_7f7552d1633e",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_g3_in_4+home_prev_ot >= 2 (away)",
+  "body": "Hit-rate lift train +0.043 / valid -0.010, but buying at the Kalshi closing offer returned -0.246 on train (n=21) and -0.088 on validation (n=36). The market already prices this situation.",
+  "evidence": "{\"train\": [107, 0.486], \"valid\": [36, 0.4722], \"priced\": [21, -0.2456, 36, -0.088], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_54f441dde814",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_win_pct_l10 >= 0.6 (home)",
+  "body": "Hit-rate lift train +0.025 / valid +0.002, but buying at the Kalshi closing offer returned -0.110 on train (n=121) and -0.092 on validation (n=250). The market already prices this situation.",
+  "evidence": "{\"train\": [678, 0.5826], \"valid\": [250, 0.52], \"priced\": [121, -0.1102, 250, -0.0924], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_a2a8098d65df",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_road_trip_len >= 4.0 (home)",
+  "body": "Hit-rate lift train +0.039 / valid -0.018, but buying at the Kalshi closing offer returned -0.146 on train (n=39) and -0.095 on validation (n=108). The market already prices this situation.",
+  "evidence": "{\"train\": [223, 0.5964], \"valid\": [108, 0.5], \"priced\": [39, -0.1461, 108, -0.0947], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_11b4b204e093",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_g3_in_4+away_g5_in_7 >= 2 (home)",
+  "body": "Hit-rate lift train +0.085 / valid -0.011, but buying at the Kalshi closing offer returned +0.164 on train (n=30) and -0.096 on validation (n=69). The market already prices this situation.",
+  "evidence": "{\"train\": [148, 0.6419], \"valid\": [69, 0.5072], \"priced\": [30, 0.1638, 69, -0.0955], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_f6653944a0ea",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.45 (home)",
+  "body": "Hit-rate lift train -0.017 / valid +0.011, but buying at the Kalshi closing offer returned -0.090 on train (n=211) and -0.099 on validation (n=429). The market already prices this situation.",
+  "evidence": "{\"train\": [211, 0.5403], \"valid\": [429, 0.5291], \"priced\": [211, -0.0903, 429, -0.0988], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_9db40da2ab1a",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.65 (away)",
+  "body": "Hit-rate lift train -0.121 / valid -0.178, but buying at the Kalshi closing offer returned -0.058 on train (n=28) and -0.100 on validation (n=46). The market already prices this situation.",
+  "evidence": "{\"train\": [28, 0.3214], \"valid\": [46, 0.3043], \"priced\": [28, -0.0577, 46, -0.0996], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_4225b6e4acb5",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: st_edge_home <= -0.1 (away)",
+  "body": "Hit-rate lift train +0.038 / valid -0.033, but buying at the Kalshi closing offer returned +0.040 on train (n=64) and -0.101 on validation (n=156). The market already prices this situation.",
+  "evidence": "{\"train\": [460, 0.4804], \"valid\": [156, 0.4487], \"priced\": [64, 0.0403, 156, -0.1005], \"family\": \"special_teams\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_0a320c11251f",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: home_g3_in_4+away_g5_in_7 >= 2 (home)",
+  "body": "Train hit rate 0.622 (lift +0.065, n=82) did not reproduce on validation (0.489, lift -0.029, n=45). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [82, 0.622], \"valid\": [45, 0.4889], \"priced\": [15, -0.2036, 45, -0.1073], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_48d6a3fceb7c",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_shot_share_l10 >= 0.47 (home)",
+  "body": "Hit-rate lift train +0.028 / valid -0.001, but buying at the Kalshi closing offer returned -0.028 on train (n=206) and -0.109 on validation (n=404). The market already prices this situation.",
+  "evidence": "{\"train\": [1203, 0.5852], \"valid\": [404, 0.5173], \"priced\": [206, -0.028, 404, -0.1092], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_72f4f824c2f4",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: diff_pdo_l10 >= 0.03 (home)",
+  "body": "Hit-rate lift train +0.028 / valid -0.000, but buying at the Kalshi closing offer returned -0.183 on train (n=55) and -0.110 on validation (n=139). The market already prices this situation.",
+  "evidence": "{\"train\": [393, 0.5852], \"valid\": [139, 0.518], \"priced\": [55, -0.1834, 139, -0.1095], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_c8857ae9a0ae",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_win_pct_l10 >= 0.7 (home)",
+  "body": "Hit-rate lift train +0.052 / valid +0.012, but buying at the Kalshi closing offer returned -0.181 on train (n=63) and -0.110 on validation (n=115). The market already prices this situation.",
+  "evidence": "{\"train\": [361, 0.6094], \"valid\": [115, 0.5304], \"priced\": [63, -0.1809, 115, -0.1104], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_da10117e984a",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_shot_share_l10 >= 0.5 (home)",
+  "body": "Hit-rate lift train +0.049 / valid +0.011, but buying at the Kalshi closing offer returned -0.119 on train (n=119) and -0.112 on validation (n=259). The market already prices this situation.",
+  "evidence": "{\"train\": [767, 0.6063], \"valid\": [259, 0.529], \"priced\": [119, -0.1192, 259, -0.1121], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_cc4c854cbfa8",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid <= 0.4 (away)",
+  "body": "Hit-rate lift train +0.057 / valid +0.104, but buying at the Kalshi closing offer returned -0.249 on train (n=22) and -0.113 on validation (n=29). The market already prices this situation.",
+  "evidence": "{\"train\": [22, 0.5], \"valid\": [29, 0.5862], \"priced\": [22, -0.2495, 29, -0.1125], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_70c72cb0a055",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid <= 0.45 (away)",
+  "body": "Hit-rate lift train +0.067 / valid +0.063, but buying at the Kalshi closing offer returned -0.186 on train (n=51) and -0.114 on validation (n=101). The market already prices this situation.",
+  "evidence": "{\"train\": [51, 0.5098], \"valid\": [101, 0.5446], \"priced\": [51, -0.186, 101, -0.1137], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_3285643538f0",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_close_home_mid >= 0.55 (home)",
+  "body": "Hit-rate lift train +0.032 / valid +0.048, but buying at the Kalshi closing offer returned -0.080 on train (n=124) and -0.114 on validation (n=233). The market already prices this situation.",
+  "evidence": "{\"train\": [124, 0.5887], \"valid\": [233, 0.5665], \"priced\": [124, -0.0797, 233, -0.1137], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_2ef7f8023636",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: away_g4_in_6+away_prev_so >= 2 (away)",
+  "body": "Train hit rate 0.550 (lift +0.107, n=40) did not reproduce on validation (0.471, lift -0.011, n=17). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [40, 0.55], \"valid\": [17, 0.4706], \"priced\": [11, -0.101, 17, -0.1171], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_86ac62ee5643",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_streak_wins >= 2.0 (home)",
+  "body": "Hit-rate lift train +0.034 / valid -0.014, but buying at the Kalshi closing offer returned +0.040 on train (n=79) and -0.117 on validation (n=125). The market already prices this situation.",
+  "evidence": "{\"train\": [401, 0.591], \"valid\": [125, 0.504], \"priced\": [79, 0.0397, 125, -0.1171], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_0e2e6b2cb1f3",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: mkt_move_home <= 0.03 (home)",
+  "body": "Hit-rate lift train -0.081 / valid -0.070, but buying at the Kalshi closing offer returned -0.053 on train (n=126) and -0.119 on validation (n=107). The market already prices this situation.",
+  "evidence": "{\"train\": [126, 0.4762], \"valid\": [107, 0.4486], \"priced\": [126, -0.0534, 107, -0.1189], \"family\": \"market\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_bb74bd948a11",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_fo_pct_l10 <= 0.48 (home)",
+  "body": "Hit-rate lift train +0.039 / valid -0.034, but buying at the Kalshi closing offer returned +0.066 on train (n=76) and -0.120 on validation (n=130). The market already prices this situation.",
+  "evidence": "{\"train\": [441, 0.5964], \"valid\": [130, 0.4846], \"priced\": [76, 0.0663, 130, -0.1201], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_8f3decee1098",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_exp_goals >= 2.8 (home)",
+  "body": "Hit-rate lift train +0.028 / valid -0.014, but buying at the Kalshi closing offer returned -0.057 on train (n=225) and -0.123 on validation (n=472). The market already prices this situation.",
+  "evidence": "{\"train\": [1272, 0.5849], \"valid\": [472, 0.5042], \"priced\": [225, -0.0574, 472, -0.1226], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_067b87078255",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: diff_pp_pct_l10 >= 0.08 (home)",
+  "body": "Hit-rate lift train +0.061 / valid -0.034, but buying at the Kalshi closing offer returned -0.048 on train (n=58) and -0.132 on validation (n=130). The market already prices this situation.",
+  "evidence": "{\"train\": [430, 0.6186], \"valid\": [130, 0.4846], \"priced\": [58, -0.0475, 130, -0.1318], \"family\": \"special_teams\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_60b4d3aec0d0",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: rest_diff >= 1.0 (home)",
+  "body": "Hit-rate lift train +0.045 / valid -0.033, but buying at the Kalshi closing offer returned +0.076 on train (n=51) and -0.141 on validation (n=103). The market already prices this situation.",
+  "evidence": "{\"train\": [324, 0.6019], \"valid\": [103, 0.4854], \"priced\": [51, 0.0758, 103, -0.1407], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_828e36a83e28",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_gf_avg_l10 >= 3.6 (home)",
+  "body": "Hit-rate lift train +0.030 / valid +0.009, but buying at the Kalshi closing offer returned -0.129 on train (n=55) and -0.143 on validation (n=110). The market already prices this situation.",
+  "evidence": "{\"train\": [305, 0.5869], \"valid\": [110, 0.5273], \"priced\": [55, -0.1293, 110, -0.1427], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_6a8d9881f01b",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_g5_in_7 >= 1 (home)",
+  "body": "Hit-rate lift train +0.105 / valid -0.044, but buying at the Kalshi closing offer returned +0.195 on train (n=32) and -0.160 on validation (n=76). The market already prices this situation.",
+  "evidence": "{\"train\": [160, 0.6625], \"valid\": [76, 0.4737], \"priced\": [32, 0.1954, 76, -0.1601], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_42aafa0e593a",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_g4_in_6+away_g5_in_7 >= 2 (home)",
+  "body": "Hit-rate lift train +0.092 / valid -0.045, but buying at the Kalshi closing offer returned +0.195 on train (n=32) and -0.161 on validation (n=74). The market already prices this situation.",
+  "evidence": "{\"train\": [154, 0.6494], \"valid\": [74, 0.473], \"priced\": [32, 0.1954, 74, -0.1609], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_b8436090bdb0",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_shot_share_l10 >= 0.53 (away)",
+  "body": "Hit-rate lift train +0.029 / valid -0.028, but buying at the Kalshi closing offer returned -0.137 on train (n=57) and -0.163 on validation (n=108). The market already prices this situation.",
+  "evidence": "{\"train\": [354, 0.4718], \"valid\": [108, 0.4537], \"priced\": [57, -0.1374, 108, -0.1629], \"family\": \"shot_quality\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_6f8fa50bb6f5",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: st_edge_home >= 0.1 (home)",
+  "body": "Hit-rate lift train +0.025 / valid -0.062, but buying at the Kalshi closing offer returned -0.075 on train (n=68) and -0.172 on validation (n=149). The market already prices this situation.",
+  "evidence": "{\"train\": [459, 0.5817], \"valid\": [149, 0.4564], \"priced\": [68, -0.0746, 149, -0.1716], \"family\": \"special_teams\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_739815fb7140",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_gf_avg_l10 >= 3.2 (home)",
+  "body": "Hit-rate lift train +0.033 / valid -0.034, but buying at the Kalshi closing offer returned +0.016 on train (n=130) and -0.178 on validation (n=227). The market already prices this situation.",
+  "evidence": "{\"train\": [656, 0.5899], \"valid\": [227, 0.4846], \"priced\": [130, 0.016, 227, -0.1783], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_ac84052ec197",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_streak_wins >= 3.0 (home)",
+  "body": "Hit-rate lift train +0.023 / valid -0.087, but buying at the Kalshi closing offer returned -0.003 on train (n=35) and -0.204 on validation (n=72). The market already prices this situation.",
+  "evidence": "{\"train\": [212, 0.5802], \"valid\": [72, 0.4306], \"priced\": [35, -0.0033, 72, -0.2039], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_e2b829d39594",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_starter_starts_l7d >= 3.0 (home)",
+  "body": "Hit-rate lift train +0.022 / valid -0.081, but buying at the Kalshi closing offer returned +0.134 on train (n=37) and -0.209 on validation (n=64). The market already prices this situation.",
+  "evidence": "{\"train\": [190, 0.5789], \"valid\": [64, 0.4375], \"priced\": [37, 0.1338, 64, -0.209], \"family\": \"goalie\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_5abd5cf97314",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: away_win_pct_l10 <= 0.3 (home)",
+  "body": "Train hit rate 0.587 (lift +0.030, n=121) did not reproduce on validation (0.472, lift -0.046, n=36). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [121, 0.5868], \"valid\": [36, 0.4722], \"priced\": [13, -0.1788, 36, -0.215], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_711de03103ee",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_pp_pct_l10 >= 0.25 (home)",
+  "body": "Hit-rate lift train +0.021 / valid -0.086, but buying at the Kalshi closing offer returned +0.002 on train (n=76) and -0.248 on validation (n=132). The market already prices this situation.",
+  "evidence": "{\"train\": [545, 0.578], \"valid\": [132, 0.4318], \"priced\": [76, 0.0023, 132, -0.2477], \"family\": \"special_teams\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_9774fefa5a29",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_g3_in_4+home_prev_ot >= 2 (away)",
+  "body": "Hit-rate lift train +0.025 / valid -0.072, but buying at the Kalshi closing offer returned -0.126 on train (n=27) and -0.254 on validation (n=39). The market already prices this situation.",
+  "evidence": "{\"train\": [126, 0.4683], \"valid\": [39, 0.4103], \"priced\": [27, -0.1256, 39, -0.254], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_9348172e872b",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_g4_in_6+home_prev_ot >= 2 (away)",
+  "body": "Hit-rate lift train +0.042 / valid -0.082, but buying at the Kalshi closing offer returned -0.098 on train (n=22) and -0.258 on validation (n=30). The market already prices this situation.",
+  "evidence": "{\"train\": [97, 0.4845], \"valid\": [30, 0.4], \"priced\": [22, -0.098, 30, -0.2575], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_0afa5959a64f",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_pp_pct_l10 >= 0.3 (home)",
+  "body": "Hit-rate lift train +0.031 / valid -0.089, but buying at the Kalshi closing offer returned +0.104 on train (n=36) and -0.258 on validation (n=70). The market already prices this situation.",
+  "evidence": "{\"train\": [296, 0.5878], \"valid\": [70, 0.4286], \"priced\": [36, 0.1043, 70, -0.2582], \"family\": \"special_teams\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_6427afed41ee",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: away_exp_goals <= 2.8 (home)",
+  "body": "Hit-rate lift train +0.085 / valid -0.039, but buying at the Kalshi closing offer returned -0.037 on train (n=33) and -0.261 on validation (n=48). The market already prices this situation.",
+  "evidence": "{\"train\": [282, 0.6418], \"valid\": [48, 0.4792], \"priced\": [33, -0.037, 48, -0.261], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_7b5d407b337c",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: away_g4_in_6+home_prev_so >= 2 (away)",
+  "body": "Train hit rate 0.474 (lift +0.031, n=38) did not reproduce on validation (0.367, lift -0.115, n=30). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [38, 0.4737], \"valid\": [30, 0.3667], \"priced\": [9, -0.3038, 30, -0.3054], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_5edda7f43fc4",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "No reproducible edge: rest_diff >= 2.0 (home)",
+  "body": "Train hit rate 0.692 (lift +0.134, n=94) did not reproduce on validation (0.400, lift -0.118, n=30). Rejected rather than tuned further.",
+  "evidence": "{\"train\": [94, 0.6915], \"valid\": [30, 0.4], \"priced\": [16, 0.0333, 30, -0.3144], \"family\": \"schedule\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_281b042a172b",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: pace_diff <= -0.5 (home)",
+  "body": "Hit-rate lift train +0.026 / valid -0.140, but buying at the Kalshi closing offer returned +0.115 on train (n=31) and -0.327 on validation (n=45). The market already prices this situation.",
+  "evidence": "{\"train\": [288, 0.5833], \"valid\": [45, 0.3778], \"priced\": [31, 0.1148, 45, -0.3265], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
+  "finding_id": "FIND_FAIL_78bf70ccc03b",
+  "created_at": "2026-09-20T23:29:42Z",
+  "title": "Beats the base rate but not the price: home_exp_goals <= 2.8 (away)",
+  "body": "Hit-rate lift train +0.112 / valid -0.123, but buying at the Kalshi closing offer returned -0.121 on train (n=36) and -0.402 on validation (n=53). The market already prices this situation.",
+  "evidence": "{\"train\": [283, 0.5548], \"valid\": [53, 0.3585], \"priced\": [36, -0.1208, 53, -0.4017], \"family\": \"form\"}",
+  "confidence": "medium",
+  "kind": "rejection"
+ },
+ {
   "finding_id": "FIND_DISCOVERY_SEARCH",
-  "created_at": "2026-09-20T20:38:09Z",
+  "created_at": "2026-09-20T23:29:42Z",
   "title": "Discovery search completed",
-  "body": "370 candidate triggers were evaluated. With that many tests, a few will clear the threshold by chance alone; survivors are labelled CANDIDATE and only forward-test results can promote them.",
-  "evidence": "{\"tested\": 370, \"survivors\": 12}",
+  "body": "690 candidate triggers were evaluated (787 games had a recovered Kalshi closing price). With that many tests, a few will clear the threshold by chance alone; survivors are labelled CANDIDATE and only forward-test results can promote them.",
+  "evidence": "{\"tested\": 690, \"survivors\": 10}",
   "confidence": "high",
   "kind": "search_summary"
  },
  {
+  "finding_id": "FIND_MARKET_BASELINE",
+  "created_at": "2026-09-20T23:29:43Z",
+  "title": "Market baseline: buying every home / away contract at the Kalshi close",
+  "body": "Flat-stake ROI of buying one side of every game that has a recovered closing candle, net of the published taker fee. This is the cost of the spread plus fees; a strategy's priced ROI has to beat it, not zero.",
+  "evidence": "{\"home\": {\"n\": 1312, \"roi\": -0.0606, \"pnl\": -79.5258, \"avg_price\": 0.5409, \"hit\": 0.5221, \"mdd\": 85.2756, \"sharpe\": -0.063}, \"away\": {\"n\": 1312, \"roi\": -0.018, \"pnl\": -23.5663, \"avg_price\": 0.4723, \"hit\": 0.4779, \"mdd\": 42.3855, \"sharpe\": -0.0162}}",
+  "confidence": "high",
+  "kind": "baseline"
+ },
+ {
   "finding_id": "FIND_COMPETITION_STATE",
-  "created_at": "2026-09-20T20:38:12Z",
+  "created_at": "2026-09-20T23:29:55Z",
   "title": "Competition state snapshot",
   "body": "Aggregate paper-trading state. Win rate is always shown with a sample size and a Wilson interval.",
-  "evidence": "{\"strategies\": 30, \"bets\": 13, \"settled\": 13, \"open\": 0, \"wins\": 7, \"losses\": 6, \"pnl\": -112.34, \"staked\": 660.94, \"roi\": -0.17, \"win_rate\": 0.5385}",
+  "evidence": "{\"FORWARD TEST\": {\"mode\": \"FORWARD TEST\", \"strategies\": 46, \"bets\": 0, \"settled\": 0, \"open\": 0, \"wins\": 0, \"losses\": 0, \"pnl\": 0.0, \"staked\": 0.0, \"roi\": null, \"win_rate\": null}, \"BACKTEST\": {\"mode\": \"BACKTEST\", \"strategies\": 46, \"bets\": 3266, \"settled\": 3266, \"open\": 0, \"wins\": 1574, \"losses\": 1692, \"pnl\": 2367.83, \"staked\": 109721.47, \"roi\": 0.0216, \"win_rate\": 0.4819}}",
   "confidence": "high",
   "kind": "status"
  }

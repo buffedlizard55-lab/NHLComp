@@ -21,5 +21,11 @@
   "zero_liquidity": 0,
   "missing_ts": 0
  },
+ "cross_validation": {
+  "team_game_rows_compared": 5248,
+  "score_conflicts": 0,
+  "shootout_goal_definition_adjusted": 392,
+  "settlement_conflicts": 0
+ },
  "open_irregularities": 4
 }
