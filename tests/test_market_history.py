@@ -544,6 +544,27 @@ class TestHistoryToBacktest(unittest.TestCase):
         self.assertEqual(self.store.one("SELECT COUNT(*) c FROM irregularities WHERE kind='conflicting_source'")["c"],
                          before)
 
+    def test_07b_injury_sensitive_rules_are_not_replayed(self):
+        # no BACKTEST wager may come from an injury-sensitive rule (no injury history)
+        for row in self.store.query(
+                """SELECT b.bet_id FROM bets b JOIN strategies s
+                     ON s.strategy_id=b.strategy_id AND s.version=b.strategy_version
+                    WHERE b.test_mode='BACKTEST' AND s.params_json LIKE '%"injury_sensitive": true%'"""):
+            self.fail(f"{row['bet_id']} was replayed by an injury-sensitive rule")
+        # a legacy row of that kind is annotated through amend_bet, never deleted
+        legacy = self.store.one("SELECT * FROM bets WHERE test_mode='BACKTEST' LIMIT 1")
+        inj = self.store.one("SELECT strategy_id, version FROM strategies WHERE strategy_id='NHL_INJURY_IMPACT' "
+                             "ORDER BY version DESC LIMIT 1")
+        self.store.execute("UPDATE bets SET strategy_id=?, strategy_version=? WHERE bet_id=?",
+                           (inj["strategy_id"], inj["version"], legacy["bet_id"]))
+        self.store.commit()
+        n = self.pipe.stage_reconcile()
+        self.assertEqual(n, 1)
+        after = self.store.one("SELECT verification_status, amended FROM bets WHERE bet_id=?", (legacy["bet_id"],))
+        self.assertIn("backtest_without_injury_context", after["verification_status"])
+        self.assertEqual(after["amended"], 1)
+        self.assertEqual(self.pipe.stage_reconcile(), 0)     # idempotent
+
     def test_08_hydrated_market_strategy_keeps_flat_staking(self):
         row = self.store.one("SELECT * FROM strategies WHERE strategy_id='NHL_STEAM_FOLLOW'")
         strat = _hydrate(row)

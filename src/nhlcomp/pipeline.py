@@ -554,7 +554,10 @@ class Pipeline:
                 "strategy_version=? AND result='OPEN'", (strat.strategy_id, strat.version))["e"] or 0)
 
             # ---------------------------------------------------------- BACKTEST
-            for ms in settled:
+            # No historical injury feed exists, so an injury-sensitive rule cannot be
+            # replayed honestly: "no pending injuries" would really mean "unknown".
+            backtestable = not getattr(strat, "injury_sensitive", False)
+            for ms in (settled if backtestable else ()):
                 gid = int(ms["game_id"])
                 g = refs.get(gid)
                 f = pit.get(gid)
@@ -734,6 +737,40 @@ class Pipeline:
         self.report["clv_attached"] = n
         return n
 
+    INJURY_CONTEXT_NOTE = "backtest_without_injury_context"
+
+    def stage_reconcile(self) -> int:
+        """Annotate BACKTEST rows that a stricter rule would not have written.
+
+        An injury-sensitive strategy cannot be replayed (no historical injury feed), so any
+        BACKTEST wager it holds was placed without knowing whether an injury was pending.
+        Those rows are never deleted; their verification_status gains a suffix, through
+        ``amend_bet`` so the before/after audit row exists.  Idempotent.
+        """
+        n = 0
+        for s in self.store.query("SELECT strategy_id, version, params_json FROM strategies"):
+            try:
+                params = json.loads(s["params_json"] or "{}")
+            except (TypeError, ValueError):
+                continue
+            if not params.get("injury_sensitive"):
+                continue
+            for b in self.store.query(
+                    """SELECT bet_id, verification_status FROM bets
+                        WHERE strategy_id=? AND strategy_version=? AND test_mode='BACKTEST'
+                          AND verification_status NOT LIKE ?""",
+                    (s["strategy_id"], int(s["version"]), f"%{self.INJURY_CONTEXT_NOTE}%")):
+                self.store.amend_bet(
+                    b["bet_id"],
+                    {"verification_status": f"{b['verification_status']};{self.INJURY_CONTEXT_NOTE}"},
+                    reason="injury-sensitive rule replayed without historical injury data; "
+                           "row kept, annotated as not a valid test of the rule")
+                n += 1
+        self.report["reconciled_bets"] = n
+        if n:
+            self.log(f"reconcile: {n} BACKTEST rows annotated '{self.INJURY_CONTEXT_NOTE}'")
+        return n
+
     def stage_analysis(self) -> dict[str, Any]:
         self.report["leaderboard"] = self.perf.leaderboard(test_mode="FORWARD TEST")
         self.report["leaderboard_backtest"] = self.perf.leaderboard(test_mode="BACKTEST")
@@ -769,6 +806,7 @@ class Pipeline:
         self.stage_forward(rows)
         self.stage_settle()
         self.stage_clv()
+        self.stage_reconcile()
         self.stage_analysis()
         self.stage_verify()
         self.store.audit("pipeline", "RUN_ALL", "", json.dumps(self.report.get("competition", {})))

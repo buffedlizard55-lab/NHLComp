@@ -329,10 +329,22 @@ class DiscoveryEngine:
         taken = (priced + unpriced)[:top]
         existing = {r["origin_ref"] for r in self.store.query(
             "SELECT origin_ref FROM strategies WHERE origin_ref IS NOT NULL")}
+        # the same trigger may already exist as a seed strategy (e.g. away_g3_in_4 >= 1 ->
+        # home is NHL_G3IN4); a generated twin would just double-count its wagers
+        seen_rules: set[tuple] = set()
+        for r in self.store.query("SELECT params_json FROM strategies WHERE params_json IS NOT NULL"):
+            try:
+                pj = json.loads(r["params_json"])
+            except (TypeError, ValueError):
+                continue
+            seen_rules.add((pj.get("feature"), pj.get("operator"), float(pj.get("threshold") or 0),
+                            pj.get("bet_side")))
         for i, c in enumerate(taken, start=1):
             ref = f"discovery:{c.key}"
             if ref in existing:
                 continue   # identical trigger already exists as a version; never duplicate
+            if (c.feature, c.operator, float(c.threshold), c.bet_side) in seen_rules:
+                continue   # a seed strategy already tests exactly this rule
             base_id = "NHL_GEN_" + c.feature.replace("+", "_AND_").upper()[:28]
             row = self.store.one(
                 "SELECT MAX(version) AS v FROM strategies WHERE strategy_id=?", (base_id,))

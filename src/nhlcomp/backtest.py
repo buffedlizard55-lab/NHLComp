@@ -276,7 +276,8 @@ class PricedBacktester:
             point: str = "close", persist: bool = True) -> PricedResult | None:
         if not isinstance(strat, ThresholdStrategy):
             return None
-        if getattr(strat, "blocked_reason", None) or strat.use_model == "sportsbook":
+        if getattr(strat, "blocked_reason", None) or strat.use_model == "sportsbook" \
+                or getattr(strat, "injury_sensitive", False):
             return None   # nothing to price: blocked, or needs a feed with no history
         priced = [r for r in rows if r.get("_winner") is not None
                   and r.get(f"mkt_{point}_home_ask") is not None

@@ -535,6 +535,22 @@ def build_seed_strategies() -> list[Strategy]:
                    "UNTESTED: neither the announcement feed nor intraday prices exist here.",
         entry_rule="Blocked: requires the confirmed starter and a pre-announcement price.")
 
+    # v2: the post-game goalie log can identify past starters, but this rule is about the
+    # *announcement* and the price before it -- neither exists in any verified feed -- so
+    # it is blocked outright rather than allowed to replay as a plain model-value bet.
+    add(strategy_id="NHL_GOALIE_NEWS", version=2, username="NHL_GOALIE_NEWS_012",
+        category="goalie_news", name="Market reaction to a goalie announcement (blocked)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home",
+        requires_goalie=True, injury_sensitive=True, min_edge=0.06,
+        blocked_reason="requires a timestamped starting-goalie announcement feed and the "
+                       "Kalshi price immediately before it; neither exists in a verified "
+                       "source, and the post-game goalie log cannot stand in for an "
+                       "announcement time",
+        data_used="NO VERIFIED SOURCE for goalie announcements or announcement timing.",
+        hypothesis="A starter announcement moves the price, and the first mover is paid. "
+                   "UNTESTED and not backtestable with current sources.",
+        entry_rule="Blocked: requires the announcement time and a pre-announcement price.")
+
     add(strategy_id="NHL_LINE_COMBO", username="NHL_LINE_COMBO_013", category="player_lines",
         name="Top-line deployment edge", feature="home_n_prior", operator=">=", threshold=10,
         bet_side="home", requires_lineup=True, min_edge=0.05,
@@ -730,6 +746,18 @@ def build_seed_strategies() -> list[Strategy]:
                   "not treated as authoritative.",
         hypothesis="A game-time-decision injury is not yet priced in. Held for confirmation "
                    "rather than bet on assumption.",
+        entry_rule="Condition met, but any day-to-day injury on either team blocks entry.")
+    # v2: identical rule, FORWARD TEST only.  There is no historical injury feed, so a
+    # replay cannot know whether an injury was pending; v1's BACKTEST rows were written
+    # without that context and are annotated (never deleted) by Pipeline.stage_reconcile.
+    add(strategy_id="NHL_INJURY_IMPACT", version=2, username="NHL_INJURY_IMPACT_021",
+        category="injury", name="Fade the side with an unresolved key injury (forward only)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home",
+        injury_sensitive=True, min_edge=0.05,
+        data_used="site.api.espn.com NHL injuries (verified, current list only; no history) -> "
+                  "FORWARD TEST only. kalshi.trade_api quotes.",
+        hypothesis="A game-time-decision injury is not yet priced in. Held for confirmation "
+                   "rather than bet on assumption. Not backtestable: no historical injury data.",
         entry_rule="Condition met, but any day-to-day injury on either team blocks entry.")
 
     return out
