@@ -180,15 +180,14 @@ def stats_fixtures(http: HttpClient, games, season: int = 20252026):
                 "savePct": round((sa - ga) / sa, 4), "timeOnIce": 3600,
                 "wins": int(gf > ga), "losses": int(gf < ga), "otLosses": 0})
     cay = f"seasonId={season}%20and%20gameTypeId=2"
+    # the real server caps a page at 100 rows and reports ``total`` (observed 2026-09-20)
     for endpoint, rows in (("team/summary", team_rows), ("goalie/summary", goalie_rows)):
         start = 0
-        while True:
-            chunk = rows[start:start + 500]
+        while start < len(rows):
+            chunk = rows[start:start + 100]
             prime(http, f"{STATS_REST}/{endpoint}?isAggregate=false&isGame=true&start={start}"
-                        f"&limit=500&cayenneExp={cay}", {"data": chunk, "total": len(rows)})
-            if len(chunk) < 500:
-                break
-            start += 500
+                        f"&limit=100&cayenneExp={cay}", {"data": chunk, "total": len(rows)})
+            start += 100
     return len(team_rows), len(goalie_rows)
 
 

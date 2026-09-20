@@ -101,7 +101,12 @@ class Pipeline:
         # sportsbook reference odds (DraftKings via NHL partner feed) and EDGE tracking
         self._safe(out, "partner_odds", self.ing.nhl_partner_odds)
         if current:
-            self._safe(out, "edge_snapshots", self.ing.nhl_edge_snapshots, current)
+            n_edge = self._safe(out, "edge_snapshots", self.ing.nhl_edge_snapshots, current)
+            if not n_edge and len(seasons) > 1:
+                # before the first game of a season the EDGE feed has nothing for it;
+                # keep snapshotting the most recent completed season instead
+                prev = sorted(seasons)[-2]
+                self._safe(out, f"edge_snapshots_{prev}", self.ing.nhl_edge_snapshots, prev)
         out["injuries"] = self.ing.espn_injuries()
         if cross_check_abbrevs and seasons:
             out["cross_validation_conflicts"] = self.ing.cross_validate_scoreboard_vs_club(
@@ -207,9 +212,11 @@ class Pipeline:
                 r["p_home_elo"] = round(pe, 5)
                 r["p_away_elo"] = round(1 - pe, 5)
 
-        # fit the tiny logistic model on the training window only, apply out of sample
+        # fit the tiny logistic model on the training window only, apply out of sample.
+        # Split the DECIDED games chronologically: with next season's schedule already
+        # loaded, splitting all rows would put nothing but unplayed games in the test window.
         bt = Backtester(self.store)
-        parts = bt.split(list(rows))
+        parts = bt.split([r for r in rows if r.get("_winner") is not None])
         train = [r for r in parts["train"] if r.get("_winner") is not None
                  and r.get("p_home_elo") is not None]
         feats = ("elo_diff", "rest_diff", "home_only_b2b", "away_only_b2b")

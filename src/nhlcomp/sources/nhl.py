@@ -149,10 +149,21 @@ class NhlStatsRest:
             for row in rows:
                 yield row
             start += len(rows)
+            # The server caps a page at 100 rows whatever ``limit`` says (observed
+            # 2026-09-20: limit=500 returned 100).  Paginate on the reported ``total``;
+            # only fall back to the short-page rule when no total is published.
+            total = payload.get("total")
+            if total is not None:
+                try:
+                    if start >= int(total):
+                        return
+                    continue
+                except (TypeError, ValueError):
+                    pass
             if len(rows) < limit:
                 return
 
-    def team_game_rows(self, season: int, game_type: int = 2, *, limit: int = 500,
+    def team_game_rows(self, season: int, game_type: int = 2, *, limit: int = 100,
                        use_cache: bool = True) -> list[dict]:
         """Per-team per-game summary rows (``team/summary?isGame=true``).
 
@@ -160,14 +171,14 @@ class NhlStatsRest:
         endpoint sorts arbitrarily, so callers key by (gameId, teamId) and never assume order.
         """
         cay = f"seasonId={season}%20and%20gameTypeId={game_type}"
-        return list(self.paged("team/summary", cay, limit=limit, max_pages=40, is_game=True,
+        return list(self.paged("team/summary", cay, limit=limit, max_pages=80, is_game=True,
                                use_cache=use_cache))
 
-    def goalie_game_rows(self, season: int, game_type: int = 2, *, limit: int = 500,
+    def goalie_game_rows(self, season: int, game_type: int = 2, *, limit: int = 100,
                          use_cache: bool = True) -> list[dict]:
         """Per-goalie per-game rows (``goalie/summary?isGame=true``): starts, saves, SA."""
         cay = f"seasonId={season}%20and%20gameTypeId={game_type}"
-        return list(self.paged("goalie/summary", cay, limit=limit, max_pages=40, is_game=True,
+        return list(self.paged("goalie/summary", cay, limit=limit, max_pages=80, is_game=True,
                                use_cache=use_cache))
 
 

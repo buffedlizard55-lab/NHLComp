@@ -146,6 +146,10 @@ class Candidate:
         return f"{self.feature}|{self.operator}|{self.threshold}|{self.bet_side}"
 
 
+def _fmt_roi(v: float | None) -> str:
+    return "n/a" if v is None else f"{v:+.3f}"
+
+
 def _split_rows(rows: Sequence[dict[str, Any]], train_frac: float = 0.6,
                 valid_frac: float = 0.2) -> tuple[list, list, list]:
     """Chronological split.  Rows must already be sorted by time."""
@@ -347,8 +351,8 @@ class DiscoveryEngine:
             d = strat.describe()
             roi_txt = ""
             if c.price_verdict != "unpriced":
-                roi_txt = (f" Priced at the Kalshi close: train ROI {c.train_roi:+.3f} "
-                           f"(n={c.train_priced_n}), validation ROI {c.valid_roi:+.3f} "
+                roi_txt = (f" Priced at the Kalshi close: train ROI {_fmt_roi(c.train_roi)} "
+                           f"(n={c.train_priced_n}), validation ROI {_fmt_roi(c.valid_roi)} "
                            f"(n={c.valid_priced_n}, avg price {c.valid_avg_price}). "
                            f"Verdict: {c.price_verdict}.")
             d["hypothesis"] = (c.rationale + f" Train hit {c.train_hit:.3f} "
@@ -393,8 +397,8 @@ class DiscoveryEngine:
                 title = (f"Beats the base rate but not the price: {c.feature} {c.operator} "
                          f"{c.threshold} ({c.bet_side})")
                 body = (f"Hit-rate lift train {c.train_lift:+.3f} / valid {c.valid_lift:+.3f}, but "
-                        f"buying at the Kalshi closing offer returned {c.train_roi:+.3f} on train "
-                        f"(n={c.train_priced_n}) and {c.valid_roi:+.3f} on validation "
+                        f"buying at the Kalshi closing offer returned {_fmt_roi(c.train_roi)} on train "
+                        f"(n={c.train_priced_n}) and {_fmt_roi(c.valid_roi)} on validation "
                         f"(n={c.valid_priced_n}). The market already prices this situation.")
             else:
                 title = f"No reproducible edge: {c.feature} {c.operator} {c.threshold} ({c.bet_side})"

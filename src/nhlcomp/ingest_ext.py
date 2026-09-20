@@ -209,6 +209,9 @@ class IngestExtensions:
         stats["historical_rows"] = n_hist
         stats["historical_new"] = new_hist
         stats["historical_pages"] = pages
+        stats["unmatched_contracts"] = int(self.store.one(
+            """SELECT COUNT(*) c FROM market_settlements
+                WHERE provider='kalshi' AND series_ticker=? AND game_id IS NULL""", (series,))["c"])
         self.store.commit()
 
         # -- 4. candlesticks -> price points
@@ -217,9 +220,10 @@ class IngestExtensions:
                                                 period_interval=period_interval))
         stats["calls_used"] = self.kalshi.calls - stats["calls_start"]
         self.log(f"kalshi history {series}: cutoff={cutoff} live={n_live} hist={n_hist} "
-                 f"(new {new_hist}) candles ok={stats.get('candles_ok')} "
-                 f"empty={stats.get('candles_empty')} err={stats.get('candles_error')} "
-                 f"pending={stats.get('candles_pending')} calls={stats['calls_used']}")
+                 f"(new {new_hist}, unmatched {stats['unmatched_contracts']}) candles "
+                 f"ok={stats.get('candles_ok')} empty={stats.get('candles_empty')} "
+                 f"err={stats.get('candles_error')} pending={stats.get('candles_pending')} "
+                 f"calls={stats['calls_used']}")
         return stats
 
     def _kalshi_price_points(self, series: str, *, cutoff_ts: int | None, budget: int,
