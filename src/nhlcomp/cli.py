@@ -151,30 +151,43 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="nhlcomp", description=__doc__)
-    p.add_argument("--db", default=DEFAULT_DB)
-    p.add_argument("--cache", default=DEFAULT_CACHE)
-    p.add_argument("--site", default=DEFAULT_SITE)
-    p.add_argument("--offline", action="store_true",
+def _common(*, suppress: bool = False) -> argparse.ArgumentParser:
+    """Global options, accepted both before and after the subcommand.
+
+    ``nhlcomp --db X run`` and ``nhlcomp run --db X`` must mean the same thing.  When the
+    parser is reused as a subparser parent its defaults are SUPPRESSed, otherwise the
+    subparser's own default would silently overwrite a value the top level already parsed.
+    """
+    d = argparse.SUPPRESS if suppress else None
+    c = argparse.ArgumentParser(add_help=False)
+    c.add_argument("--db", default=d if suppress else DEFAULT_DB)
+    c.add_argument("--cache", default=d if suppress else DEFAULT_CACHE)
+    c.add_argument("--site", default=d if suppress else DEFAULT_SITE)
+    c.add_argument("--offline", action="store_true", default=d if suppress else False,
                    help="never touch the network; use only the response cache")
-    p.add_argument("--quiet", action="store_true")
+    c.add_argument("--quiet", action="store_true", default=d if suppress else False)
+    return c
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(prog="nhlcomp", description=__doc__, parents=[_common()])
+    sub_common = _common(suppress=True)
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("init").set_defaults(fn=cmd_init)
-    sub.add_parser("probe").set_defaults(fn=cmd_probe)
+    sub.add_parser("init", parents=[sub_common]).set_defaults(fn=cmd_init)
+    sub.add_parser("probe", parents=[sub_common]).set_defaults(fn=cmd_probe)
 
     for name, fn in (("ingest", cmd_ingest), ("run", cmd_run)):
-        sp = sub.add_parser(name)
+        sp = sub.add_parser(name, parents=[sub_common])
         _ingest_args(sp)
         sp.set_defaults(fn=fn)
     sub.choices["run"].add_argument("--game-types", default="2")
     sub.choices["run"].add_argument("--no-ingest", action="store_true")
     sub.choices["run"].add_argument("--no-prior", action="store_true")
 
-    sub.add_parser("build-site").set_defaults(fn=cmd_build_site)
-    sub.add_parser("verify").set_defaults(fn=cmd_verify)
-    sub.add_parser("report").set_defaults(fn=cmd_report)
+    sub.add_parser("build-site", parents=[sub_common]).set_defaults(fn=cmd_build_site)
+    sub.add_parser("verify", parents=[sub_common]).set_defaults(fn=cmd_verify)
+    sub.add_parser("report", parents=[sub_common]).set_defaults(fn=cmd_report)
 
     args = p.parse_args(argv)
     return args.fn(args)

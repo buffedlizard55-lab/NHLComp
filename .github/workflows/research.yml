@@ -38,11 +38,13 @@ jobs:
           PYTHONPATH=src python -m unittest discover -s tests -v
 
       - name: Probe every registered data source
-        run: PYTHONPATH=src python -m nhlcomp probe --db data/nhlcomp.db | tee data/probe.json
+        run: |
+          set -o pipefail
+          PYTHONPATH=src python -m nhlcomp probe --db data/nhlcomp.db | tee data/probe.json
 
       - name: Ingest live data
         run: |
-          set -e
+          set -eo pipefail
           CLUBS=ANA,BOS,BUF,CGY,CAR,CHI,CBJ,COL,DAL,DET,EDM,FLA,LAK,MIN,MTL,NSH,NJD,OTT,PHI,PIT,SEA,SJS,STL,TBL,TOR,UTA,VAN,VGK,WSH,WPG,NYI,NYR
           PYTHONPATH=src python -m nhlcomp ingest \
             --db data/nhlcomp.db \
@@ -54,6 +56,7 @@ jobs:
 
       - name: Full pipeline (models, discovery, backtest, forward, settlement, verify)
         run: |
+          set -eo pipefail
           PYTHONPATH=src python -m nhlcomp run \
             --db data/nhlcomp.db \
             --no-ingest \
@@ -62,10 +65,14 @@ jobs:
             2>&1 | tee data/run.log
 
       - name: Verify (irregularity queue)
-        run: PYTHONPATH=src python -m nhlcomp verify --db data/nhlcomp.db | tee data/verify.json
+        run: |
+          set -o pipefail
+          PYTHONPATH=src python -m nhlcomp verify --db data/nhlcomp.db | tee data/verify.json
 
       - name: Report
-        run: PYTHONPATH=src python -m nhlcomp report --db data/nhlcomp.db | tee data/report.txt
+        run: |
+          set -o pipefail
+          PYTHONPATH=src python -m nhlcomp report --db data/nhlcomp.db | tee data/report.txt
 
       - name: Build the GitHub Pages site from the ledger
         continue-on-error: true
