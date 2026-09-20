@@ -1,0 +1,4 @@
+usage: nhlcomp [-h] [--db DB] [--cache CACHE] [--site SITE] [--offline]
+               [--quiet]
+               {init,probe,ingest,run,build-site,verify,report} ...
+nhlcomp: error: unrecognized arguments: --db data/nhlcomp.db --site docs
