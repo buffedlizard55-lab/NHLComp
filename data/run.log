@@ -1,4 +1,15 @@
-usage: nhlcomp [-h] [--db DB] [--cache CACHE] [--site SITE] [--offline]
-               [--quiet]
-               {init,probe,ingest,run,build-site,verify,report} ...
-nhlcomp: error: unrecognized arguments: --db data/nhlcomp.db
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/__main__.py", line 4, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/cli.py", line 193, in main
+    return args.fn(args)
+           ^^^^^^^^^^^^^
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/cli.py", line 114, in cmd_run
+    report = pipe.run_all(**kw)
+             ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/pipeline.py", line 443, in run_all
+    self.stage_ingest(**kw.get("ingest", {}))
+TypeError: Pipeline.stage_ingest() missing 3 required keyword-only arguments: 'seasons', 'scoreboard_days', and 'club_abbrevs'
