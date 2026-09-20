@@ -182,16 +182,34 @@ jobs:
             done
           fi
 
-      - name: Configure Pages
-        if: github.ref == 'refs/heads/main'
-        uses: actions/configure-pages@v5
-
       - name: Upload Pages artifact
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: docs
 
+  # Pages deployment lives in its own job because actions/deploy-pages requires the job to
+  # declare the github-pages environment (the previous single-job layout failed with
+  # "Missing environment").  configure-pages with enablement switches the site from the
+  # legacy branch build (which served the README) to the Actions artifact built from docs/.
+  deploy-pages:
+    if: github.ref == 'refs/heads/main'
+    needs: test-and-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure Pages (Actions build type)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - name: Deploy to GitHub Pages
-        if: github.ref == 'refs/heads/main'
+        id: deployment
         uses: actions/deploy-pages@v4
