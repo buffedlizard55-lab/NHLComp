@@ -8,6 +8,12 @@
 [ingest] kalshi.settled_markets: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=3&status=settled
 [ingest] espn.nhl_api: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries
 [ingest] openmeteo.archive: reachable (200) https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-73.99&current=temperature_2m
+[ingest] teams: 62 franchise rows from api.nhle.com/stats/rest/en/team
+[ingest] standings: 32 team rows as of 2025-04-17
+[ingest] standings: 32 team rows as of 2026-04-17
+[ingest] standings: 0 team rows as of ?
+[ingest] club schedule ANA 20242025: 88 games (88 new, 0 updated)
+[ingest] club schedule BOS 20242025: 89 games (87 new, 2 updated)
 Traceback (most recent call last):
   File "<frozen runpy>", line 198, in _run_module_as_main
   File "<frozen runpy>", line 88, in _run_code
@@ -20,12 +26,14 @@ Traceback (most recent call last):
   File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/cli.py", line 92, in cmd_ingest
     out = pipe.stage_ingest(
           ^^^^^^^^^^^^^^^^^^
-  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/pipeline.py", line 48, in stage_ingest
-    out["teams"] = self.ing.teams()
-                   ^^^^^^^^^^^^^^^^
-  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/ingest.py", line 75, in teams
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/pipeline.py", line 57, in stage_ingest
+    self.ing.club_season(ab, season)
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/ingest.py", line 186, in club_season
+    ins, upd = self._insert_games(games, "nhl.api_web")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/ingest.py", line 138, in _insert_games
     self.store.execute(
-  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/store.py", line 528, in execute
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/store.py", line 533, in execute
     return self.conn.execute(sql, tuple(params))
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-sqlite3.IntegrityError: UNIQUE constraint failed: teams.abbrev
+sqlite3.IntegrityError: FOREIGN KEY constraint failed
