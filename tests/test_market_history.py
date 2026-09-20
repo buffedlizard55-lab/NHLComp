@@ -507,11 +507,30 @@ class TestHistoryToBacktest(unittest.TestCase):
             audit = self.store.query("SELECT * FROM bet_audit WHERE bet_id=? AND action='AMEND'", (b["bet_id"],))
             self.assertTrue(audit)
 
-    def test_07_verification_is_clean(self):
+    def test_07_verification_is_clean_and_cross_validates_sources(self):
         v = self.pipe.stage_verify()
         self.assertEqual(v["bets"]["bad_pnl"], 0)
         self.assertEqual(v["bets"]["duplicate_bet"], 0)
         self.assertEqual(v["bets"]["impossible_odds"], 0)
+        cv = v["cross_validation"]
+        self.assertEqual(cv["team_game_rows_compared"], 480)
+        self.assertEqual(cv["score_conflicts"], 0)
+        self.assertEqual(cv["settlement_conflicts"], 0)
+        # a planted disagreement is recorded with both values, not resolved
+        self.store.execute("UPDATE team_game_stats SET gf = gf + 1 WHERE game_id=? AND home_road='H'",
+                           (self.games[3]["game_id"],))
+        self.store.execute("UPDATE market_settlements SET result = CASE result WHEN 'yes' THEN 'no' ELSE 'yes' END "
+                           "WHERE contract LIKE ? ", (f"%{ABBREVS[self.games[4]['home'] - 1]}",))
+        self.store.commit()
+        cv = self.pipe.stage_verify()["cross_validation"]
+        self.assertEqual(cv["score_conflicts"], 1)
+        self.assertGreaterEqual(cv["settlement_conflicts"], 1)
+        irr = self.store.query("SELECT * FROM irregularities WHERE kind='conflicting_source'")
+        self.assertTrue(any("stats REST team/summary says" in r["detail"] for r in irr))
+        self.assertTrue(all(r["status"] == "open" for r in irr))
+        # the schedule row itself was not touched
+        g = self.store.one("SELECT home_score FROM games WHERE game_id=?", (self.games[3]["game_id"],))
+        self.assertEqual(g["home_score"], self.games[3]["hs"])
 
     def test_08_hydrated_market_strategy_keeps_flat_staking(self):
         row = self.store.one("SELECT * FROM strategies WHERE strategy_id='NHL_STEAM_FOLLOW'")

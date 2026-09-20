@@ -213,11 +213,59 @@ class Verifier:
         return conflicts
 
     # ------------------------------------------------------------------ report
+    def cross_validate_stats_vs_schedule(self) -> dict[str, int]:
+        """Second-source check of every final score: the stats REST per-game team line
+        (goalsFor / goalsAgainst, one row per team) against the schedule feed's score.
+        Both are NHL first-party feeds but different systems; a disagreement is recorded with
+        both values and left for review -- never resolved by picking one."""
+        compared = conflicts = 0
+        for r in self.store.query(
+                """SELECT g.game_id, g.home_score, g.away_score, t.team_id, t.gf, t.ga, t.home_road
+                     FROM team_game_stats t JOIN games g ON g.game_id = t.game_id
+                    WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL
+                      AND t.gf IS NOT NULL AND t.ga IS NOT NULL"""):
+            compared += 1
+            is_home = (r["home_road"] == "H")
+            exp_gf, exp_ga = ((r["home_score"], r["away_score"]) if is_home
+                              else (r["away_score"], r["home_score"]))
+            if (int(r["gf"]), int(r["ga"])) != (int(exp_gf), int(exp_ga)):
+                conflicts += 1
+                self.store.flag(
+                    "conflicting_source",
+                    f"game {r['game_id']} team {r['team_id']}: schedule says GF {exp_gf} / GA {exp_ga}, "
+                    f"stats REST team/summary says GF {r['gf']} / GA {r['ga']}",
+                    entity_type="game", entity_id=str(r["game_id"]), severity="error",
+                    sources="nhl.api_web|nhl.stats_rest_game")
+        # settlement results vs the schedule winner: Kalshi 'yes' must be the actual winner
+        settle_conf = 0
+        for r in self.store.query(
+                """SELECT ms.contract, ms.result, ms.team_abbrev, g.game_id, g.home_id, g.away_id,
+                          g.home_score, g.away_score
+                     FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
+                    WHERE ms.provider='kalshi' AND ms.result IN ('yes','no') AND ms.team_abbrev IS NOT NULL
+                      AND g.home_score IS NOT NULL AND g.away_score IS NOT NULL
+                      AND g.home_score <> g.away_score"""):
+            tid = self.store.team_id_for(r["team_abbrev"])
+            if tid not in (r["home_id"], r["away_id"]):
+                continue
+            team_won = (r["home_score"] > r["away_score"]) == (tid == r["home_id"])
+            if team_won != (r["result"] == "yes"):
+                settle_conf += 1
+                self.store.flag(
+                    "conflicting_source",
+                    f"contract {r['contract']} settled {r['result']} for {r['team_abbrev']} but the NHL "
+                    f"score is {r['home_score']}-{r['away_score']} (game {r['game_id']})",
+                    entity_type="quote", entity_id=r["contract"], severity="critical",
+                    sources="kalshi.historical|nhl.api_web")
+        return {"team_game_rows_compared": compared, "score_conflicts": conflicts,
+                "settlement_conflicts": settle_conf}
+
     def run_all(self) -> dict[str, Any]:
         summary = {}
         summary["games"] = self.check_games()
         summary["bets"] = self.check_bets()
         summary["quotes"] = self.check_quotes()
+        summary["cross_validation"] = self.cross_validate_stats_vs_schedule()
         summary["open_irregularities"] = self.store.one(
             "SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"]
         self.store.audit("verifier", "RUN_ALL", "", json.dumps(summary))
