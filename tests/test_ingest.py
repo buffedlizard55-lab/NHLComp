@@ -219,6 +219,38 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(by_id["kalshi.candles"].status, "rejected")
         self.assertIn("404", by_id["kalshi.candles"].known_limits)
 
+    def test_seeding_with_a_probe_satisfies_the_foreign_key(self):
+        """Regression: the verification row was inserted before the registry row existed,
+        which raised IntegrityError on any real probe run."""
+        fd, path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        s = Store(path)
+        probes = {spec.source_id: (200, "reachable", "HTTP 200")
+                  for spec in SOURCES if spec.probe_urls}
+        n = seed_registry(s, verified_probe=probes)
+        self.assertEqual(n, len(SOURCES))
+        ver = s.query("SELECT * FROM source_verification")
+        self.assertEqual(len(ver), len(probes))
+        # a reachable source that is not already rejected becomes verified
+        statuses = {r["source_id"]: r["status"] for r in
+                    s.query("SELECT source_id, status FROM source_registry")}
+        self.assertEqual(statuses["nhl.api_web"], "verified")
+        # ...but a rejected source stays rejected even if the probe somehow succeeds
+        self.assertEqual(statuses["kalshi.candles"], "rejected")
+        s.close()
+
+    def test_unreachable_probe_does_not_promote_a_source(self):
+        fd, path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        s = Store(path)
+        seed_registry(s, verified_probe={"nhl.api_web": (None, "unreachable", "DNS failure")})
+        row = s.one("SELECT status FROM source_registry WHERE source_id='nhl.api_web'")
+        self.assertNotEqual(row["status"], "verified")
+        v = s.one("SELECT ok, verdict FROM source_verification")
+        self.assertEqual(v["ok"], 0)
+        self.assertEqual(v["verdict"], "unreachable")
+        s.close()
+
     def test_seeding_without_a_probe_does_not_claim_verified(self):
         fd, path = tempfile.mkstemp(suffix=".db")
         os.close(fd)

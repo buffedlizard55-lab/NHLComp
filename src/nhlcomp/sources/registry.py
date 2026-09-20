@@ -429,21 +429,16 @@ def seed_registry(store: Store, *, verified_probe: dict[str, tuple[int | None, s
         d["api_available"] = int(spec.api_available)
         d["first_seen_at"] = now
         status = spec.status
-        if spec.source_id in verified_probe:
-            http_status, verdict, evidence = verified_probe[spec.source_id]
-            store.execute(
-                """INSERT INTO source_verification
-                   (source_id, checked_at, method, url_probed, http_status, ok, evidence, verdict, notes)
-                   VALUES(?,?,?,?,?,?,?,?,?)""",
-                (spec.source_id, now, "http_get", spec.probe_urls[0] if spec.probe_urls else spec.url,
-                 http_status, 1 if verdict == "reachable" else 0, evidence, verdict,
-                 "automated probe"),
-            )
+        probed = spec.source_id in verified_probe
+        if probed:
+            _http_status, verdict, _evidence = verified_probe[spec.source_id]
             if verdict == "reachable" and spec.status != "rejected":
                 status = "verified"
         d["status"] = status
-        d["last_verified_at"] = now if spec.source_id in verified_probe else None
+        d["last_verified_at"] = now if probed else None
         cols = [c for c in d if c != "probe_urls"]
+        # the registry row must exist BEFORE the verification row: source_verification has a
+        # foreign key onto it, and seeding the probe first raises IntegrityError.
         store.execute(
             f"""INSERT INTO source_registry({','.join(cols)})
                 VALUES({','.join('?' * len(cols))})
@@ -451,6 +446,17 @@ def seed_registry(store: Store, *, verified_probe: dict[str, tuple[int | None, s
                   {','.join(f'{c}=excluded.{c}' for c in cols if c != 'source_id')}""",
             tuple(d[c] for c in cols),
         )
+        if probed:
+            http_status, verdict, evidence = verified_probe[spec.source_id]
+            store.execute(
+                """INSERT INTO source_verification
+                   (source_id, checked_at, method, url_probed, http_status, ok, evidence, verdict, notes)
+                   VALUES(?,?,?,?,?,?,?,?,?)""",
+                (spec.source_id, now, "http_get",
+                 spec.probe_urls[0] if spec.probe_urls else spec.url,
+                 http_status, 1 if verdict == "reachable" else 0, evidence, verdict,
+                 "automated probe"),
+            )
         n += 1
     store.commit()
     return n
