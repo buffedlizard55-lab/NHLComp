@@ -78,7 +78,8 @@ class TestCliModuleRuns(unittest.TestCase):
         r1 = self._run("init", "--db", path)
         self.assertEqual(r1.returncode, 0, r1.stderr)
         self.assertIn(path, r1.stdout)
-        self.assertIn("13 sources registered", r1.stdout)
+        from nhlcomp.sources.registry import SOURCES
+        self.assertIn(f"{len(SOURCES)} sources registered", r1.stdout)
         r2 = self._run("report", "--db", path)
         self.assertEqual(r2.returncode, 0, r2.stderr)
         self.assertIn("competition status", r2.stdout)

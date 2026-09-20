@@ -173,7 +173,7 @@ def _table(id_: str, headers: Sequence[str], rows: Sequence[Sequence[str]],
 
 # --------------------------------------------------------------------- pages
 def page_dashboard(store: Store, perf: Performance, gen: str) -> str:
-    tot = perf.competition_totals()
+    tot = perf.competition_totals(test_mode="FORWARD TEST")
     irr = store.one("SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"]
     src_ok = store.one("SELECT COUNT(*) c FROM source_registry WHERE status='verified'")["c"]
     src_all = store.one("SELECT COUNT(*) c FROM source_registry")["c"]
@@ -188,22 +188,100 @@ def page_dashboard(store: Store, perf: Performance, gen: str) -> str:
         ("Open irregularities", f'<span class="{"warn" if irr else ""}">{irr}</span>'),
     ]
     body = ["<h2>Competition dashboard</h2>",
+            '<p class="small">The headline numbers are <b>FORWARD TEST</b> only: paper bets opened '
+            'against a live Kalshi quote before puck drop. Backtests are shown separately below and '
+            'never added in.</p>',
             '<div class="cards">' + "".join(
                 f'<div class="card"><div class="k">{e(k)}</div>'
                 f'<div class="v">{v}</div></div>' for k, v in cards) + "</div>"]
+
+    # BACKTEST and FORWARD TEST are never merged: show them side by side
+    modes = []
+    for mode in ("BACKTEST", "FORWARD TEST"):
+        r = store.one(
+            """SELECT COUNT(*) c, SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN 1 ELSE 0 END) settled,
+                      SUM(CASE WHEN result='OPEN' THEN 1 ELSE 0 END) open_n,
+                      COALESCE(SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN pnl END),0) pnl,
+                      COALESCE(SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN stake END),0) staked,
+                      COALESCE(SUM(fee),0) fees,
+                      SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) wins
+                 FROM bets WHERE test_mode=?""", (mode,))
+        settled = int(r["settled"] or 0)
+        modes.append([e(mode), str(r["c"]), str(settled), str(r["open_n"] or 0),
+                      signed(r["pnl"]), n(r["staked"]), pct((r["pnl"] / r["staked"]) if r["staked"] else None),
+                      pct((r["wins"] / settled) if settled else None), n(r["fees"])])
+    body.append("<h2>Backtest vs forward test (never merged)</h2>")
+    body.append(_table("modes", ["Mode", "Bets", "Settled", "Open", "P&L", "Staked", "ROI",
+                                 "Win rate", "Fees paid"], modes, numeric=(1, 2, 3, 4, 5, 6, 7, 8)))
+    body.append('<p class="small">BACKTEST rows are priced from the recovered Kalshi candle at '
+                'or before puck drop (or, for a few early rows, an undocumented pre-settlement '
+                'quote — see the verification column). FORWARD TEST rows were opened against a '
+                'live quote before the game and settle from the official result. Kalshi\'s '
+                'published taker fee is deducted from both.</p>')
+
+    # how much real price history backs the backtests
+    cov = store.one(
+        """SELECT COUNT(*) contracts,
+                  SUM(CASE WHEN candles_state='ok' THEN 1 ELSE 0 END) with_close,
+                  SUM(CASE WHEN game_id IS NULL THEN 1 ELSE 0 END) unmatched,
+                  MIN(game_date) first_game, MAX(game_date) last_game
+             FROM market_settlements WHERE provider='kalshi' AND result IN ('yes','no')""")
+    games_priced = store.one(
+        "SELECT COUNT(DISTINCT game_id) c FROM market_price_points WHERE point='close' "
+        "AND game_id IS NOT NULL")["c"]
+    pts = store.one("SELECT COUNT(*) c FROM market_price_points")["c"]
+    stats = store.one("SELECT COUNT(*) c, COUNT(DISTINCT game_id) g FROM team_game_stats")
+    goalies = store.one("SELECT COUNT(*) c, COUNT(DISTINCT game_id) g FROM goalie_game_stats")
+    odds = store.one("SELECT COUNT(*) c, COUNT(DISTINCT game_id) g FROM odds_snapshots")
+    edge = store.one("SELECT COUNT(*) c, COUNT(DISTINCT substr(retrieved_at,1,10)) d FROM edge_team_snapshots")
+    cards2 = [
+        ("Settled Kalshi contracts", cov["contracts"] or 0),
+        ("… with a pre-game candle", cov["with_close"] or 0),
+        ("Games with a closing price", games_priced),
+        ("Price points stored", pts),
+        ("Contract window", f'{e(cov["first_game"] or "—")} → {e(cov["last_game"] or "—")}'),
+        ("Team-game stat rows", f'{stats["c"]} ({stats["g"]} games)'),
+        ("Goalie-game rows", f'{goalies["c"]} ({goalies["g"]} games)'),
+        ("Sportsbook odds snapshots", f'{odds["c"]} ({odds["g"]} games)'),
+        ("EDGE team snapshots", f'{edge["c"]} ({edge["d"]} days)'),
+    ]
+    body.append("<h2>Data behind the tests</h2>")
+    body.append('<div class="cards">' + "".join(
+        f'<div class="card"><div class="k">{e(k)}</div><div class="v" style="font-size:18px">{v}</div></div>'
+        for k, v in cards2) + "</div>")
+    mb = store.one("SELECT evidence FROM findings WHERE finding_id='FIND_MARKET_BASELINE'")
+    if mb:
+        try:
+            base = json.loads(mb["evidence"])
+            rows = [[e(side), str(v.get("n")), pct(v.get("roi")), n(v.get("avg_price"), 3),
+                     pct(v.get("hit"))] for side, v in base.items()]
+            body.append("<h3>Market baseline (buy every contract at the close, net of fees)</h3>")
+            body.append(_table("mb", ["Side", "Games", "ROI", "Avg price", "Hit rate"], rows,
+                               numeric=(1, 2, 3, 4)))
+            body.append('<p class="small">A priced strategy has to beat this number, not zero: it '
+                        'is what the spread and the taker fee cost a blind buyer.</p>')
+        except (ValueError, TypeError):
+            pass
 
     body.append('<div class="note">This is a <b>paper-trading research competition</b>. No real '
                 'money is wagered and no order-placement code exists in this repository. Prices '
                 'come from the Kalshi public market-data API and results from the NHL API.</div>')
 
-    top = perf.leaderboard()[:10]
-    rows = [[str(r["rank"]), e(r["username"]), e(r["category"]), str(r["n_settled"]),
-             signed(r["pnl"]), pct(r["roi"]), pct(r["win_rate"]),
-             f'{pct(r["win_rate_ci"][0], 1)}–{pct(r["win_rate_ci"][1], 1)}',
-             n(r["max_drawdown"]), str(r["open"])] for r in top]
-    body.append("<h2>Top strategies</h2>")
-    body.append(_table("lb", ["#", "Username", "Category", "Settled", "P&L", "ROI", "Win rate",
-                              "Win-rate 95% CI", "Max DD", "Open"], rows, numeric=(0, 3, 4, 5, 6, 8, 9)))
+    for mode, title in (("FORWARD TEST", "Top strategies — forward test (live paper trading)"),
+                        ("BACKTEST", "Top strategies — backtest (Kalshi closing candles)")):
+        top = [r for r in perf.leaderboard(test_mode=mode) if r["n_settled"]][:10]
+        rows = [[str(i), e(r["username"]), e(r["category"]), str(r["n_settled"]),
+                 signed(r["pnl"]), pct(r["roi"]), pct(r["win_rate"]),
+                 f'{pct(r["win_rate_ci"][0], 1)}–{pct(r["win_rate_ci"][1], 1)}',
+                 n(r["max_drawdown"]), str(r["open"])] for i, r in enumerate(top, 1)]
+        body.append(f"<h2>{e(title)}</h2>")
+        if rows:
+            body.append(_table(f"lb_{mode[:4].lower()}", ["#", "Username", "Category", "Settled", "P&L",
+                                                            "ROI", "Win rate", "Win-rate 95% CI",
+                                                            "Max DD", "Open"], rows,
+                               numeric=(0, 3, 4, 5, 6, 8, 9)))
+        else:
+            body.append('<p class="small">No settled wagers in this mode yet.</p>')
 
     mc = store.one("SELECT body, evidence FROM findings WHERE finding_id='FIND_MODEL_COMPARE'")
     if mc:
@@ -230,46 +308,60 @@ def page_dashboard(store: Store, perf: Performance, gen: str) -> str:
                      f'{e(s["status"])}</span>',
                      e(s["known_limits"])[:400]])
     body.append(_table("srcs", ["Source", "Name", "Status", "Known limits"], rows))
-    body.append('<div class="note caveat"><b>Why some sections show no profit history:</b> '
-                'Kalshi does not document the timestamp behind its <code>previous_*</code> price '
-                'fields and its candle endpoint returned 404, so no precisely-timestamped '
-                'historical price series exists. Bets built from settled-contract prices are '
-                'labelled BACKTEST with '
-                '<code>verification_status=single_source_timing_unverified</code>; everything '
-                'else is FORWARD TEST and settles as games finish.</div>')
+    body.append('<div class="note caveat"><b>How to read the P&amp;L:</b> BACKTEST rows use the '
+                'Kalshi candlestick history (<code>verification_status=kalshi_candle_close</code>: '
+                'entry at the last hourly candle ending at or before the scheduled start, with '
+                'its timestamp). A handful of early rows were priced from Kalshi\'s undocumented '
+                '<code>previous_yes_ask</code> and remain labelled '
+                '<code>single_source_timing_unverified</code>; they are never relabelled. '
+                'FORWARD TEST rows are opened only against a live quote and settle from the '
+                'official NHL result. No sportsbook history exists in this system, so nothing '
+                'is backtested against sportsbook odds; the DraftKings line from the NHL partner '
+                'feed is recorded as a reference for forward signals only.</div>')
     return _page("Dashboard", "index.html", "".join(body), gen)
 
 
 def page_leaderboard(store: Store, perf: Performance, gen: str) -> str:
-    rows_data = perf.leaderboard()
-    cats = sorted({r["category"] for r in rows_data})
     body = ["<h2>Leaderboard</h2>",
-            '<div class="controls"><input id="q" placeholder="filter by username or category…" '
-            'oninput="filterTable(\'lb\', this.value)">',
-            '<select onchange="filterCategory(this.value)"><option value="">all categories</option>'
-            + "".join(f'<option value="{e(c)}">{e(c)}</option>' for c in cats) + "</select></div>",
-            '<p class="small">Win rate is always paired with its 95% Wilson interval — a 3-bet '
-            'sample proves nothing. Click any header to sort; click a username for its wagers.</p>']
-    rows = []
-    for r in rows_data:
-        rows.append([str(r["rank"]),
-                     f'<a href="strategies.html#{e(r["strategy_id"])}">{e(r["username"])}</a>',
-                     e(r["category"]), e(r["status"]), str(r["n_bets"]), str(r["n_settled"]),
-                     str(r["wins"]), str(r["losses"]), str(r["pushes"]), str(r["open"]),
-                     signed(r["pnl"]), n(r["staked"]), pct(r["roi"]), pct(r["win_rate"]),
-                     f'{pct(r["win_rate_ci"][0], 1)}–{pct(r["win_rate_ci"][1], 1)}',
-                     n(r["avg_price"], 3), n(r["avg_edge"], 4), n(r["max_drawdown"]),
-                     n(r["volatility"]), str(r["longest_losing_streak"]),
-                     pct(r["clv_beat_close"]), n(r["clv_avg"], 4), str(r["n_clv"]),
-                     n(r["starting_bankroll"], 0), n(r["bankroll"])])
-    body.append(_table("lb", ["#", "Username", "Category", "Status", "Bets", "Settled", "W", "L",
-                              "Push", "Open", "P&L", "Staked", "ROI", "Win rate", "95% CI",
-                              "Avg price", "Avg edge", "Max DD", "Volatility", "Worst streak",
-                              "Beat close", "Avg CLV", "n CLV", "Start bank", "Bankroll"],
-                       rows, numeric=tuple(i for i in range(25) if i not in (1, 2, 3))))
+            '<p class="small">Two boards, never merged. <b>Forward test</b> is the competition: '
+            'paper bets opened against a live Kalshi quote before puck drop, settled from the '
+            'official result. <b>Backtest</b> is the same rules replayed against the recovered '
+            'Kalshi closing candles (flat historical evidence, not live performance). Win rate is '
+            'always paired with its 95% Wilson interval — a 3-bet sample proves nothing. Click any '
+            'header to sort; click a username for its wagers.</p>']
+    for mode, tid, title in (("FORWARD TEST", "lb", "Forward test (live paper trading)"),
+                             ("BACKTEST", "lbb", "Backtest (Kalshi closing candles, net of fees)")):
+        rows_data = perf.leaderboard(test_mode=mode)
+        cats = sorted({r["category"] for r in rows_data})
+        body.append(f"<h2>{e(title)}</h2>")
+        body.append(f'<div class="controls"><input placeholder="filter by username or category…" '
+                    f'oninput="filterTable(\'{tid}\', this.value)">'
+                    f'<select onchange="filterCategory(\'{tid}\', this.value)">'
+                    f'<option value="">all categories</option>'
+                    + "".join(f'<option value="{e(c)}">{e(c)}</option>' for c in cats) + "</select></div>")
+        rows = []
+        for r in rows_data:
+            rows.append([str(r["rank"]),
+                         f'<a href="strategies.html#{e(r["strategy_id"])}">{e(r["username"])}</a>',
+                         e(r["category"]), e(r["status"]), str(r["n_bets"]), str(r["n_settled"]),
+                         str(r["wins"]), str(r["losses"]), str(r["pushes"]), str(r["open"]),
+                         signed(r["pnl"]), n(r["staked"]), pct(r["roi"]), pct(r["win_rate"]),
+                         f'{pct(r["win_rate_ci"][0], 1)}–{pct(r["win_rate_ci"][1], 1)}',
+                         n(r["avg_price"], 3), n(r["avg_edge"], 4), n(r["max_drawdown"]),
+                         n(r["volatility"]), str(r["longest_losing_streak"]),
+                         pct(r["clv_beat_close"]), n(r["clv_avg"], 4), str(r["n_clv"]),
+                         n(r["starting_bankroll"], 0), n(r["bankroll"])])
+        body.append(_table(tid, ["#", "Username", "Category", "Status", "Bets", "Settled", "W", "L",
+                                 "Push", "Open", "P&L", "Staked", "ROI", "Win rate", "95% CI",
+                                 "Avg price", "Avg edge", "Max DD", "Volatility", "Worst streak",
+                                 "Beat close", "Avg CLV", "n CLV", "Start bank", "Bankroll"],
+                           rows, numeric=tuple(i for i in range(25) if i not in (1, 2, 3))))
+        if mode == "BACKTEST":
+            body.append('<p class="small">Backtest bankroll columns are informational: BACKTEST '
+                        'P&amp;L never funds a forward stake.</p>')
     body.append("""<script>
-function filterCategory(v){
-  const t=document.getElementById('lb');
+function filterCategory(id, v){
+  const t=document.getElementById(id);
   for(const r of t.tBodies[0].rows)
     r.style.display = (!v || r.cells[2].textContent===v)?'':'none';
 }
@@ -311,15 +403,33 @@ ROI {pct(b.get('roi'))}</td></tr>
 </tbody></table>""")
         bt = store.query("SELECT * FROM backtests WHERE strategy_id=? AND version=?",
                          (s["strategy_id"], s["version"]))
-        if bt:
+        acc = [x for x in bt if not (x["label"] or "").startswith("priced")]
+        priced = [x for x in bt if (x["label"] or "").startswith("priced")]
+        if acc:
             rows = [[e(x["label"]), str(x["n_bets"]), str(x["n_wins"]), str(x["n_losses"]),
                      pct(_ratio(x["n_wins"], x["n_bets"])), e(x["test_from"]), e(x["test_to"]),
                      e("yes" if x["data_sufficient"] else "no"), e(x["caveat"])[:300]]
-                    for x in bt]
-            parts.append("<h2 style='font-size:13px'>Accuracy backtest (no price data)</h2>")
+                    for x in acc]
+            parts.append("<h2 style='font-size:13px'>Accuracy backtest (all decided games, no prices)</h2>")
             parts.append(_table(f"bt_{key}", ["Window", "N", "W", "L", "Hit rate", "From", "To",
                                               "Price data OK?", "Caveat"], rows,
                                 numeric=(1, 2, 3, 4)))
+        if priced:
+            order = {"priced_all": 0, "priced_train": 1, "priced_valid": 2, "priced_test": 3}
+            priced.sort(key=lambda x: order.get(x["label"], 9))
+            rows = [[e(x["label"]), str(x["n_games"] or 0), str(x["n_bets"]), pct(x["hit_rate"]),
+                     pct(x["base_rate"]), n(x["avg_price"], 3), n(x["avg_edge"], 4),
+                     signed(x["pnl"]), pct(x["roi"]), n(x["max_drawdown"]), n(x["sharpe"], 2),
+                     e(x["test_from"]), e(x["test_to"]), e(x["price_basis"])] for x in priced]
+            parts.append("<h2 style='font-size:13px'>Priced backtest (Kalshi closing candle, "
+                         "flat 1-unit stakes, net of taker fee)</h2>")
+            parts.append(_table(f"pbt_{key}", ["Window", "Priced games", "Bets", "Hit rate",
+                                               "Base rate", "Avg price", "Avg edge", "P&L (units)",
+                                               "ROI", "Max DD", "Sharpe", "From", "To", "Price basis"],
+                                rows, numeric=(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)))
+            parts.append('<p class="small">train / valid / test are consecutive chronological '
+                         'windows. A rule is only interesting if the sign of the ROI survives '
+                         'out of sample; the Research Lab lists the market baseline it must beat.</p>')
         parts.append("<h2 style='font-size:13px'>Wagers</h2>")
         total_bets = store.one(
             "SELECT COUNT(*) c FROM bets WHERE strategy_id=? AND strategy_version=?",
@@ -347,13 +457,23 @@ def _bets_table(id_: str, bets: Sequence[Any]) -> str:
     for b in bets:
         rows.append([e(b["bet_id"])[:52], e(b["test_mode"]), e(b["game_date"]), e(b["matchup"]),
                      e(b["market"]), e(b["selection"]), e(b["provider"]), n(b["price"], 3),
-                     n(b["model_prob"], 4), n(b["edge"], 4), n(b["stake"]), n(b["filled_size"], 2),
-                     n(b["liquidity"], 0), e(b["result"]), signed(b["pnl"]), pct(b["roi"]),
-                     n(b["clv"], 4), e(b["verification_status"]), e(b["bet_ts"])])
+                     e(_col(b, "price_point") or ""), n(b["model_prob"], 4), n(b["edge"], 4),
+                     n(b["stake"]), n(b["filled_size"], 2), n(b["liquidity"], 0),
+                     n(_col(b, "fee"), 2), e(b["result"]), signed(b["pnl"]), pct(b["roi"]),
+                     n(b["close_price"], 3), n(b["clv"], 4), e(b["verification_status"]),
+                     e(b["decision_ts"])[:19], e(b["bet_ts"])])
     return _table(id_, ["Bet ID", "Mode", "Game", "Matchup", "Market", "Selection", "Provider",
-                        "Price", "Model p", "Edge", "Stake", "Contracts", "Liquidity", "Result",
-                        "P&L", "ROI", "CLV", "Verification", "Placed"], rows,
-                  numeric=(7, 8, 9, 10, 11, 12, 14, 15, 16))
+                        "Price", "Price point", "Model p", "Edge", "Stake", "Contracts", "Liquidity",
+                        "Fee", "Result", "P&L", "ROI", "Close", "CLV", "Verification",
+                        "Decision ts", "Placed"], rows,
+                  numeric=(7, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19))
+
+
+def _col(row: Any, name: str) -> Any:
+    try:
+        return row[name]
+    except (IndexError, KeyError):
+        return None
 
 
 def page_upcoming(store: Store, gen: str) -> str:
@@ -572,7 +692,8 @@ def page_verification(store: Store, gen: str) -> str:
 
 
 def page_methodology(store: Store, gen: str) -> str:
-    tot = Performance(store).competition_totals()
+    tot = Performance(store).competition_totals(test_mode="FORWARD TEST")
+    tot_b = Performance(store).competition_totals(test_mode="BACKTEST")
     body = f"""
 <h2>Methodology</h2>
 <div class="note">This is a paper-trading research competition. <b>No real money is wagered and
@@ -592,26 +713,70 @@ season's points percentage — never the current season's final standings.</p>
 
 <h2>3. Backtest versus forward test</h2>
 <p>The distinction is never blurred. A run is labelled <b>BACKTEST</b> only when the price it used
-was genuinely quoted in the past. Because Kalshi's candle endpoint returned HTTP 404 and its
-<code>previous_*</code> fields have no documented timestamp, price-based backtests carry
-<code>verification_status=single_source_timing_unverified</code>. Everything priced from a live
-quote is <b>FORWARD TEST</b> and settles later.</p>
-<p>Where no price feed exists at all, the backtest reports <i>predictive accuracy only</i> —
-hit rate, lift over base rate, log loss and Brier score — and stores
-<code>data_sufficient=0</code> with this caveat:</p>
+was genuinely quoted in the past <i>with a timestamp</i>. Kalshi publishes hourly candlesticks for
+every contract (live tier for recent contracts, <code>/historical</code> tier for contracts settled
+before the cutoff); the <b>closing price</b> used here is the last hourly candle ending at or before
+the NHL scheduled start, and the <code>open</code>, <code>T-24h</code>, <code>T-6h</code> and
+<code>T-1h</code> candles give line movement. Such rows carry
+<code>verification_status=kalshi_candle_close</code>. A few early rows were priced from Kalshi's
+undocumented <code>previous_yes_ask</code> before the candle history was recovered; they keep the
+label <code>single_source_timing_unverified</code> permanently. Everything priced from a live quote
+is <b>FORWARD TEST</b> and settles later from the official NHL result. No sportsbook history exists
+in this system, so no backtest is ever claimed against sportsbook odds.</p>
+<p>Two backtests are reported per strategy and never combined: an <i>accuracy</i> backtest on every
+decided game (hit rate, lift over base rate, log loss, Brier; <code>data_sufficient=0</code>, no
+P&amp;L) and a <i>priced</i> backtest on the games whose Kalshi closing candle was recovered (flat
+1-unit stakes at the offer, net of the exchange fee, on the whole window and on chronological
+train / validation / test splits). The accuracy backtest carries this caveat:</p>
 <div class="note caveat">{e(CAVEAT_NO_PRICE)}</div>
+
+<h2>3a. Data labels</h2>
+<ul>
+<li><b>SOURCE DATA</b> — NHL schedule/results, stats REST per-game team and goalie lines, Kalshi
+quotes, settlements and candlesticks, the NHL partner-feed (DraftKings) odds, EDGE snapshots.</li>
+<li><b>DERIVED</b> — every feature (rest days, rolling PP%/PK%, shot share, PDO, starter save
+percentage, line movement, vig), every price point picked from a candle, every P&amp;L figure.</li>
+<li><b>MODEL OUTPUT</b> — Poisson / Elo / logistic probabilities and any edge computed from them;
+also any third-party model number (e.g. xG) should one ever be ingested.</li>
+<li><b>ASSUMPTION</b> — recorded where used: the post-game goalie log identifies the starter for a
+<i>past</i> game (starters are announced pre-game, but this system did not observe the announcement);
+the fee model is Kalshi's published general schedule (M = 1 for KXNHLGAME); no slippage beyond the
+single quoted level.</li>
+<li><b>UNVERIFIED</b> — anything flagged in the Verification queue, and every strategy still
+carrying a <code>blocked_reason</code>.</li>
+</ul>
 
 <h2>4. Execution model</h2>
 <p>Buys happen at the <b>offer</b>, never the mid. Size is capped by the quoted
 <code>yes_ask_size_fp</code>; if the desired stake needs more contracts than are offered the order
 is partially filled and the remainder is recorded as unfilled. A missing or zero-size offer means
 no bet. Slippage is stored as 0 because only one book level is available — that is a limitation of
-the data, recorded rather than papered over.</p>
+the data, recorded rather than papered over. <b>Fees:</b> Kalshi's general taker fee,
+<code>round up(0.07 × C × P × (1 − P))</code> per the fee schedule effective 2026-07-07
+(KXNHLGAME is not on the non-standard list, so the multiplier is 1), is charged on every simulated
+fill and deducted from the settled P&amp;L; the fee is stored on each bet row.</p>
 
-<h2>5. Staking</h2>
-<p>Fractional Kelly, capped, with open exposure reserved from the bankroll so a strategy cannot
-over-commit. Aggressive staking is permitted by design — the drawdown, volatility and
-losing-streak columns exist so the risk is visible, not so it is suppressed.</p>
+<h2>5. Staking and bankrolls</h2>
+<p>Model-based strategies use fractional Kelly, capped, with open exposure reserved from the
+bankroll so a strategy cannot over-commit. Market-structure rules (no model of their own) stake a
+flat fraction. Each strategy version has its own virtual bankroll; <b>only FORWARD TEST results move
+it</b> — BACKTEST P&amp;L is reported separately and never funds a forward stake. Aggressive staking is
+permitted by design — the drawdown, volatility and losing-streak columns exist so the risk is
+visible, not so it is suppressed.</p>
+
+<h2>5a. Strategy versions and lifecycle</h2>
+<p>A strategy is identified by <code>(strategy_id, version)</code>. Changing a rule creates a new
+version; the old one is set to <code>retired</code> with the reason, and its bets stay in the
+ledger. Lifecycle states: candidate → active → paused / retired / rejected, each transition logged
+in <code>strategy_lifecycle</code> with evidence. Blocked categories (no verified input yet) are
+registered with an explicit <code>blocked_reason</code> and stay in
+<code>WAITING FOR OTHER INFORMATION</code> rather than betting on an assumption.</p>
+
+<h2>5b. Sportsbook reference</h2>
+<p>The NHL partner feed publishes DraftKings moneylines for the current slate. They are stored as
+published (American odds), de-vigged proportionally, and attached to forward signals as a
+<i>reference</i> — Kalshi remains the execution venue. Because the feed has no history, the
+book-vs-exchange strategy is forward-test only and says so.</p>
 
 <h2>6. Statistics</h2>
 <p>Win rate is always shown with a 95% Wilson interval and a sample size. The discovery engine
@@ -626,20 +791,30 @@ ASSUMPTION or UNVERIFIED. Bets are append-only; corrections go through
 <code>amend_bet</code>, which writes a before/after audit row.</p>
 
 <h2>8. Current state</h2>
-<p>{tot['strategies']} strategies · {tot['bets']} simulated bets · {tot['settled']} settled ·
-{tot['open']} open · P&amp;L {n(tot['pnl'])} · ROI {pct(tot['roi'])}.</p>
+<p>{tot['strategies']} strategies. FORWARD TEST: {tot['bets']} simulated bets · {tot['settled']}
+settled · {tot['open']} open · P&amp;L {n(tot['pnl'])} · ROI {pct(tot['roi'])}. BACKTEST (reported
+separately, never merged): {tot_b['bets']} priced wagers · P&amp;L {n(tot_b['pnl'])} · ROI
+{pct(tot_b['roi'])}.</p>
 
 <h2>9. Known limitations</h2>
 <ul>
-<li>No verified historical sportsbook odds. Closing-line value is measured against Kalshi only.</li>
+<li>No verified historical sportsbook odds. Closing-line value is measured against the Kalshi
+closing candle only; the DraftKings reference exists only from the day collection started.</li>
+<li>The Kalshi closing candle is hourly: "close" means the last candle ending at or before the
+scheduled start, so it may include trades from the final minutes before puck drop. Kalshi's NHL
+books are thin outside the playoffs; the candle's <code>yes_ask</code> is a price, not a
+guarantee of size, and the fee model assumes the general schedule.</li>
+<li>Starting goalies for <i>upcoming</i> games have no verified pre-game source, so goalie-gated
+strategies forward-test only when a starter becomes known; their backtests rely on the post-game
+log (an explicit ASSUMPTION).</li>
 <li>Arena latitude/longitude is unavailable: the legacy NHL venue host could not be reached, so
 travel is derived from published venue UTC offsets rather than invented coordinates.</li>
-<li>Goalie announcements, line combinations and EDGE tracking are not ingested at scale, so
-goaltending, line-matchup and tracking strategies are hypotheses awaiting forward tests rather
-than tested results.</li>
-<li>Preseason Kalshi markets are thin; several contracts show zero size on both sides and are
-recorded as <code>insufficient_liquidity</code> instead of being traded.</li>
-<li>No intraday price history, so no live/in-game or line-movement backtest is attempted.</li>
+<li>Line combinations, goalie announcements and player props have no verified feed. EDGE tracking
+is snapshotted forward only (season-to-date aggregates, no per-game history).</li>
+<li>Preseason Kalshi markets are thin; contracts with zero size on both sides are recorded as
+<code>insufficient_liquidity</code> instead of being traded.</li>
+<li>In-game candles (60/120 minutes after the start) are stored for research; the pipeline runs on
+a batch schedule and cannot execute during a game, so no in-game bet is simulated.</li>
 </ul>
 """
     return _page("Methodology", "methodology.html", body, gen)
@@ -680,8 +855,10 @@ def build_site(store: Store, outdir: str) -> int:
 
     # JSON mirrors so the data is machine-readable too
     dumps = {
-        "leaderboard.json": perf.leaderboard(),
-        "competition.json": perf.competition_totals(),
+        "leaderboard.json": {"FORWARD TEST": perf.leaderboard(test_mode="FORWARD TEST"),
+                             "BACKTEST": perf.leaderboard(test_mode="BACKTEST")},
+        "competition.json": {"FORWARD TEST": perf.competition_totals(test_mode="FORWARD TEST"),
+                             "BACKTEST": perf.competition_totals(test_mode="BACKTEST")},
         "sources.json": [dict(r) for r in store.query("SELECT * FROM source_registry")],
         "strategies.json": [dict(r) for r in store.query("SELECT * FROM strategies")],
         "bets.json": [dict(r) for r in store.query(

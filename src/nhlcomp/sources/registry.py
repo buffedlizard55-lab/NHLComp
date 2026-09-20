@@ -159,30 +159,101 @@ SOURCES: tuple[SourceSpec, ...] = (
     ),
     SourceSpec(
         source_id="nhl.edge",
-        name="NHL EDGE (puck & player tracking)",
-        url="https://www.nhl.com/stats/edge",
-        data_type="skating speed, skating distance, shot speed, shot location, zone time",
-        nhl_relevance="Tracking metrics for player-prop and speed-based hypotheses",
-        historical_depth="2021-22 onward (tracking rollout)",
-        live_available=True,
-        update_frequency="Live and daily",
+        name="NHL EDGE tracking API (api-web.nhle.com/v1/edge)",
+        url="https://api-web.nhle.com/v1/edge",
+        data_type="team + skater + goalie tracking aggregates: skating distance, speed bursts, "
+                  "shot speed, zone time, top-10 leaderboards",
+        nhl_relevance="Tracking metrics for speed/shot-quality hypotheses (brief 25). Not assumed "
+                      "predictive; snapshotted so a test becomes possible later.",
+        historical_depth="Season-to-date aggregates from 2021-22 (seasonsWithEdgeStats); NO "
+                         "per-game history endpoint found, so only dated snapshots accumulate here",
+        live_available=False,
+        update_frequency="Daily during the season",
         api_available=True,
         auth_required="none",
         cost="free",
         genuinely_free="yes",
-        usage_limits="Exposed through api-web player/team landing payloads rather than a "
-                     "documented standalone API",
+        usage_limits="Undocumented public JSON; treated as rate-sensitive (one call per team per run)",
         licensing="not published",
         provenance="NHL (first party)",
         reliability="medium",
         accuracy="official tracking feed",
-        granularity="per player / per game",
-        automated_access="partial",
-        known_limits="Not every metric is available for every game; coverage varies by arena "
-                     "and season. No historical bulk export.",
-        notes="Accessed via api-web player landing featuredStats; each metric must be checked "
-              "for coverage before use.",
-        probe_urls=("https://www.nhl.com/stats/edge",),
+        granularity="per team / per player, season-to-date",
+        automated_access="yes",
+        known_limits="The HTML page www.nhl.com/stats/edge is NOT reachable as a plain GET (the "
+                     "earlier 'unreachable' verdict probed that page). The JSON API "
+                     "/v1/edge/team-comparison/{teamId}/{season}/{gameType} and "
+                     "/v1/edge/skater-speed-top-10/... returned HTTP 200 on 2026-09-20. Values "
+                     "are season aggregates: a snapshot taken today cannot be used for a game "
+                     "played last month without look-ahead, so EDGE is FORWARD-only until a "
+                     "dated history exists.",
+        notes="Snapshotted into edge_team_snapshots each run (SOURCE DATA, forward-only).",
+        probe_urls=("https://api-web.nhle.com/v1/edge/skater-speed-top-10/F/max/20252026/2",),
+    ),
+    SourceSpec(
+        source_id="nhl.stats_rest_game",
+        name="NHL Stats REST per-game reports (team/summary, goalie/summary with isGame=true)",
+        url="https://api.nhle.com/stats/rest/en",
+        data_type="one row per team-game (PP%, PK%, shots for/against, faceoff%, GF/GA, "
+                  "home/road, opponent) and one row per goalie-game (gamesStarted, saves, "
+                  "shotsAgainst, savePct, TOI, decision)",
+        nhl_relevance="Verified official per-game special-teams, shot-share and goalie logs -> the "
+                      "point-in-time features for the goaltending / special-teams / PDO strategies",
+        historical_depth="Multi-season (seasonId + gameTypeId filters); 2025-26 regular season "
+                         "returned 2,624 team-game rows and 2,768 goalie-game rows",
+        live_available=False,
+        update_frequency="After each game",
+        api_available=True,
+        auth_required="none",
+        cost="free",
+        genuinely_free="yes",
+        usage_limits="limit=100 pages with start offset; ~27 pages per season per report",
+        licensing="not published",
+        provenance="NHL (first party)",
+        reliability="high",
+        accuracy="official game statistics",
+        granularity="per team-game / per goalie-game",
+        automated_access="yes",
+        known_limits="Rows appear only after a game is final, so for UPCOMING games the starter is "
+                     "unknown from this feed (goalie-gated strategies stay WAITING FOR GOALIE). "
+                     "For past games the starter identity is the post-game log: using it as a "
+                     "pre-game feature is an explicit ASSUMPTION (starters are announced at the "
+                     "morning skate) recorded on every such strategy.",
+        notes="Verified 2026-09-20: team/summary?isAggregate=false&isGame=true&cayenneExp="
+              "seasonId=20252026 and gameTypeId=2 -> total 2624; goalie/summary same filter -> "
+              "total 2768, fields gamesStarted/saves/shotsAgainst/savePct/timeOnIce/teamAbbrev.",
+        probe_urls=("https://api.nhle.com/stats/rest/en/goalie/summary?isAggregate=false&isGame=true"
+                    "&limit=1&cayenneExp=seasonId=20252026%20and%20gameTypeId=2",),
+    ),
+    SourceSpec(
+        source_id="nhl.partner_odds",
+        name="NHL partner-game odds feed (DraftKings via api-web)",
+        url="https://api-web.nhle.com/v1/partner-game/US/now",
+        data_type="American-odds moneyline (MONEY_LINE_2_WAY), puck line and total for the current "
+                  "slate, per partner",
+        nhl_relevance="The only verified no-key sportsbook line in this project; used as a "
+                      "REFERENCE price (de-vigged) next to each Kalshi forward signal, never as an "
+                      "execution price",
+        historical_depth="NONE: current slate only; snapshots accumulate from 2026-09-20",
+        live_available=True,
+        update_frequency="Continuous while the slate is open",
+        api_available=True,
+        auth_required="none",
+        cost="free",
+        genuinely_free="yes",
+        usage_limits="Undocumented public JSON; one call per run",
+        licensing="not published (DraftKings odds redistributed by the NHL)",
+        provenance="NHL (first party feed) carrying DraftKings (partnerId 9) prices",
+        reliability="medium",
+        accuracy="as published by the partner at retrieval time",
+        granularity="per game / per market",
+        automated_access="yes",
+        known_limits="No history -> FORWARD TEST only. A sportsbook line is a quote with margin, not "
+                     "a probability; it is de-vigged proportionally before comparison and the raw "
+                     "American odds are stored unchanged.",
+        notes="Verified 2026-09-20: partner-game/US/now returned games with MONEY_LINE_2_WAY, "
+              "PUCK_LINE and OVER_UNDER entries (value = American odds, qualifier = line).",
+        probe_urls=("https://api-web.nhle.com/v1/partner-game/US/now",),
     ),
     # ---------------------------------------------------------- market data
     SourceSpec(
@@ -215,36 +286,71 @@ SOURCES: tuple[SourceSpec, ...] = (
     ),
     SourceSpec(
         source_id="kalshi.candles",
-        name="Kalshi historical candles",
-        url="https://api.elections.kalshi.com/trade-api/v2/series/{series}/markets/{ticker}/candles",
-        data_type="timestamped OHLC price history per contract",
-        nhl_relevance="Would make fully timestamped price-based BACKTESTS possible",
-        historical_depth="n/a",
-        live_available=False,
-        update_frequency="n/a",
-        api_available=False,
+        name="Kalshi candlesticks (live tier)",
+        url="https://api.elections.kalshi.com/trade-api/v2/series/{series}/markets/{ticker}/candlesticks",
+        data_type="timestamped 1/60/1440-minute candles per contract: yes_bid/yes_ask OHLC, trade "
+                  "price OHLC/mean, volume, open interest",
+        nhl_relevance="Makes timestamped price-based BACKTESTS and closing-line value possible: "
+                      "the last pre-game candle is the closing price; earlier candles give the "
+                      "opening and T-24h/T-6h/T-1h lines.",
+        historical_depth="Contracts settled after the historical cutoff (2026-07-22T00:00:00Z); "
+                         "older contracts are served by kalshi.historical",
+        live_available=True,
+        update_frequency="Continuous",
+        api_available=True,
         auth_required="none",
         cost="free",
-        genuinely_free="unknown",
-        usage_limits="n/a",
+        genuinely_free="yes",
+        usage_limits="Public read endpoint; this project paces uncached reads at ~8/s and caps "
+                     "calls per run",
         licensing="Kalshi API terms apply",
         provenance="Kalshi (first party exchange)",
-        reliability="n/a",
-        accuracy="n/a",
-        granularity="n/a",
-        automated_access="no",
-        known_limits="Both documented path shapes returned HTTP 404 'page not found' from the "
-                     "build environment on 2026-09-20 for a known settled contract "
-                     "(KXNHLGAME-26SEP19VGKLA-VGK). Treated as UNAVAILABLE.",
-        notes="REJECTED: verified unavailable. Intraday price history cannot be reconstructed, so "
-              "no intraday line-movement backtest is attempted anywhere in this project.",
+        reliability="high",
+        accuracy="exchange-grade",
+        granularity="per contract, per period",
+        automated_access="yes",
+        known_limits="The endpoint is named 'candlesticks'. The 2026-09-20 probes that returned "
+                     "404 used the path segment 'candles', which does not exist -- that verdict "
+                     "was a wrong-URL error, not an unavailable feed, and is corrected here. "
+                     "Periods with no trades carry only price.previous plus bid/ask OHLC.",
+        notes="Verified 2026-09-20: /series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/"
+              "candlesticks?period_interval=60 returned hourly candles (e.g. end_period_ts "
+              "1789653600 yes_ask close 0.59, yes_bid close 0.51, volume 22.85).",
         probe_urls=("https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/"
-                    "KXNHLGAME-26SEP19VGKLA-VGK/candles?start_ts=1789603200&end_ts=1789905600"
-                    "&period_interval=60",
-                    "https://api.elections.kalshi.com/trade-api/v2/markets/"
-                    "KXNHLGAME-26SEP19VGKLA-VGK/candles?start_ts=1789603200&end_ts=1789905600"
-                    "&period_interval=60"),
-        status="rejected",
+                    "KXNHLGAME-26SEP19VGKLA-VGK/candlesticks?start_ts=1789603200"
+                    "&end_ts=1789905600&period_interval=60",),
+    ),
+    SourceSpec(
+        source_id="kalshi.historical",
+        name="Kalshi historical tier (markets + candlesticks before the cutoff)",
+        url="https://api.elections.kalshi.com/trade-api/v2/historical",
+        data_type="finalized contracts (result, settlement_ts, close_time, volume) and their "
+                  "candlestick history for everything settled before /historical/cutoff",
+        nhl_relevance="The full KXNHLGAME record back through the 2025-26 season (regular season "
+                      "and playoffs) -- the basis for every priced BACKTEST in this project",
+        historical_depth="All KXNHLGAME contracts settled before 2026-07-22T00:00:00Z",
+        live_available=False,
+        update_frequency="Static (contracts migrate here after the cutoff moves)",
+        api_available=True,
+        auth_required="none",
+        cost="free",
+        genuinely_free="yes",
+        usage_limits="Cursor pagination up to 1000 rows/page; no time filter on the market list, "
+                     "so the full series is walked once and resumed via a stored cursor",
+        licensing="Kalshi API terms apply",
+        provenance="Kalshi (first party exchange)",
+        reliability="high",
+        accuracy="exchange-grade",
+        granularity="per contract; candles per period",
+        automated_access="yes",
+        known_limits="Only settled/finalized contracts. Candle timestamps are period ends; the "
+                     "'close' used here is the last 60-minute candle ending at or before the NHL "
+                     "scheduled start, so it can include trades up to puck drop.",
+        notes="Verified 2026-09-20: /historical/cutoff -> 2026-07-22T00:00:00Z; "
+              "/historical/markets?series_ticker=KXNHLGAME&limit=2 -> KXNHLGAME-26JUN14CARVGK-CAR "
+              "result yes, volume_fp 5825067.90; /historical/markets/{ticker}/candlesticks -> "
+              "hourly candles with yes_ask close 0.53 at end_period_ts 1781481600.",
+        probe_urls=("https://api.elections.kalshi.com/trade-api/v2/historical/cutoff",),
     ),
     SourceSpec(
         source_id="kalshi.settled_markets",
@@ -254,7 +360,9 @@ SOURCES: tuple[SourceSpec, ...] = (
                   "and the official result",
         nhl_relevance="The only verified source of real historical NHL prices available to this "
                       "project, and therefore the only legitimate basis for price-based BACKTESTS",
-        historical_depth="As far back as Kalshi has listed NHL game markets",
+        historical_depth="LIVE TIER ONLY: contracts settled after the historical cutoff "
+                         "(12 KXNHLGAME contracts on 2026-09-20; cursor exhausted). Everything "
+                         "older is served by kalshi.historical.",
         live_available=False,
         update_frequency="On settlement",
         api_available=True,
@@ -360,7 +468,7 @@ SOURCES: tuple[SourceSpec, ...] = (
     # ---------------------------------------------------------- analytics communities
     SourceSpec(
         source_id="nst.money_puck_evolved",
-        name="Natural Stat Trick / MoneyPuck / Evolving-Hockey",
+        name="Natural Stat Trick / Evolving-Hockey (HTML)",
         url="https://www.naturalstattrick.com/",
         data_type="xG, high-danger chances, Corsi, Fenwick, zone entries",
         nhl_relevance="Advanced metrics that NHL does not publish in bulk",
@@ -371,19 +479,48 @@ SOURCES: tuple[SourceSpec, ...] = (
         auth_required="none",
         cost="free",
         genuinely_free="freemium",
-        usage_limits="HTML scraping; several sites paywall or rate-limit; terms generally prohibit "
-                     "systematic scraping",
+        usage_limits="HTML only; Evolving-Hockey paywalls most tables; systematic scraping is not "
+                     "permitted by the sites",
         licensing="not published",
         provenance="Third party analytics",
         reliability="medium",
         accuracy="model-derived (xG models differ between providers)",
         granularity="per game / per player",
         automated_access="not permitted without permission",
-        known_limits="REJECTED for automated ingest: no API, scraping conflicts with site terms, "
-                     "and xG is a model output that would be mislabelled as source data.",
+        known_limits="REJECTED for automated ingest: no API and scraping conflicts with site "
+                     "terms. xG would also be a MODEL OUTPUT, not source data.",
         notes="Recorded so the absence is a decision, not an oversight. Revisit only with an "
               "explicit data agreement.",
         status="rejected",
+    ),
+    SourceSpec(
+        source_id="moneypuck.downloads",
+        name="MoneyPuck published data downloads",
+        url="https://moneypuck.com/data.htm",
+        data_type="season/game/player summary CSVs and per-shot files (shots_{year}.zip) with "
+                  "MoneyPuck's xGoal model output, 2007-08 onward",
+        nhl_relevance="Shot-level xG history that could add a shot-quality feature family; a "
+                      "third-party MODEL OUTPUT, so it must be labelled as such",
+        historical_depth="2007-08 through the current season (per data.htm)",
+        live_available=False,
+        update_frequency="Daily during the season",
+        api_available=False,
+        auth_required="none",
+        cost="free",
+        genuinely_free="yes (non-commercial, credit required)",
+        usage_limits="Only the downloads listed on data.htm; MoneyPuck asks that other pages "
+                     "(predictions, betting pages) not be scraped",
+        licensing="Free for non-commercial use with credit to MoneyPuck.com (stated on data.htm)",
+        provenance="Third party (MoneyPuck)",
+        reliability="medium",
+        accuracy="model-derived xG; raw shot events mirror NHL play-by-play",
+        granularity="per shot / per game / per player",
+        automated_access="yes, for the listed files only",
+        known_limits="Not ingested yet: files are large (per-season zips) and every derived feature "
+                     "would be MODEL OUTPUT from a model this project cannot audit. Kept as a "
+                     "candidate rather than rejected, because the published terms permit it.",
+        notes="Terms read 2026-09-20 from data.htm; data dictionaries are linked from that page.",
+        probe_urls=("https://moneypuck.com/data.htm",),
     ),
     SourceSpec(
         source_id="research.public",

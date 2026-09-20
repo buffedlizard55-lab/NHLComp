@@ -13,6 +13,14 @@ from typing import Any, Iterable, Sequence
 from .store import Store, utcnow
 
 
+def _col(row: Any, name: str) -> Any:
+    """Column value or None when an older ledger lacks the column."""
+    try:
+        return row[name]
+    except (IndexError, KeyError):
+        return None
+
+
 class Verifier:
     def __init__(self, store: Store):
         self.store = store
@@ -92,8 +100,10 @@ class Verifier:
                 pnl = float(b["pnl"] or 0)
                 if b["odds_format"] == "binary":
                     contracts = float(b["filled_size"] or 0)
-                    exp_win = contracts * (1 - float(b["entry_price"] or 0))
-                    exp_loss = -contracts * float(b["entry_price"] or 0)
+                    # settled P&L is net of the exchange fee recorded on the row
+                    fee = float(_col(b, "fee") or 0.0)
+                    exp_win = contracts * (1 - float(b["entry_price"] or 0)) - fee
+                    exp_loss = -contracts * float(b["entry_price"] or 0) - fee
                     if not (abs(pnl - exp_win) < 0.01 or abs(pnl - exp_loss) < 0.01):
                         counts["bad_pnl"] += 1
                         self.store.flag("incorrect_pnl",
@@ -203,11 +213,76 @@ class Verifier:
         return conflicts
 
     # ------------------------------------------------------------------ report
+    def cross_validate_stats_vs_schedule(self) -> dict[str, int]:
+        """Second-source check of every final score: the stats REST per-game team line
+        (goalsFor / goalsAgainst, one row per team) against the schedule feed's score.
+        Both are NHL first-party feeds but different systems; a disagreement is recorded with
+        both values and left for review -- never resolved by picking one."""
+        compared = conflicts = so_adjusted = 0
+        for r in self.store.query(
+                """SELECT g.game_id, g.home_score, g.away_score, g.last_period_type, t.team_id, t.gf,
+                          t.ga, t.home_road
+                     FROM team_game_stats t JOIN games g ON g.game_id = t.game_id
+                    WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL
+                      AND t.gf IS NOT NULL AND t.ga IS NOT NULL"""):
+            compared += 1
+            is_home = (r["home_road"] == "H")
+            exp_gf, exp_ga = ((r["home_score"], r["away_score"]) if is_home
+                              else (r["away_score"], r["home_score"]))
+            got = (int(r["gf"]), int(r["ga"]))
+            if got == (int(exp_gf), int(exp_ga)):
+                continue
+            if r["last_period_type"] == "SO":
+                # Definitional difference, verified on the 2024-25 data: the NHL stats REST
+                # team line excludes the shootout-deciding goal (a 2-1 SO win is GF 1 / GA 1),
+                # while the schedule feed credits it.  Consistent once that goal is removed.
+                hs, as_ = int(r["home_score"]), int(r["away_score"])
+                if hs > as_:
+                    hs -= 1
+                else:
+                    as_ -= 1
+                adj = (hs, as_) if is_home else (as_, hs)
+                if got == adj:
+                    so_adjusted += 1
+                    continue
+            conflicts += 1
+            self.store.flag(
+                "conflicting_source",
+                f"game {r['game_id']} team {r['team_id']}: schedule says GF {exp_gf} / GA {exp_ga}, "
+                f"stats REST team/summary says GF {r['gf']} / GA {r['ga']}",
+                entity_type="game", entity_id=str(r["game_id"]), severity="error",
+                sources="nhl.api_web|nhl.stats_rest_game")
+        # settlement results vs the schedule winner: Kalshi 'yes' must be the actual winner
+        settle_conf = 0
+        for r in self.store.query(
+                """SELECT ms.contract, ms.result, ms.team_abbrev, g.game_id, g.home_id, g.away_id,
+                          g.home_score, g.away_score
+                     FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
+                    WHERE ms.provider='kalshi' AND ms.result IN ('yes','no') AND ms.team_abbrev IS NOT NULL
+                      AND g.home_score IS NOT NULL AND g.away_score IS NOT NULL
+                      AND g.home_score <> g.away_score"""):
+            tid = self.store.team_id_for(r["team_abbrev"])
+            if tid not in (r["home_id"], r["away_id"]):
+                continue
+            team_won = (r["home_score"] > r["away_score"]) == (tid == r["home_id"])
+            if team_won != (r["result"] == "yes"):
+                settle_conf += 1
+                self.store.flag(
+                    "conflicting_source",
+                    f"contract {r['contract']} settled {r['result']} for {r['team_abbrev']} but the NHL "
+                    f"score is {r['home_score']}-{r['away_score']} (game {r['game_id']})",
+                    entity_type="quote", entity_id=r["contract"], severity="critical",
+                    sources="kalshi.historical|nhl.api_web")
+        return {"team_game_rows_compared": compared, "score_conflicts": conflicts,
+                "shootout_goal_definition_adjusted": so_adjusted,
+                "settlement_conflicts": settle_conf}
+
     def run_all(self) -> dict[str, Any]:
         summary = {}
         summary["games"] = self.check_games()
         summary["bets"] = self.check_bets()
         summary["quotes"] = self.check_quotes()
+        summary["cross_validation"] = self.cross_validate_stats_vs_schedule()
         summary["open_irregularities"] = self.store.one(
             "SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"]
         self.store.audit("verifier", "RUN_ALL", "", json.dumps(summary))

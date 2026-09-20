@@ -179,5 +179,7 @@ class TestDerivedWinnersAndMigration(unittest.TestCase):
         cols = {r[1] for r in reopened.conn.execute("PRAGMA table_info(injuries)")}
         self.assertIn("position", cols)
         self.assertIn("long_comment", cols)
+        from nhlcomp.store import SCHEMA_VERSION
         self.assertEqual(
-            reopened.one("SELECT value FROM meta WHERE key='schema_version'")["value"], "4")
+            reopened.one("SELECT value FROM meta WHERE key='schema_version'")["value"],
+            str(SCHEMA_VERSION))

@@ -14,7 +14,8 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable, Sequence
 
 from .http import HttpClient, NetworkUnavailable, parse_iso
-from .sources.kalshi import KalshiApi, KalshiApiError, normalize_market
+from .ingest_ext import IngestExtensions
+from .sources.kalshi import KalshiApi, KalshiApiError, normalize_market, parse_event_ticker
 from .sources.nhl import (NhlApi, NhlStatsRest, daterange, normalize_game,
                           parse_scoreboard_games, parse_standings)
 from .sources.registry import SOURCES, probe_urls_for, seed_registry
@@ -34,7 +35,7 @@ def _num(v: object) -> float | None:
         return None
 
 
-class Ingestor:
+class Ingestor(IngestExtensions):
     def __init__(self, store: Store, http: HttpClient, *, verbose: bool = True):
         self.store = store
         self.http = http
@@ -271,9 +272,16 @@ class Ingestor:
         """
         rules = m.get("rules_primary") or ""
         away_name = home_name = None
+        game_date = None
+        parsed = parse_event_ticker(m.get("event_ticker") or "")
+        if parsed and not parsed.get("ambiguous"):
+            # ticker date is the *local* game date Kalshi uses; NHL game_date is also local
+            gid = self._game_by_abbrevs(parsed["game_date"], parsed["away_abbrev"],
+                                        parsed["home_abbrev"])
+            if gid is not None:
+                return gid, (parsed["away_abbrev"], parsed["home_abbrev"])
         mm = re.search(r"the (.+?) vs (.+?) NHL game originally scheduled for "
                        r"([A-Z][a-z]{2}) (\d{1,2}), (\d{4})", rules)
-        game_date = None
         if mm:
             away_name, home_name, mon, d, y = mm.groups()
             game_date = f"{y}-{MONTHS.get(mon.upper(), 0):02d}-{int(d):02d}"
@@ -306,6 +314,25 @@ class Ingestor:
                             entity_type="quote", entity_id=m.get("event_ticker"))
             return None, abbrevs
         return int(g["game_id"]), abbrevs
+
+    def _game_by_abbrevs(self, game_date: str, away: str, home: str) -> int | None:
+        """Exact (date, away, home) lookup with a +/-1 day tolerance for UTC/local drift."""
+        rows = self.store.query(
+            """SELECT g.game_id, g.game_date FROM games g
+                 JOIN teams a ON a.team_id = g.away_id JOIN teams h ON h.team_id = g.home_id
+                WHERE a.abbrev=? AND h.abbrev=? AND g.game_date BETWEEN date(?, '-1 day') AND date(?, '+1 day')
+                ORDER BY ABS(julianday(g.game_date) - julianday(?))""",
+            (away, home, game_date, game_date, game_date))
+        if not rows:
+            rows = self.store.query(
+                """SELECT g.game_id, g.game_date FROM games g
+                     JOIN teams a ON a.team_id = g.away_id JOIN teams h ON h.team_id = g.home_id
+                    WHERE a.abbrev=? AND h.abbrev=? AND g.game_date BETWEEN date(?, '-1 day') AND date(?, '+1 day')
+                    ORDER BY ABS(julianday(g.game_date) - julianday(?))""",
+                (home, away, game_date, game_date, game_date))
+        if len(rows) >= 1 and (len(rows) == 1 or rows[0]["game_date"] == game_date):
+            return int(rows[0]["game_id"])
+        return None
 
     def _team_id_for(self, name: str | None) -> int | None:
         """Resolve a Kalshi place name to a single NHL team_id.

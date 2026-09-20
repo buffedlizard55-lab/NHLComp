@@ -349,10 +349,27 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(by_id["odds.the_odds_api"].status, "rejected")
         self.assertEqual(by_id["nst.money_puck_evolved"].status, "rejected")
 
-    def test_candles_recorded_as_rejected_with_evidence(self):
+    def test_candles_registry_entry_records_the_corrected_path(self):
+        """The 2026-09-20 404s came from probing '/candles'; the endpoint is
+        '/candlesticks'.  The registry must say so rather than keep a wrong rejection."""
         by_id = {s.source_id: s for s in SOURCES}
-        self.assertEqual(by_id["kalshi.candles"].status, "rejected")
-        self.assertIn("404", by_id["kalshi.candles"].known_limits)
+        spec = by_id["kalshi.candles"]
+        self.assertNotEqual(spec.status, "rejected")
+        self.assertIn("candlesticks", spec.url)
+        self.assertIn("404", spec.known_limits)
+        self.assertTrue(all("candlesticks" in u for u in spec.probe_urls))
+        hist = by_id["kalshi.historical"]
+        self.assertIn("/historical", hist.url)
+        self.assertTrue(hist.probe_urls)
+
+    def test_registry_still_rejects_scraping_only_sources(self):
+        by_id = {s.source_id: s for s in SOURCES}
+        self.assertEqual(by_id["nst.money_puck_evolved"].status, "rejected")
+        self.assertEqual(by_id["odds.the_odds_api"].status, "rejected")
+        self.assertEqual(by_id["nhl.legacy_statsapi"].status, "flagged")
+        # MoneyPuck's listed downloads are permitted (non-commercial, credit) -> candidate
+        self.assertEqual(by_id["moneypuck.downloads"].status, "candidate")
+        self.assertIn("credit", by_id["moneypuck.downloads"].licensing.lower())
 
     def test_seeding_with_a_probe_satisfies_the_foreign_key(self):
         """Regression: the verification row was inserted before the registry row existed,
@@ -370,8 +387,16 @@ class TestRegistry(unittest.TestCase):
         statuses = {r["source_id"]: r["status"] for r in
                     s.query("SELECT source_id, status FROM source_registry")}
         self.assertEqual(statuses["nhl.api_web"], "verified")
-        # ...but a rejected source stays rejected even if the probe somehow succeeds
-        self.assertEqual(statuses["kalshi.candles"], "rejected")
+        # ...but a rejected source stays rejected even if a probe somehow succeeds
+        s2 = Store(path)
+        probes_all = {spec.source_id: (200, "reachable", "HTTP 200") for spec in SOURCES}
+        seed_registry(s2, verified_probe=probes_all)
+        statuses = {r["source_id"]: r["status"] for r in
+                    s2.query("SELECT source_id, status FROM source_registry")}
+        for spec in SOURCES:
+            if spec.status == "rejected":
+                self.assertEqual(statuses[spec.source_id], "rejected", spec.source_id)
+        s2.close()
         s.close()
 
     def test_unreachable_probe_does_not_promote_a_source(self):

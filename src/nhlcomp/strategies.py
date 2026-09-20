@@ -22,6 +22,26 @@ STATUSES = (
 )
 
 
+def feature_value(features: dict[str, Any], feature: str) -> float | None:
+    """Resolve a feature name to a number.
+
+    ``a+b`` denotes an interaction: the sum of the two binary flags (2 == both true).  A
+    missing or non-numeric component makes the whole value None -- never 0 -- so that an
+    interaction is not silently treated as "false" when one input was simply unavailable.
+    """
+    parts = feature.split("+") if "+" in feature else [feature]
+    total = 0.0
+    for part in parts:
+        raw = features.get(part)
+        if raw is None:
+            return None
+        try:
+            total += float(raw)
+        except (TypeError, ValueError):
+            return None
+    return total
+
+
 @dataclass
 class Quote:
     provider: str
@@ -115,6 +135,8 @@ class Strategy:
     max_stake_pct = 0.10
     min_edge = 0.03
     min_sample_for_bet = 0
+    stake_mode = "kelly"      # kelly | flat
+    flat_pct = 0.02           # bankroll fraction per bet when stake_mode == "flat"
 
     def __init__(self, **overrides: Any):
         for k, v in overrides.items():
@@ -130,10 +152,12 @@ class Strategy:
         return max(0.0, f) * self.stake_fraction
 
     def size_stake(self, p: float, price: float, bankroll: float, open_exposure: float) -> float:
+        available = max(0.0, bankroll - open_exposure)
+        if getattr(self, "stake_mode", "kelly") == "flat":
+            return round(min(float(self.flat_pct) * bankroll, available), 2)
         f = self.kelly(p, price)
         cap = min(self.max_stake_pct, max(0.0, 0.25))
         f = min(f, cap)
-        available = max(0.0, bankroll - open_exposure)
         return round(min(f * available, available), 2)
 
     def find_quote(self, ctx: DecisionContext, market_type: str, selection: str,
@@ -200,6 +224,15 @@ class ThresholdStrategy(Strategy):
         self.injury_sensitive = bool(injury_sensitive)
         self.min_price = float(min_price)
         self.blocked_reason = blocked_reason
+        if use_model == "market":
+            # a market-following rule has no probability model of its own, so Kelly is
+            # undefined; it stakes a flat fraction and its evidence is the priced backtest.
+            # It also has no "edge" to demand: entry is at the offered price when the
+            # trigger fires.
+            if "stake_mode" not in kw:
+                self.stake_mode = "flat"
+            if "min_edge" not in kw:
+                self.min_edge = 0.0
         self.params = {"feature": feature, "side_feature": side_feature, "operator": operator,
                        "threshold": threshold, "bet_side": bet_side, "market": market,
                        "use_model": use_model, "min_edge": self.min_edge,
@@ -207,7 +240,8 @@ class ThresholdStrategy(Strategy):
                        "requires_lineup": self.requires_lineup,
                        "injury_sensitive": self.injury_sensitive, "min_price": self.min_price,
                        "blocked_reason": self.blocked_reason,
-                       "stake_fraction": self.stake_fraction}
+                       "stake_fraction": self.stake_fraction,
+                       "stake_mode": self.stake_mode, "flat_pct": self.flat_pct}
         self.hypothesis = (f"When {feature} {operator} {threshold} the {bet_side} side wins more "
                            f"often than the market price implies.")
         self.entry_rule = (f"At decision time, compute {feature} from NHL schedule/results only; "
@@ -218,13 +252,9 @@ class ThresholdStrategy(Strategy):
 
     # ------------------------------------------------------------------ logic
     def _passes(self, ctx: DecisionContext) -> tuple[bool, str]:
-        raw = ctx.features.get(self.feature)
-        if raw is None:
+        val = feature_value(ctx.features, self.feature)
+        if val is None:
             return False, f"feature {self.feature} unavailable"
-        try:
-            val = float(raw)
-        except (TypeError, ValueError):
-            return False, f"feature {self.feature} non-numeric"
         ops = {">=": val >= self.threshold, "<=": val <= self.threshold,
                ">": val > self.threshold, "<": val < self.threshold,
                "==": abs(val - self.threshold) < 1e-9}
@@ -232,6 +262,18 @@ class ThresholdStrategy(Strategy):
 
     def _prob(self, ctx: DecisionContext) -> float | None:
         preds = ctx.predictions
+        if self.use_model == "market":
+            # no model: the market's own offer is the reference probability
+            q = self.find_quote(ctx, self.market, self.bet_side, "YES")
+            if q is None:
+                return None
+            return float(q.ask) if q.ask is not None else (float(q.mid) if q.mid is not None else None)
+        if self.use_model == "sportsbook":
+            # de-vigged sportsbook moneyline (DraftKings via the NHL partner feed) as the
+            # reference probability; absent for past games, so this is forward-only
+            key = "p_home_book" if self.bet_side == "home" else "p_away_book"
+            p = preds.get(key)
+            return None if p is None else float(p)
         if self.use_model == "elo":
             key = "p_home_elo" if self.bet_side == "home" else "p_away_elo"
         elif self.use_model == "logistic":
@@ -309,6 +351,17 @@ class ThresholdStrategy(Strategy):
                     supporting={"trigger": detail, "feature": self.feature,
                                 "feature_value": f.get(self.feature)})
         if p is None:
+            if self.use_model == "market":
+                if not ok:
+                    return [Signal(status="WATCHING", blocking_reason=f"condition not met ({detail})", **base)]
+                return [Signal(status="QUALIFIED",
+                               blocking_reason="market-rule strategy: trigger met but no quote "
+                                               "published for this market yet", **base)]
+            if self.use_model == "sportsbook":
+                return [Signal(status="WAITING FOR OTHER INFORMATION",
+                               blocking_reason="no sportsbook reference line for this game: the "
+                                               "NHL partner-odds feed covers the current slate "
+                                               "only, so this rule is forward-test only", **base)]
             return [Signal(status="WAITING FOR OTHER INFORMATION",
                            blocking_reason="no model probability available", **base)]
         if not ok:
@@ -338,7 +391,7 @@ class ThresholdStrategy(Strategy):
                            blocking_reason=f"ask {ask:.2f} below floor {self.min_price:.2f}: the "
                                            f"remaining payoff does not justify the variance",
                            quote=quote, **base)]
-        required = round(p - self.min_edge, 4)
+        required = round(p - (0.0 if self.use_model == "market" else self.min_edge), 4)
         base.update(fair_price=round(ask, 4), required_price=required, quote=quote)
         if ask > required:
             return [Signal(status="PRICE TOO HIGH",
@@ -448,6 +501,29 @@ def build_seed_strategies() -> list[Strategy]:
                    "probability more than the moneyline reflects. UNTESTED: cannot be "
                    "evaluated until confirmed starters are obtainable.",
         entry_rule="Blocked: requires the confirmed starting goalie for both teams.")
+    # v2: the per-game goalie log (api.nhle.com/stats/rest goalie/summary isGame=true) is
+    # verified, so the matchup can be built point-in-time.  Starter identity for PAST games
+    # is the post-game log (ASSUMPTION: public at the morning skate); for UPCOMING games no
+    # verified pre-game starter source exists, so the goalie gate still holds forward.
+    add(strategy_id="NHL_GOALIE_EDGE", version=2, username="NHL_GOALIE_EDGE_011",
+        category="goaltending", name="Goaltending matchup edge (starter SV% last 10 starts)",
+        feature="diff_starter_sv_pct_l10", operator=">=", threshold=0.010, bet_side="home",
+        requires_goalie=True, min_edge=0.04,
+        data_used="api.nhle.com/stats/rest goalie/summary per-game (verified); api-web.nhle.com "
+                  "schedule/results; kalshi candlesticks + quotes.",
+        hypothesis="A home starter whose save percentage over his last 10 starts exceeds the "
+                   "away starter's by a full point is under-priced because the market anchors "
+                   "on team strength. BACKTESTABLE with post-game starter logs; FORWARD gated "
+                   "until a verified pre-game starter source exists.",
+        entry_rule="diff_starter_sv_pct_l10 >= 0.010 with both starters known.")
+    add(strategy_id="NHL_GOALIE_FATIGUE", username="NHL_GOALIE_FATIGUE_022",
+        category="goaltending", name="Fade the goalie on consecutive-night starts",
+        feature="away_starter_b2b", operator=">=", threshold=1, bet_side="home",
+        requires_goalie=True, min_edge=0.04,
+        data_used="api.nhle.com/stats/rest goalie/summary per-game (verified); kalshi prices.",
+        hypothesis="A goalie starting the second night of a back-to-back saves fewer shots than "
+                   "his baseline, and the moneyline prices the team, not the goalie's workload.",
+        entry_rule="Away starter also started the previous night (starter_b2b == 1).")
 
     add(strategy_id="NHL_GOALIE_NEWS", username="NHL_GOALIE_NEWS_012", category="goalie_news",
         name="Market reaction to a goalie announcement", feature="home_n_prior",
@@ -458,6 +534,22 @@ def build_seed_strategies() -> list[Strategy]:
         hypothesis="A starter announcement moves the price, and the first mover is paid. "
                    "UNTESTED: neither the announcement feed nor intraday prices exist here.",
         entry_rule="Blocked: requires the confirmed starter and a pre-announcement price.")
+
+    # v2: the post-game goalie log can identify past starters, but this rule is about the
+    # *announcement* and the price before it -- neither exists in any verified feed -- so
+    # it is blocked outright rather than allowed to replay as a plain model-value bet.
+    add(strategy_id="NHL_GOALIE_NEWS", version=2, username="NHL_GOALIE_NEWS_012",
+        category="goalie_news", name="Market reaction to a goalie announcement (blocked)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home",
+        requires_goalie=True, injury_sensitive=True, min_edge=0.06,
+        blocked_reason="requires a timestamped starting-goalie announcement feed and the "
+                       "Kalshi price immediately before it; neither exists in a verified "
+                       "source, and the post-game goalie log cannot stand in for an "
+                       "announcement time",
+        data_used="NO VERIFIED SOURCE for goalie announcements or announcement timing.",
+        hypothesis="A starter announcement moves the price, and the first mover is paid. "
+                   "UNTESTED and not backtestable with current sources.",
+        entry_rule="Blocked: requires the announcement time and a pre-announcement price.")
 
     add(strategy_id="NHL_LINE_COMBO", username="NHL_LINE_COMBO_013", category="player_lines",
         name="Top-line deployment edge", feature="home_n_prior", operator=">=", threshold=10,
@@ -485,6 +577,29 @@ def build_seed_strategies() -> list[Strategy]:
         data_used="NONE VERIFIED for special teams.",
         hypothesis="A PP/PK differential is predictive beyond goal differential. UNTESTED.",
         entry_rule="Blocked: requires a verified play-by-play or special-teams feed.")
+    # v2: team/summary isGame=true carries PP% / PK% per game, so the block is lifted.
+    add(strategy_id="NHL_SPECIAL_TEAMS", version=2, username="NHL_SPECIAL_TEAMS_015",
+        category="special_teams", name="Special-teams matchup edge (PP vs PK, last 10)",
+        feature="st_edge_home", operator=">=", threshold=0.10, bet_side="home", min_edge=0.04,
+        data_used="api.nhle.com/stats/rest team/summary per-game PP%/PK% (verified); kalshi prices.",
+        hypothesis="When the home power play against the away penalty kill is at least ten "
+                   "points stronger than the reverse matchup, the moneyline under-weights it. "
+                   "Tested, not assumed: the priced backtest decides.",
+        entry_rule="st_edge_home >= 0.10 computed from games strictly before the game date.")
+    add(strategy_id="NHL_SHOT_SHARE", username="NHL_SHOT_SHARE_023", category="shot_quality",
+        name="Shot-share dominance", feature="diff_shot_share_l10", operator=">=",
+        threshold=0.04, bet_side="home", min_edge=0.04,
+        data_used="api.nhle.com/stats/rest team/summary per-game shots for/against (verified).",
+        hypothesis="Shot share is a stabler skill signal than goal differential over ten games; "
+                   "a four-point shot-share gap is under-priced when recent results hid it.",
+        entry_rule="home shot share minus away shot share (last 10) >= 0.04.")
+    add(strategy_id="NHL_PDO_REGRESSION", username="NHL_PDO_REGRESSION_024",
+        category="shot_quality", name="Fade the PDO-inflated visitor", feature="away_pdo_l10",
+        operator=">=", threshold=1.03, bet_side="home", min_edge=0.04,
+        data_used="api.nhle.com/stats/rest team/summary per-game (verified).",
+        hypothesis="A visitor whose shooting + save percentage (PDO) over the last ten games is "
+                   "above 1.03 is riding variance; the market extrapolates the results.",
+        entry_rule="away_pdo_l10 >= 1.03.")
 
     add(strategy_id="NHL_EDGE_TRACKING", username="NHL_EDGE_TRACKING_016",
         category="edge_tracking", name="NHL EDGE tracking variables",
@@ -496,6 +611,21 @@ def build_seed_strategies() -> list[Strategy]:
         hypothesis="Skate distance / shot speed / high-danger chances are predictive. UNTESTED "
                    "and, per the brief, not assumed predictive in advance.",
         entry_rule="Blocked: requires a verified NHL EDGE feed.")
+    # v2: the JSON EDGE API (api-web.nhle.com/v1/edge/team-comparison) IS reachable and is
+    # snapshotted every run, but it is a season-to-date aggregate with no per-game history,
+    # so nothing can be backtested yet.  Blocked until a forward history has accumulated.
+    add(strategy_id="NHL_EDGE_TRACKING", version=2, username="NHL_EDGE_TRACKING_016",
+        category="edge_tracking", name="NHL EDGE tracking variables (snapshot collection)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home", min_edge=0.04,
+        blocked_reason="EDGE team snapshots (skating distance, speed bursts, shot speed, zone "
+                       "time) are collected forward from the verified api-web.nhle.com/v1/edge "
+                       "API, but the feed is season-to-date with no per-game history; no test "
+                       "is possible until enough dated snapshots exist, and predictiveness is "
+                       "not assumed",
+        data_used="api-web.nhle.com/v1/edge/team-comparison (verified JSON; snapshots only).",
+        hypothesis="Skating distance / speed bursts / shot speed are predictive of results "
+                   "beyond the scoreboard. UNTESTED until the snapshot history is long enough.",
+        entry_rule="Blocked: requires a dated EDGE history for point-in-time features.")
 
     add(strategy_id="NHL_WEATHER_OUTDOOR", username="NHL_WEATHER_OUTDOOR_017",
         category="weather_arena", name="Outdoor-game weather effect",
@@ -519,6 +649,19 @@ def build_seed_strategies() -> list[Strategy]:
                   "kalshi.trade_api candles NOT AVAILABLE.",
         hypothesis="Live prices overreact to goals. UNTESTED: no intraday price history.",
         entry_rule="Blocked: requires an intraday price feed.")
+    # v2: candlesticks are available (the endpoint is /candlesticks, not /candles) and the
+    # 60- and 120-minute in-game points are stored for research; but this pipeline runs on
+    # a batch schedule and cannot act during a game, so in-game rules stay research-only.
+    add(strategy_id="NHL_LIVE_INGAME", version=2, username="NHL_LIVE_INGAME_018",
+        category="live_in_game", name="In-game momentum reaction (research only)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home", min_edge=0.06,
+        blocked_reason="intraday Kalshi candlesticks are now ingested (ig60/ig120 points) and "
+                       "can be studied, but the paper-trading loop runs on a batch schedule "
+                       "and cannot observe or act on a price during a game; no in-game bet is "
+                       "simulated because its execution time cannot be honoured",
+        data_used="kalshi candlesticks (verified, 60-minute periods); api-web.nhle.com scoreboard.",
+        hypothesis="Live prices overreact to goals. Research finding only; not tradeable here.",
+        entry_rule="Blocked: batch pipeline cannot execute intraday.")
 
     add(strategy_id="NHL_PERIOD_BET", username="NHL_PERIOD_BET_019", category="period_betting",
         name="Period-specific value", feature="home_n_prior", operator=">=", threshold=10,
@@ -529,6 +672,62 @@ def build_seed_strategies() -> list[Strategy]:
         data_used="kalshi.trade_api KXNHLGAME (game-level only, verified).",
         hypothesis="Period markets are less efficient than game markets. UNTESTED.",
         entry_rule="Blocked: requires a verified period-level market.")
+    # v2: the series listing shows KXNHL1P (first-period) and KXNHLOVERTIME exist on Kalshi.
+    # They are registered in kalshi_series but not priced or modelled here yet.
+    add(strategy_id="NHL_PERIOD_BET", version=2, username="NHL_PERIOD_BET_019",
+        category="period_betting", name="Period-specific value (market found, unmodelled)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home", min_edge=0.05,
+        blocked_reason="Kalshi lists first-period (KXNHL1P) and overtime (KXNHLOVERTIME) series "
+                       "(verified via /series?category=Sports&tags=Hockey), but this system has "
+                       "no period-level model and does not ingest those contracts' prices yet; "
+                       "nothing is bet until both exist",
+        data_used="kalshi series registry (verified); no period-level prices ingested.",
+        hypothesis="Period markets are less efficient than game markets. UNTESTED.",
+        entry_rule="Blocked: requires period-level prices and a period-level model.")
+
+    # -- market-structure rules (priced backtests decide; flat stakes, no model)
+    add(strategy_id="NHL_STEAM_FOLLOW", username="NHL_STEAM_FOLLOW_025", category="market",
+        name="Follow the late move toward the home side", feature="mkt_move6_home",
+        operator=">=", threshold=0.03, bet_side="home", use_model="market",
+        data_used="kalshi candlesticks: T-6h mid vs. closing mid (verified, timestamped).",
+        hypothesis="A three-cent move toward the home side in the last six hours reflects "
+                   "informed order flow ('sharp money' made measurable), and the close still "
+                   "under-reacts. Measured, not assumed: the priced backtest decides.",
+        entry_rule="closing mid minus T-6h mid >= +0.03 for the home contract; buy home at the ask.")
+    add(strategy_id="NHL_STEAM_FADE", username="NHL_STEAM_FADE_026", category="market",
+        name="Fade the late move against the home side", feature="mkt_move6_home",
+        operator="<=", threshold=-0.03, bet_side="home", use_model="market",
+        data_used="kalshi candlesticks: T-6h mid vs. closing mid (verified, timestamped).",
+        hypothesis="The opposite of STEAM_FOLLOW: a late move against the home side overshoots "
+                   "on a thin book and the home contract is cheap at the close. One of the two "
+                   "rules must lose; keeping both makes the test honest.",
+        entry_rule="closing mid minus T-6h mid <= -0.03 for the home contract; buy home at the ask.")
+    add(strategy_id="NHL_HOME_FAV", username="NHL_HOME_FAV_027", category="market",
+        name="Buy home favourites at the close", feature="mkt_close_home_mid", operator=">=",
+        threshold=0.60, bet_side="home", use_model="market",
+        data_used="kalshi candlesticks closing mid (verified).",
+        hypothesis="Favourite-longshot bias: favourites priced at 60c+ win more often than the "
+                   "price implies once the exchange vig is paid. Simple baseline the model rules "
+                   "must beat.",
+        entry_rule="closing home mid >= 0.60; buy home at the ask.")
+    add(strategy_id="NHL_HOME_DOG", username="NHL_HOME_DOG_028", category="market",
+        name="Buy home underdogs at the close", feature="mkt_close_home_mid", operator="<=",
+        threshold=0.42, bet_side="home", use_model="market",
+        data_used="kalshi candlesticks closing mid (verified).",
+        hypothesis="Home underdogs below 42c are over-faded by the public. The mirror image of "
+                   "HOME_FAV; at most one of them can be right about the same prices.",
+        entry_rule="closing home mid <= 0.42; buy home at the ask.")
+    add(strategy_id="NHL_BOOK_VS_EXCHANGE", username="NHL_BOOK_VS_EXCHANGE_029",
+        category="market", name="Exchange cheaper than the de-vigged sportsbook line",
+        feature="home_n_prior", operator=">=", threshold=0, bet_side="home",
+        use_model="sportsbook", min_edge=0.03, stake_mode="flat",
+        data_used="api-web.nhle.com/v1/partner-game (DraftKings moneyline, verified, current "
+                  "slate only); kalshi.trade_api quotes.",
+        hypothesis="When the Kalshi ask is at least three cents below the de-vigged DraftKings "
+                   "probability for the same side, the exchange is slow and the book is the "
+                   "better estimate. FORWARD TEST ONLY: no sportsbook history is available, so "
+                   "no backtest is claimed.",
+        entry_rule="kalshi ask <= devigged DK probability - 0.03; buy home at the ask.")
 
     add(strategy_id="NHL_OT_SURVIVAL", username="NHL_OT_SURVIVAL_020", category="ot_shootout",
         name="Extra-time specialists are underpriced in close games", feature="ot_rate",
@@ -547,6 +746,18 @@ def build_seed_strategies() -> list[Strategy]:
                   "not treated as authoritative.",
         hypothesis="A game-time-decision injury is not yet priced in. Held for confirmation "
                    "rather than bet on assumption.",
+        entry_rule="Condition met, but any day-to-day injury on either team blocks entry.")
+    # v2: identical rule, FORWARD TEST only.  There is no historical injury feed, so a
+    # replay cannot know whether an injury was pending; v1's BACKTEST rows were written
+    # without that context and are annotated (never deleted) by Pipeline.stage_reconcile.
+    add(strategy_id="NHL_INJURY_IMPACT", version=2, username="NHL_INJURY_IMPACT_021",
+        category="injury", name="Fade the side with an unresolved key injury (forward only)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home",
+        injury_sensitive=True, min_edge=0.05,
+        data_used="site.api.espn.com NHL injuries (verified, current list only; no history) -> "
+                  "FORWARD TEST only. kalshi.trade_api quotes.",
+        hypothesis="A game-time-decision injury is not yet priced in. Held for confirmation "
+                   "rather than bet on assumption. Not backtestable: no historical injury data.",
         entry_rule="Condition met, but any day-to-day injury on either team blocks entry.")
 
     return out

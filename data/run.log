@@ -1,20 +1,38 @@
 [pipeline] skipping ingest (no ingest config supplied)
 [pipeline] features: 3968 rows, 0 leakage problems
 [pipeline] elo prior from 20242025 standings for 32 teams
-[pipeline] models: {"poisson": {"n": 0, "log_loss": null, "brier": null}, "elo": {"n": 0, "log_loss": null, "brier": null}, "logistic": {"n": 0, "log_loss": null, "brier": null}, "home_ice_constant": {"n": 0, "log_loss": null, "brier": null}}
-[pipeline] strategies: 370 triggers tested, 12 promoted, 30 total
-[pipeline] forward: {'BACKTEST': 13, 'FORWARD TEST': 0}
-[pipeline] verification: {"games": {"missing_start": 0, "missing_result": 0, "tied_final": 0, "impossible_score": 0, "duplicate": 2, "bad_season": 0}, "bets": {"impossible_odds": 0, "missing_timestamp": 0, "bad_pnl": 0, "duplicate_bet": 0, "stake_exceeds_bankroll": 0, "unmapped": 0}, "quotes": {"crossed_book": 0, "impossible_price": 0, "zero_liquidity": 0, "missing_ts": 0}, "open_irregularities": 4}
+[pipeline] models: {"poisson": {"n": 525, "log_loss": 0.68403, "brier": 0.24547}, "elo": {"n": 525, "log_loss": 0.68961, "brier": 0.24705}, "logistic": {"n": 525, "log_loss": 0.68693, "brier": 0.24689}, "home_ice_constant": {"n": 525, "log_loss": 0.69219, "brier": 0.24952}}
+[pipeline] strategies: 690 triggers tested, 0 promoted, 46 total
+[pipeline] backtests: 46 strategies; market baseline {"home": {"n": 1312, "roi": -0.0606, "pnl": -79.5258, "avg_price": 0.5409, "hit": 0.5221, "mdd": 85.2756, "sharpe": -0.063}, "away": {"n": 1312, "roi": -0.018, "pnl": -23.5663, "avg_price": 0.4723, "hit": 0.4779, "mdd": 42.3855, "sharpe": -0.0162}}
+[pipeline] forward: {'BACKTEST': 2, 'FORWARD TEST': 0}
+[pipeline] reconcile: 250 BACKTEST rows annotated 'backtest_without_injury_context'
+[pipeline] verification: {"games": {"missing_start": 0, "missing_result": 0, "tied_final": 0, "impossible_score": 0, "duplicate": 2, "bad_season": 0}, "bets": {"impossible_odds": 0, "missing_timestamp": 0, "bad_pnl": 0, "duplicate_bet": 0, "stake_exceeds_bankroll": 0, "unmapped": 0}, "quotes": {"crossed_book": 0, "impossible_price": 0, "zero_liquidity": 0, "missing_ts": 0}, "cross_validation": {"team_game_rows_compared": 5248, "score_conflicts": 0, "shootout_goal_definition_adjusted": 392, "settlement_conflicts": 0}, "open_irregularities": 4}
 site written to docs
 {
- "strategies": 30,
- "bets": 13,
- "settled": 13,
- "open": 0,
- "wins": 7,
- "losses": 6,
- "pnl": -112.34,
- "staked": 660.94,
- "roi": -0.17,
- "win_rate": 0.5385
+ "FORWARD TEST": {
+  "mode": "FORWARD TEST",
+  "strategies": 46,
+  "bets": 0,
+  "settled": 0,
+  "open": 0,
+  "wins": 0,
+  "losses": 0,
+  "pnl": 0.0,
+  "staked": 0.0,
+  "roi": null,
+  "win_rate": null
+ },
+ "BACKTEST": {
+  "mode": "BACKTEST",
+  "strategies": 46,
+  "bets": 3268,
+  "settled": 3268,
+  "open": 0,
+  "wins": 1575,
+  "losses": 1693,
+  "pnl": 2391.66,
+  "staked": 109769.1,
+  "roi": 0.0218,
+  "win_rate": 0.4819
+ }
 }

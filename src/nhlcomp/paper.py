@@ -10,6 +10,9 @@ Execution model (explicit, because the brief forbids assuming unlimited liquidit
 * Slippage is reported as 0 only because a single book level is all we have; the field is
   kept so a multi-level order book can populate it later.
 * A missing or zero-size offer means **no bet**, recorded as a blocking status.
+* Kalshi's general taker fee (``0.07 x C x P x (1-P)``, fee schedule effective 2026-07-07)
+  is charged on every simulated fill and deducted from the settled P&L, because a paper
+  result that ignores a real, published fee overstates what the strategy earns.
 
 Nothing in this module can place a real order: there is no order-placement code at all.
 """
@@ -21,6 +24,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Sequence
 
+from .market import kalshi_taker_fee
 from .store import Store, utcnow
 from .strategies import DecisionContext, Quote, Signal, Strategy
 
@@ -54,9 +58,20 @@ def simulate_fill(stake: float, ask: float, ask_size: float | None) -> Fill:
                 slippage=0.0, liquidity=liquidity)
 
 
-def binary_settlement(entry_price: float, contracts: float, won: bool) -> float:
-    """A YES contract costs ``entry_price`` and pays 1.00 if it wins."""
-    return round(contracts * (1.0 - entry_price), 4) if won else round(-contracts * entry_price, 4)
+def binary_settlement(entry_price: float, contracts: float, won: bool, *, fee: float = 0.0) -> float:
+    """A YES contract costs ``entry_price`` and pays 1.00 if it wins.  ``fee`` (dollars,
+    already paid at the fill) is deducted from the result in both branches."""
+    gross = contracts * (1.0 - entry_price) if won else -contracts * entry_price
+    return round(gross - float(fee or 0.0), 4)
+
+
+def _fee_of(bet: Any) -> float:
+    """Fee recorded on a bet row (0 for rows written before fees were modelled)."""
+    try:
+        v = bet["fee"]
+    except (KeyError, IndexError):
+        return 0.0
+    return float(v or 0.0)
 
 
 class PaperEngine:
@@ -102,6 +117,7 @@ class PaperEngine:
         fill = simulate_fill(sig.stake, sig.quote.ask, sig.quote.ask_size)
         if fill.contracts_filled <= 0:
             return None
+        fee = kalshi_taker_fee(fill.price, fill.contracts_filled) if provider == "kalshi" else 0.0
         bet_id = f"{sig.strategy_id}-v{sig.version}-{sig.game_id}-{sig.market}-{sig.selection}"
         model_p = sig.model_prob if sig.model_prob == sig.model_prob else None
         row = {
@@ -131,6 +147,7 @@ class PaperEngine:
             "filled_size": fill.contracts_filled,
             "slippage": fill.slippage,
             "entry_price": fill.price,
+            "fee": fee,
             "result": "OPEN",
             "pnl": None,
             "source_url": source_url or (sig.quote.source_url if hasattr(sig.quote, "source_url") else ""),
@@ -138,6 +155,8 @@ class PaperEngine:
             "notes": json.dumps({
                 "contracts_requested": fill.contracts_requested,
                 "unfilled_stake": fill.unfilled_stake,
+                "taker_fee": fee,
+                "fee_basis": "kalshi general taker fee 0.07*C*P*(1-P), schedule eff. 2026-07-07",
                 "bid": sig.quote.bid, "ask": sig.quote.ask,
                 "ask_size": sig.quote.ask_size, "volume": sig.quote.volume,
                 "market_key": sig.quote.market_key, "contract": sig.quote.contract,
@@ -199,7 +218,7 @@ class PaperEngine:
                 continue
             price = float(bet["entry_price"] or bet["price"])
             contracts = float(bet["filled_size"] or (float(bet["stake"]) / price if price else 0))
-            pnl = binary_settlement(price, contracts, won)
+            pnl = binary_settlement(price, contracts, won, fee=_fee_of(bet))
             close = closing.get(bet["selection"])
             close_price = close.ask if close else None
             clv = round(close_price - price, 4) if close_price is not None else None
@@ -212,6 +231,22 @@ class PaperEngine:
             n += 1
         self.store.commit()
         return n
+
+    PENDING_STATUSES = ('WATCHING', 'QUALIFIED', 'READY TO BET', 'PRICE TOO HIGH', 'PRICE TOO LOW',
+                        'WAITING FOR GOALIE', 'WAITING FOR LINEUP', 'WAITING FOR INJURY',
+                        'WAITING FOR OTHER INFORMATION')
+
+    def expire_started(self, now_iso: str) -> int:
+        """A pending signal on a game that has already started can no longer be acted on;
+        mark it EXPIRED (the row stays, with its last status reason, for the record)."""
+        marks = ",".join("?" * len(self.PENDING_STATUSES))
+        cur = self.store.execute(
+            f"""UPDATE upcoming_bets SET status='EXPIRED'
+                 WHERE status IN ({marks})
+                   AND game_id IN (SELECT game_id FROM games WHERE start_time_utc < ?)""",
+            (*self.PENDING_STATUSES, now_iso))
+        self.store.commit()
+        return cur.rowcount
 
     def expire_stale(self, cutoff_ts: str) -> int:
         cur = self.store.execute(

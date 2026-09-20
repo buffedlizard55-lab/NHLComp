@@ -172,15 +172,20 @@ class Performance:
             r["rank"] = i
         return rows
 
-    def competition_totals(self) -> dict[str, Any]:
+    def competition_totals(self, *, test_mode: str | None = None) -> dict[str, Any]:
+        """Aggregate ledger state.  ``test_mode`` restricts to BACKTEST or FORWARD TEST; the
+        default aggregates both and is labelled ``mode='ALL'`` so a reader can tell."""
+        where = " WHERE test_mode=?" if test_mode else ""
+        params = (test_mode,) if test_mode else ()
         rows = self.store.query(
-            """SELECT COALESCE(SUM(pnl),0) pnl, COALESCE(SUM(stake),0) staked, COUNT(*) n,
+            f"""SELECT COALESCE(SUM(pnl),0) pnl, COALESCE(SUM(stake),0) staked, COUNT(*) n,
                       SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) wins,
                       SUM(CASE WHEN result='LOSS' THEN 1 ELSE 0 END) losses,
                       SUM(CASE WHEN result='OPEN' THEN 1 ELSE 0 END) open
-               FROM bets""")[0]
+               FROM bets{where}""", params)[0]
         settled = int(rows["wins"] or 0) + int(rows["losses"] or 0)
         return {
+            "mode": test_mode or "ALL",
             "strategies": len(self.store.latest_versions()),
             "bets": int(rows["n"] or 0), "settled": settled, "open": int(rows["open"] or 0),
             "wins": int(rows["wins"] or 0), "losses": int(rows["losses"] or 0),

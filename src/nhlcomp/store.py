@@ -21,13 +21,31 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Iterable, Iterator
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 # Columns added after their table already shipped.  Applied by Store._migrate so a
 # committed ledger.db from an earlier version gains them without a destructive rebuild.
 ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("injuries", "position", "TEXT"),
     ("injuries", "long_comment", "TEXT"),
+    # schema v5: historical-tier Kalshi contracts carry more identifying detail
+    ("market_settlements", "series_ticker", "TEXT"),
+    ("market_settlements", "tier", "TEXT"),
+    ("market_settlements", "floor_strike", "REAL"),
+    ("market_settlements", "close_time", "TEXT"),
+    ("market_settlements", "title", "TEXT"),
+    ("market_settlements", "occurrence_datetime", "TEXT"),
+    ("market_settlements", "team_abbrev", "TEXT"),
+    ("market_settlements", "market_type", "TEXT"),
+    ("market_settlements", "candles_state", "TEXT"),
+    ("bets", "close_price_ts", "TEXT"),
+    ("bets", "price_point", "TEXT"),
+    ("bets", "fee", "REAL"),                     # exchange taker fee at the fill (dollars)
+    ("backtests", "avg_edge", "REAL"),
+    ("backtests", "hit_rate", "REAL"),
+    ("backtests", "base_rate", "REAL"),
+    ("backtests", "n_games", "INTEGER"),
+    ("backtests", "price_basis", "TEXT"),
 )
 
 SCHEMA = """
@@ -507,6 +525,136 @@ CREATE TABLE IF NOT EXISTS audit_log (
     entity    TEXT,
     detail    TEXT
 );
+
+-- ---------------------------------------------------------------- schema v5
+-- Named price points derived from Kalshi candlesticks (see nhlcomp.market).  One row per
+-- (contract, point); the candle timestamp makes the timing of every price auditable.
+CREATE TABLE IF NOT EXISTS market_price_points (
+    contract        TEXT NOT NULL,
+    point           TEXT NOT NULL,            -- open|t24h|t6h|t1h|close|ig60|ig120|final|latest
+    end_period_ts   INTEGER NOT NULL,         -- unix seconds, end of the candle period
+    game_id         INTEGER,
+    team_abbrev     TEXT,                     -- NHL triCode the YES side refers to (moneyline)
+    series_ticker   TEXT,
+    market_type     TEXT,
+    bid             REAL,
+    ask             REAL,
+    last            REAL,
+    mean            REAL,
+    volume          REAL,
+    open_interest   REAL,
+    period_interval INTEGER NOT NULL DEFAULT 60,
+    tier            TEXT NOT NULL,            -- historical|live
+    retrieved_at    TEXT NOT NULL,
+    source_url      TEXT,
+    provenance      TEXT NOT NULL DEFAULT 'DERIVED',
+    PRIMARY KEY (contract, point)
+);
+CREATE INDEX IF NOT EXISTS idx_mpp_game ON market_price_points(game_id);
+
+-- Kalshi series discovered through /series?category=Sports&tags=Hockey.
+CREATE TABLE IF NOT EXISTS kalshi_series (
+    ticker             TEXT PRIMARY KEY,
+    title              TEXT,
+    category           TEXT,
+    tags               TEXT,
+    fee_type           TEXT,
+    frequency          TEXT,
+    settlement_sources TEXT,
+    contract_terms_url TEXT,
+    first_seen         TEXT NOT NULL,
+    last_seen          TEXT NOT NULL,
+    n_settled_events   INTEGER,
+    earliest_event     TEXT,
+    latest_event       TEXT,
+    history_cursor     TEXT,                  -- resume point for /historical/markets paging
+    history_complete   INTEGER NOT NULL DEFAULT 0
+);
+
+-- Per-team per-game lines from api.nhle.com/stats/rest team/summary?isGame=true.
+CREATE TABLE IF NOT EXISTS team_game_stats (
+    game_id        INTEGER NOT NULL,
+    team_id        INTEGER NOT NULL,
+    game_date      TEXT,
+    home_road      TEXT,
+    opponent_abbrev TEXT,
+    team_name      TEXT,
+    gf REAL, ga REAL, sf REAL, sa REAL,
+    pp_pct REAL, pk_pct REAL, pp_net_pct REAL, pk_net_pct REAL, fo_pct REAL,
+    wins REAL, losses REAL, ot_losses REAL, points REAL, reg_wins REAL, so_wins REAL,
+    season         INTEGER,
+    game_type      INTEGER,
+    source_id      TEXT NOT NULL,
+    retrieved_at   TEXT NOT NULL,
+    provenance     TEXT NOT NULL DEFAULT 'SOURCE',
+    PRIMARY KEY (game_id, team_id)
+);
+CREATE INDEX IF NOT EXISTS idx_tgs_team_date ON team_game_stats(team_id, game_date);
+
+-- Per-goalie per-game lines from api.nhle.com/stats/rest goalie/summary?isGame=true.
+CREATE TABLE IF NOT EXISTS goalie_game_stats (
+    game_id        INTEGER NOT NULL,
+    player_id      INTEGER NOT NULL,
+    goalie_name    TEXT,
+    team_abbrev    TEXT,
+    opponent_abbrev TEXT,
+    home_road      TEXT,
+    game_date      TEXT,
+    started        INTEGER NOT NULL DEFAULT 0,
+    saves REAL, shots_against REAL, goals_against REAL, save_pct REAL, toi_seconds REAL,
+    decision       TEXT,
+    season         INTEGER,
+    game_type      INTEGER,
+    source_id      TEXT NOT NULL,
+    retrieved_at   TEXT NOT NULL,
+    provenance     TEXT NOT NULL DEFAULT 'SOURCE',
+    PRIMARY KEY (game_id, player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_ggs_team_date ON goalie_game_stats(team_abbrev, game_date);
+CREATE INDEX IF NOT EXISTS idx_ggs_player_date ON goalie_game_stats(player_id, game_date);
+
+-- Sportsbook prices published through the NHL's partner odds feed.  Snapshots only:
+-- the feed has no history, so this table *is* the history from the day ingestion began.
+CREATE TABLE IF NOT EXISTS odds_snapshots (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id         INTEGER NOT NULL,
+    partner         TEXT NOT NULL,
+    market_desc     TEXT NOT NULL,            -- MONEY_LINE_2_WAY | PUCK_LINE | OVER_UNDER
+    home_price      REAL,                     -- American odds exactly as published
+    away_price      REAL,
+    home_qualifier  TEXT,
+    away_qualifier  TEXT,
+    home_abbrev     TEXT,
+    away_abbrev     TEXT,
+    start_time_utc  TEXT,
+    source_updated_utc TEXT,
+    retrieved_at    TEXT NOT NULL,
+    source_url      TEXT,
+    provenance      TEXT NOT NULL DEFAULT 'SOURCE',
+    UNIQUE (game_id, partner, market_desc, source_updated_utc)
+);
+CREATE INDEX IF NOT EXISTS idx_odds_game ON odds_snapshots(game_id);
+
+-- NHL EDGE team aggregates.  Season-to-date snapshots (no per-game history), hence
+-- usable as FORWARD-TEST inputs only.
+CREATE TABLE IF NOT EXISTS edge_team_snapshots (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id       INTEGER NOT NULL,
+    season        INTEGER NOT NULL,
+    game_type     INTEGER NOT NULL,
+    retrieved_at  TEXT NOT NULL,
+    games_played  INTEGER,
+    avg_shot_speed REAL,
+    shot_attempts_90_plus REAL,
+    bursts_over_22 REAL,
+    bursts_20_22  REAL,
+    max_skating_speed REAL,
+    distance_last10_avg REAL,
+    payload_json  TEXT NOT NULL,
+    source_url    TEXT,
+    provenance    TEXT NOT NULL DEFAULT 'SOURCE',
+    UNIQUE (team_id, season, game_type, retrieved_at)
+);
 """
 
 
@@ -719,7 +867,8 @@ class Store:
             raise KeyError(f"unknown bet_id {bet_id}")
         if not fields:
             return
-        allowed = {"price", "stake", "result", "pnl", "close_price", "verification_status", "notes"}
+        allowed = {"price", "stake", "result", "pnl", "close_price", "clv", "close_price_ts",
+                   "price_point", "verification_status", "notes"}
         bad = set(fields) - allowed
         if bad:
             raise ValueError(f"fields not amendable without explicit schema change: {sorted(bad)}")
@@ -795,10 +944,13 @@ class Store:
         )
 
     def sync_bankroll(self, strategy_id: str, version: int) -> None:
+        # BACKTEST rows never touch the live bankroll: the brief forbids merging backtest
+        # and forward-test results, and letting recovered historical PnL fund forward
+        # stakes would do exactly that.
         row = self.one(
             """SELECT COALESCE(SUM(pnl),0) AS realized
                FROM bets WHERE strategy_id=? AND strategy_version=? AND result IN
-                 ('WIN','LOSS','PUSH','VOID')""",
+                 ('WIN','LOSS','PUSH','VOID') AND test_mode='FORWARD TEST'""",
             (strategy_id, version),
         )
         s = self.one("SELECT starting_bankroll FROM strategies WHERE strategy_id=? AND version=?",
@@ -810,7 +962,8 @@ class Store:
         # open exposure is reserved from the bankroll so strategies cannot over-commit
         open_exposure = self.one(
             """SELECT COALESCE(SUM(stake),0) AS e FROM bets
-               WHERE strategy_id=? AND strategy_version=? AND result='OPEN'""",
+               WHERE strategy_id=? AND strategy_version=? AND result='OPEN'
+                 AND test_mode='FORWARD TEST'""",
             (strategy_id, version),
         )["e"] or 0.0
         self.execute("UPDATE strategies SET bankroll=? WHERE strategy_id=? AND version=?",
