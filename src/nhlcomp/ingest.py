@@ -258,6 +258,7 @@ class Ingestor:
                           volume=excluded.volume, liquidity=excluded.liquidity,
                           last_price=excluded.last_price, game_id=excluded.game_id""",
                     tuple(row[c] for c in cols))
+                n += 1
         self.store.commit()
         self.log(f"kalshi: {len(markets)} contracts -> {n} quote rows")
         return len(markets)
@@ -289,16 +290,15 @@ class Ingestor:
                     if len(rest) == la + lb:
                         away_name, home_name = rest[:la], rest[lb:]
                         break
+        away_id = self._team_id_for(away_name)
+        home_id = self._team_id_for(home_name)
         abbrevs = (self._abbrev_for(away_name), self._abbrev_for(home_name))
-        if not (game_date and abbrevs[0] and abbrevs[1]):
+        if not (game_date and away_id and home_id):
             return None, abbrevs
         g = self.store.one(
-            """SELECT game_id FROM games WHERE game_date=? AND
-               ((away_id=(SELECT team_id FROM teams WHERE abbrev=?) AND
-                 home_id=(SELECT team_id FROM teams WHERE abbrev=?)) OR
-                (away_id=(SELECT team_id FROM teams WHERE abbrev=?) AND
-                 home_id=(SELECT team_id FROM teams WHERE abbrev=?)))""",
-            (game_date, abbrevs[0], abbrevs[1], abbrevs[1], abbrevs[0]))
+            "SELECT game_id FROM games WHERE game_date=? AND "
+            "((away_id=? AND home_id=?) OR (away_id=? AND home_id=?))",
+            (game_date, away_id, home_id, home_id, away_id))
         if g is None:
             self.store.flag("unmatched_market",
                             f"kalshi {m.get('event_ticker')} could not be matched to an NHL game "
@@ -306,6 +306,28 @@ class Ingestor:
                             entity_type="quote", entity_id=m.get("event_ticker"))
             return None, abbrevs
         return int(g["game_id"]), abbrevs
+
+    def _team_id_for(self, name: str | None) -> int | None:
+        """Resolve a Kalshi place name to a single NHL team_id.
+
+        Goes through Store.team_id_for so a triCode shared by two franchises (Utah Hockey
+        Club / Utah Mammoth are both UTA) resolves to the active one instead of whichever
+        row SQLite happens to return first.
+        """
+        ab = self._abbrev_for(name)
+        if not ab:
+            return None
+        tid = self.store.team_id_for(ab, name if name else None)
+        if tid is not None:
+            return tid
+        rows = self.store.query(
+            "SELECT team_id FROM teams WHERE abbrev=? AND active=1 ORDER BY team_id", (ab,))
+        if len(rows) == 1:
+            return int(rows[0]["team_id"])
+        rows = self.store.query("SELECT team_id FROM teams WHERE abbrev=?", (ab,))
+        if len(rows) == 1:
+            return int(rows[0]["team_id"])
+        return None
 
     def _abbrev_for(self, name: str | None) -> str | None:
         if not name:

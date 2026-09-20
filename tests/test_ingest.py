@@ -288,6 +288,51 @@ class TestSideResolution(unittest.TestCase):
         self.assertIsNone(_side_for_selection(None, g, self.names))
 
 
+class TestAmbiguousFranchiseMatching(unittest.TestCase):
+    """Regression: two franchises share the UTA triCode (59 Utah Hockey Club, 68 Utah
+    Mammoth). Resolving through a bare ``WHERE abbrev=?`` subquery returned whichever row
+    SQLite hit first, so real Kalshi contracts for Utah failed to match their NHL game."""
+
+    def setUp(self):
+        fd, self.dbpath = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        self.store = Store(self.dbpath)
+        self.http = HttpClient(tempfile.mkdtemp())
+        self.ing = Ingestor(self.store, self.http, verbose=False)
+        for tid, name, active in ((59, "Utah Hockey Club", 0), (68, "Utah Mammoth", 1),
+                                  (26, "Los Angeles Kings", 1), (21, "Colorado Avalanche", 1)):
+            ab = "UTA" if tid in (59, 68) else ("LAK" if tid == 26 else "COL")
+            self.store.execute("INSERT INTO teams(team_id, abbrev, full_name, active) "
+                               "VALUES(?,?,?,?)", (tid, ab, name, active))
+        for gid, gd, away, home in ((300, "2026-09-22", 68, 26), (301, "2026-09-20", 68, 21)):
+            self.store.execute(
+                "INSERT INTO games(game_id, season, game_type, game_date, start_time_utc,"
+                " home_id, away_id, state) VALUES(?,20262027,1,?,?,?,?,?)",
+                (gid, gd, f"{gd}T01:00:00Z", home, away, "FUTURE"))
+        self.store.commit()
+
+    def tearDown(self):
+        self.store.close()
+
+    def test_utah_contract_matches_the_active_franchise_game(self):
+        m = {"event_ticker": "KXNHLGAME-26SEP22UTALA",
+             "rules_primary": "If Utah wins the Utah vs Los Angeles NHL game originally "
+                              "scheduled for Sep 22, 2026, then the market resolves to Yes."}
+        gid, abbrevs = self.ing._match_kalshi_game(m)
+        self.assertEqual(abbrevs, ("UTA", "LAK"))
+        self.assertEqual(gid, 300)
+
+    def test_second_utah_contract_also_matches(self):
+        m = {"event_ticker": "KXNHLGAME-26SEP20UTACOL",
+             "rules_primary": "If Utah wins the Utah vs Colorado NHL game originally "
+                              "scheduled for Sep 20, 2026, then the market resolves to Yes."}
+        gid, _ = self.ing._match_kalshi_game(m)
+        self.assertEqual(gid, 301)
+
+    def test_team_id_prefers_the_active_franchise(self):
+        self.assertEqual(self.ing._team_id_for("Utah"), 68)
+
+
 class TestRegistry(unittest.TestCase):
     def test_every_source_declares_the_required_fields(self):
         required = {"source_id", "name", "url", "data_type", "nhl_relevance", "historical_depth",
