@@ -1,33 +1,76 @@
 """Kalshi prediction-market adapter (public market-data endpoints only).
 
-Verified from this repository's build environment on 2026-09-20:
-``GET https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME``
-returned HTTP 200 with live NHL game contracts including ``yes_bid_dollars``,
-``yes_ask_dollars``, ``yes_bid_size_fp``, ``yes_ask_size_fp``, ``volume_fp`` and
-``liquidity_dollars`` -- i.e. real quote depth, which is what the execution model needs.
+What has actually been verified against ``https://api.elections.kalshi.com`` (all reads,
+no authentication):
 
-No authentication is required for the market-data reads used here.  Order placement
-would require credentials and is deliberately NOT implemented: this project is
-paper-trading only.
+* ``GET /trade-api/v2/markets?series_ticker=KXNHLGAME`` -- live NHL game contracts with
+  ``yes_bid_dollars``/``yes_ask_dollars`` and size fields (verified 2026-09-20 from CI).
+* ``GET /trade-api/v2/markets?...&status=settled`` -- **only the most recent** settled
+  contracts.  Kalshi partitions its data into a *live* tier and a *historical* tier; a
+  settled contract older than ``GET /trade-api/v2/historical/cutoff`` disappears from the
+  live listing.  On 2026-09-20 the live listing held just 12 pre-season KXNHLGAME
+  contracts while the historical tier held the whole 2025-26 season.
+* ``GET /trade-api/v2/historical/markets?series_ticker=KXNHLGAME&limit=1000&cursor=...``
+  -- settled contracts older than the cutoff (verified 2026-09-20: returned the 2026
+  Stanley Cup Final contracts with ``result``, ``settlement_ts``, ``close_time``,
+  ``open_time``, ``occurrence_datetime``, ``volume_fp``).  Time filters are ignored on this
+  endpoint; paging is by cursor only.
+* ``GET /trade-api/v2/historical/markets/{ticker}/candlesticks?start_ts&end_ts&period_interval``
+  -- genuine timestamped OHLC price history for historical-tier contracts, at 1-minute and
+  60-minute resolution (verified 2026-09-20 on KXNHLGAME-26JUN14CARVGK-CAR: hourly candles
+  pre-game, minute candles in-game, each with ``price``, ``yes_bid``, ``yes_ask``,
+  ``volume`` and ``open_interest``).
+* ``GET /trade-api/v2/series/{series}/markets/{ticker}/candlesticks?...`` -- same for
+  live-tier contracts, with ``*_dollars``/``*_fp`` field names and *no* ``price.open/close``
+  in periods that had no trades (verified 2026-09-20 on KXNHLGAME-26SEP19VGKLA-VGK).
+* ``GET /trade-api/v2/series?category=Sports&tags=Hockey`` -- lists the hockey series
+  (KXNHLGAME, KXNHLTOTAL, KXNHLSPREAD, KXNHL1P, KXNHLOVERTIME, KXNHL, ... verified 2026-09-20).
+
+The earlier ``.../candles`` path used by this project was simply the wrong resource name
+(the API calls them ``candlesticks``); that is why it 404'd.
+
+Order placement would require credentials and is deliberately NOT implemented: this
+project is paper-trading only.
 """
 
 from __future__ import annotations
 
-from typing import Any
+import re
+import time
+from typing import Any, Callable
 
 from ..http import HttpClient
 
 BASE = "https://api.elections.kalshi.com/trade-api/v2"
+HIST_BASE = f"{BASE}/historical"
 
 # Series tickers that have been observed or are plausible; each is verified at runtime
 # by ``verify_series`` and flagged rather than assumed.
 CANDIDATE_SERIES = [
     "KXNHLGAME",        # observed: per-game NHL winner markets
-    "KXNHL",            # candidate: season-level NHL markets
-    "KXNHLSTANLEYCUP",  # candidate: Stanley Cup futures
-    "KXNHLCONF",        # candidate: conference winners
-    "KXNHLAWARD",       # candidate: individual awards
+    "KXNHLTOTAL",       # observed 2026-09-20: full-game total goals, one contract per strike
+    "KXNHLSPREAD",      # observed 2026-09-20: puck line, one contract per team+strike
+    "KXNHL1P",          # observed in the series list: 1st period winner
+    "KXNHLOVERTIME",    # observed in the series list: game goes to overtime
+    "KXNHL",            # observed: Stanley Cup futures
 ]
+
+#: Kalshi team codes that differ from the NHL triCode.  Everything not listed here is
+#: assumed identical to the NHL abbreviation and is still validated against the teams
+#: table before a contract is attached to a game.
+KALSHI_TEAM_ALIASES = {
+    "LA": "LAK", "NJ": "NJD", "SJ": "SJS", "TB": "TBL", "WAS": "WSH", "MON": "MTL",
+    "CLB": "CBJ", "NAS": "NSH", "VGS": "VGK", "UTAH": "UTA", "ARI": "UTA",
+}
+
+NHL_TRICODES = (
+    "ANA", "BOS", "BUF", "CGY", "CAR", "CHI", "CBJ", "COL", "DAL", "DET", "EDM", "FLA",
+    "LAK", "MIN", "MTL", "NSH", "NJD", "NYI", "NYR", "OTT", "PHI", "PIT", "SEA", "SJS",
+    "STL", "TBL", "TOR", "UTA", "VAN", "VGK", "WSH", "WPG",
+)
+
+_MONTHS = {"JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6, "JUL": 7,
+           "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12}
 
 
 class KalshiApiError(RuntimeError):
@@ -44,25 +87,75 @@ def _f(d: dict, key: str) -> float | None:
         return None
 
 
+def _first(d: dict, *keys: str) -> float | None:
+    """First parseable float among alternative field names (live vs historical schema)."""
+    for k in keys:
+        v = _f(d, k)
+        if v is not None:
+            return v
+    return None
+
+
 class KalshiApi:
     source_id = "kalshi.trade_api"
 
+    #: polite pacing between uncached historical reads; Kalshi's published read limit
+    #: for unauthenticated/basic access is well above this.
+    pace_seconds = 0.12
+
     def __init__(self, http: HttpClient):
         self.http = http
+        self.calls = 0
+
+    # ------------------------------------------------------------ helpers
+    def _get(self, url: str, *, use_cache: bool = True) -> dict:
+        payload = self.http.get(url, use_cache=use_cache).json
+        self.calls += 1
+        if isinstance(payload, dict) and payload.get("error"):
+            raise KalshiApiError(f"GET {url} -> {payload['error']}")
+        if not isinstance(payload, dict):
+            raise KalshiApiError(f"GET {url} -> unexpected payload type {type(payload).__name__}")
+        return payload
 
     # ------------------------------------------------------------ discovery
     def series(self, ticker: str) -> dict | None:
         try:
-            return self.http.get(f"{BASE}/series/{ticker}").json
+            return self._get(f"{BASE}/series/{ticker}")
         except Exception:
             return None
 
-    def events(self, series_ticker: str, *, limit: int = 200, status: str = "active") -> list[dict]:
-        url = f"{BASE}/events?series_ticker={series_ticker}&limit={limit}&status={status}"
+    def series_list(self, *, category: str = "Sports", tags: str = "Hockey") -> list[dict]:
+        """All series in a category/tag.  Verified 2026-09-20: ``?category=Sports&tags=Hockey``
+        returns the NHL series family with ``ticker``, ``title``, ``fee_type``,
+        ``settlement_sources`` and ``contract_terms_url``."""
+        url = f"{BASE}/series?category={category}&tags={tags}"
         try:
-            return self.http.get(url).json.get("events", [])
+            return list(self._get(url).get("series", []))
         except Exception:
             return []
+
+    def events(self, series_ticker: str, *, limit: int = 200, status: str = "open") -> list[dict]:
+        url = f"{BASE}/events?series_ticker={series_ticker}&limit={limit}&status={status}"
+        try:
+            return self._get(url).get("events", [])
+        except Exception:
+            return []
+
+    def events_page(self, series_ticker: str, *, status: str = "settled", limit: int = 200,
+                    cursor: str | None = None, with_nested_markets: bool = False
+                    ) -> tuple[list[dict], str | None]:
+        """One page of events (newest first) and the cursor for the next page.
+
+        Verified 2026-09-20: ``status=settled`` lists the entire KXNHLGAME history back
+        through the 2025-26 season, but ``markets`` is empty for events older than the
+        historical cutoff -- use :meth:`historical_markets` for those.
+        """
+        url = (f"{BASE}/events?series_ticker={series_ticker}&status={status}&limit={limit}"
+               f"&with_nested_markets={'true' if with_nested_markets else 'false'}")
+        if cursor:
+            url += f"&cursor={cursor}"
+        payload = self._get(url)
+        return list(payload.get("events", [])), (payload.get("cursor") or None)
 
     #: Kalshi rejects unknown status values with {"error":{"code":"bad_request",
     #: "details":"invalid status filter"}} -- verified 2026-09-20 for "finalized".
@@ -71,9 +164,9 @@ class KalshiApi:
 
     def markets(self, series_ticker: str, *, limit: int = 200, status: str = "open",
                 cursor: str | None = None, max_pages: int = 5) -> list[dict]:
-        """Fetch contracts.  Raises ``KalshiApiError`` on an API-level error instead of
-        returning an empty list, because an empty list and a rejected request look identical
-        to the caller and would silently understate the market."""
+        """Fetch live-tier contracts.  Raises ``KalshiApiError`` on an API-level error
+        instead of returning an empty list, because an empty list and a rejected request
+        look identical to the caller and would silently understate the market."""
         if status not in self.VALID_STATUSES:
             raise KalshiApiError(f"invalid status filter {status!r}; "
                                  f"expected one of {self.VALID_STATUSES}")
@@ -83,9 +176,9 @@ class KalshiApi:
             url = f"{BASE}/markets?series_ticker={series_ticker}&limit={limit}&status={status}"
             if cursor:
                 url += f"&cursor={cursor}"
-            payload = self.http.get(url).json
-            if isinstance(payload, dict) and payload.get("error"):
-                raise KalshiApiError(f"GET {url} -> {payload['error']}")
+            # cache-on: one fetch per URL per run (the CI cache directory is fresh every
+            # run, and offline tests prime it); a stale hit is labelled by HttpClient.
+            payload = self._get(url)
             page = payload.get("markets", [])
             for m in page:
                 key = (m.get("ticker"), m.get("side"))
@@ -100,41 +193,194 @@ class KalshiApi:
 
     def settled_markets(self, series_ticker: str, *, limit: int = 200,
                         max_pages: int = 10) -> list[dict]:
-        """Historical, settled contracts.
-
-        Verified 2026-09-20: each row carries ``result`` (yes/no), ``previous_yes_bid_dollars``,
-        ``previous_yes_ask_dollars``, ``volume_fp`` and ``settlement_ts``.  Kalshi does not
-        document the exact timestamp behind the ``previous_*`` fields, so callers must treat
-        them as "some quote that predates settlement" and label any derived bet accordingly.
-        """
+        """Recently settled contracts from the *live* tier only (see module docstring)."""
         return self.markets(series_ticker, limit=limit, status="settled", max_pages=max_pages)
+
+    # ------------------------------------------------------------ historical tier
+    def historical_cutoff(self) -> str | None:
+        """ISO timestamp separating the live tier from the historical tier.
+
+        Verified 2026-09-20: ``GET /historical/cutoff`` returned 2026-07-22T00:00:00Z.
+        The response key is read defensively because Kalshi's docs and payload differ.
+        """
+        try:
+            payload = self._get(f"{HIST_BASE}/cutoff")
+        except Exception:
+            return None
+        for k in ("cutoff", "cutoff_ts", "historical_cutoff", "settled_before", "ts"):
+            v = payload.get(k)
+            if isinstance(v, str) and len(v) >= 10:
+                return v
+        for v in payload.values():
+            if isinstance(v, str) and re.match(r"^\d{4}-\d{2}-\d{2}T", v):
+                return v
+        return None
+
+    def historical_markets(self, series_ticker: str, *, limit: int = 1000,
+                           cursor: str | None = None, max_pages: int = 50,
+                           on_page: Callable[[list[dict], str | None], None] | None = None,
+                           ) -> tuple[list[dict], str | None]:
+        """Settled contracts older than the cutoff, newest first, paged by cursor.
+
+        Returns (markets, next_cursor).  ``next_cursor`` is None once the series history
+        is exhausted; callers persist it so a later run can resume where this one stopped.
+        """
+        out: list[dict] = []
+        for _ in range(max_pages):
+            url = f"{HIST_BASE}/markets?series_ticker={series_ticker}&limit={limit}"
+            if cursor:
+                url += f"&cursor={cursor}"
+            payload = self._get(url)
+            page = payload.get("markets", [])
+            out.extend(page)
+            cursor = payload.get("cursor") or None
+            if on_page:
+                on_page(page, cursor)
+            if not cursor or not page:
+                cursor = None
+                break
+            time.sleep(self.pace_seconds)
+        return out, cursor
+
+    def historical_trades(self, ticker: str, *, limit: int = 1000,
+                          min_ts: int | None = None, max_ts: int | None = None) -> list[dict]:
+        url = f"{HIST_BASE}/trades?ticker={ticker}&limit={limit}"
+        if min_ts is not None:
+            url += f"&min_ts={min_ts}"
+        if max_ts is not None:
+            url += f"&max_ts={max_ts}"
+        try:
+            return list(self._get(url).get("trades", []))
+        except Exception:
+            return []
+
+    # ------------------------------------------------------------ price history
+    def candlesticks(self, series_ticker: str, ticker: str, *, start_ts: int, end_ts: int,
+                     period_interval: int = 60, tier: str = "historical") -> list[dict]:
+        """Timestamped OHLC candles, normalized to one schema regardless of tier.
+
+        ``tier`` is 'historical' for contracts settled before the cutoff and 'live'
+        otherwise.  Raises ``KalshiApiError`` on an API error so a missing history is never
+        silently mistaken for an empty one.
+        """
+        if tier == "historical":
+            url = (f"{HIST_BASE}/markets/{ticker}/candlesticks"
+                   f"?start_ts={start_ts}&end_ts={end_ts}&period_interval={period_interval}")
+        else:
+            url = (f"{BASE}/series/{series_ticker}/markets/{ticker}/candlesticks"
+                   f"?start_ts={start_ts}&end_ts={end_ts}&period_interval={period_interval}")
+        payload = self._get(url, use_cache=(tier == "historical"))
+        raw = payload.get("candlesticks")
+        if raw is None:
+            raise KalshiApiError(f"GET {url} -> no 'candlesticks' key ({sorted(payload)})")
+        out = [normalize_candle(c) for c in raw]
+        out = [c for c in out if c["end_period_ts"] is not None]
+        out.sort(key=lambda c: c["end_period_ts"])
+        return out
+
+    def candles(self, ticker: str, *, start_ts: int, end_ts: int, period_interval: int = 60,
+                series_ticker: str = "KXNHLGAME", tier: str = "historical") -> list[dict]:
+        """Backwards-compatible alias for :meth:`candlesticks`."""
+        try:
+            return self.candlesticks(series_ticker, ticker, start_ts=start_ts, end_ts=end_ts,
+                                     period_interval=period_interval, tier=tier)
+        except Exception:
+            return []
 
     def orderbook(self, ticker: str) -> dict | None:
         try:
-            return self.http.get(f"{BASE}/markets/{ticker}/orderbook").json
+            return self._get(f"{BASE}/markets/{ticker}/orderbook", use_cache=False)
         except Exception:
             return None
 
     def trades(self, ticker: str, *, limit: int = 100) -> list[dict]:
         try:
-            return self.http.get(f"{BASE}/markets/trades?ticker={ticker}&limit={limit}").json.get("trades", [])
+            return self._get(f"{BASE}/markets/trades?ticker={ticker}&limit={limit}",
+                             use_cache=False).get("trades", [])
         except Exception:
             return []
 
-    def candles(self, ticker: str, *, start_ts: int, end_ts: int, period_interval: int = 60) -> list[dict]:
-        """Historical OHLC candles.  If this returns rows it is genuine timestamped
-        price history and may be used for BACKTEST labels; if it 404s the caller must
-        fall back to FORWARD TEST."""
-        url = (f"{BASE}/series/KXNHLGAME/markets/{ticker}/candles"
-               f"?start_ts={start_ts}&end_ts={end_ts}&period_interval={period_interval}")
-        try:
-            return self.http.get(url).json.get("candles", [])
-        except Exception:
-            return []
+
+# --------------------------------------------------------------------- normalizers
+def normalize_candle(c: dict) -> dict[str, Any]:
+    """One schema for both candle payload shapes.
+
+    Historical tier: ``price{open,high,low,close,mean,previous}``, ``yes_bid{...}``,
+    ``yes_ask{...}``, ``volume``, ``open_interest``.
+    Live tier: the same keys suffixed ``_dollars`` / ``_fp`` and *absent* ``price.open`` etc.
+    for periods with no trades (only ``previous_dollars`` is present).
+    """
+    price = c.get("price") or {}
+    bid = c.get("yes_bid") or {}
+    ask = c.get("yes_ask") or {}
+    ts = c.get("end_period_ts")
+    try:
+        ts = int(ts) if ts is not None else None
+    except (TypeError, ValueError):
+        ts = None
+    return {
+        "end_period_ts": ts,
+        "price_open": _first(price, "open", "open_dollars"),
+        "price_high": _first(price, "high", "high_dollars"),
+        "price_low": _first(price, "low", "low_dollars"),
+        "price_close": _first(price, "close", "close_dollars"),
+        "price_mean": _first(price, "mean", "mean_dollars"),
+        "price_previous": _first(price, "previous", "previous_dollars"),
+        "bid_open": _first(bid, "open", "open_dollars"),
+        "bid_high": _first(bid, "high", "high_dollars"),
+        "bid_low": _first(bid, "low", "low_dollars"),
+        "bid_close": _first(bid, "close", "close_dollars"),
+        "ask_open": _first(ask, "open", "open_dollars"),
+        "ask_high": _first(ask, "high", "high_dollars"),
+        "ask_low": _first(ask, "low", "low_dollars"),
+        "ask_close": _first(ask, "close", "close_dollars"),
+        "volume": _first(c, "volume", "volume_fp"),
+        "open_interest": _first(c, "open_interest", "open_interest_fp"),
+    }
+
+
+def parse_event_ticker(event_ticker: str) -> dict[str, Any] | None:
+    """Decode ``KXNHLGAME-26JUN14CARVGK`` -> date + Kalshi team codes.
+
+    The team part is split against the NHL triCode list plus :data:`KALSHI_TEAM_ALIASES`;
+    when more than one split is valid (or none) the result carries ``ambiguous=True`` and
+    the caller must fall back to the rules text rather than guess.
+    """
+    m = re.match(r"^(KXNHL[A-Z0-9]*)-(\d{2})([A-Z]{3})(\d{2})([A-Z]+)$", event_ticker or "")
+    if not m:
+        return None
+    series, yy, mon, dd, rest = m.groups()
+    if mon not in _MONTHS:
+        return None
+    date = f"{2000 + int(yy):04d}-{_MONTHS[mon]:02d}-{int(dd):02d}"
+    known = set(NHL_TRICODES) | set(KALSHI_TEAM_ALIASES)
+    splits = []
+    for i in range(2, len(rest) - 1):
+        a, b = rest[:i], rest[i:]
+        if a in known and b in known:
+            splits.append((a, b))
+    out = {"series": series, "game_date": date, "raw": rest, "ambiguous": len(splits) != 1}
+    if len(splits) == 1:
+        a, b = splits[0]
+        out["away_code"], out["home_code"] = a, b
+        out["away_abbrev"] = KALSHI_TEAM_ALIASES.get(a, a)
+        out["home_abbrev"] = KALSHI_TEAM_ALIASES.get(b, b)
+    return out
+
+
+def market_team_code(m: dict) -> str | None:
+    """The contract suffix (``...-CAR``) for team-winner style markets, else None."""
+    t = (m.get("ticker") or "")
+    ev = (m.get("event_ticker") or "")
+    if ev and t.startswith(ev + "-"):
+        suffix = t[len(ev) + 1:]
+        if suffix.isalpha():
+            return suffix
+    return None
 
 
 def normalize_market(m: dict, *, ts_utc: str, retrieved_at: str,
-                     source_url: str) -> dict[str, Any]:
+                     source_url: str) -> list[dict[str, Any]]:
     """Convert one Kalshi market into the normalized quote rows we store.
 
     Emits one row for the YES side and one for the NO side so that both sides of the
@@ -154,7 +400,7 @@ def normalize_market(m: dict, *, ts_utc: str, retrieved_at: str,
             "market_key": m.get("event_ticker") or "",
             "contract": ticker,
             "game_date": game_date,
-            "market_type": "moneyline" if (m.get("market_type") == "binary") else (m.get("market_type") or "binary"),
+            "market_type": market_type_for(m),
             "selection": m.get("title") or ticker,
             "side": side,
             "price": _f(m, "last_price_dollars"),
@@ -171,6 +417,15 @@ def normalize_market(m: dict, *, ts_utc: str, retrieved_at: str,
             "rules": m.get("rules_primary"),
         })
     return rows
+
+
+def market_type_for(m: dict) -> str:
+    """Map a Kalshi series to this project's market vocabulary."""
+    ev = (m.get("event_ticker") or m.get("ticker") or "")
+    series = ev.split("-", 1)[0]
+    return {"KXNHLGAME": "moneyline", "KXNHLTOTAL": "total", "KXNHLSPREAD": "puck_line",
+            "KXNHL1P": "first_period", "KXNHLOVERTIME": "overtime"}.get(
+        series, "moneyline" if m.get("market_type") == "binary" else (m.get("market_type") or "binary"))
 
 
 def binary_price_to_decimal(price: float) -> float:

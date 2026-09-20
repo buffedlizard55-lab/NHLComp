@@ -1,20 +1,21 @@
 """Backtesting.
 
 Hard rule from the brief: *if historical prices cannot be verified, do not call the result
-a historical backtest*.  No verified historical NHL odds feed is available to this
-project (see ``source_registry``: the sportsbook aggregator requires a paid key and the
-Kalshi candle endpoint is unverified).  Therefore:
+a historical backtest*.  Two modes exist and are never mixed:
 
-* :meth:`Backtester.run` measures **predictive accuracy only** -- hit rate, lift over the
-  base rate, log loss, Brier score -- and stores it with ``data_sufficient=0`` plus an
-  explicit caveat.  It never produces a PnL figure, because producing one would require
-  inventing odds.
-* Profit and loss for every strategy comes exclusively from the forward-test ledger,
-  where the price was really quoted.
+* :meth:`Backtester.run` -- **accuracy only** (hit rate, lift, log loss, Brier) for games
+  without a verified price.  Stored with ``data_sufficient=0`` and an explicit caveat; it
+  never produces a PnL figure because that would require inventing odds.
+* :meth:`Backtester.run_priced` -- a genuine priced backtest for games whose Kalshi
+  closing (or opening / T-6h) offer was recovered from timestamped candlesticks
+  (``market_price_points``).  Every bet's entry price is a real quote with a real
+  timestamp; PnL, ROI, drawdown and CLV are computed from those prices and the settled
+  result.  Stored with ``data_sufficient=1`` and ``price_basis`` naming the candle point.
 
 Splits are chronological.  Features are already point-in-time by construction
-(``features.FeatureBuilder``), and ``assert_no_leakage`` re-checks that no feature row
-was built from a game that had not started yet.
+(``features.FeatureBuilder`` / ``features_ext.ExtendedFeatures``), and
+``assert_no_leakage`` re-checks that no feature row was built from a game that had not
+started yet.
 """
 
 from __future__ import annotations
@@ -25,8 +26,9 @@ from dataclasses import dataclass
 from typing import Any, Sequence
 
 from .models import brier, log_loss, wilson_interval
+from .market import kalshi_fee_per_unit_staked
 from .store import Store, utcnow
-from .strategies import Strategy, ThresholdStrategy
+from .strategies import Strategy, ThresholdStrategy, feature_value
 
 CAVEAT_NO_PRICE = ("No verified historical betting-price feed is available, so this run measures "
                    "predictive accuracy only. PnL, ROI and CLV are deliberately not computed -- "
@@ -99,12 +101,8 @@ class Backtester:
                 continue
             if not isinstance(strat, ThresholdStrategy):
                 continue
-            raw = r.get(strat.feature)
-            if raw is None:
-                continue
-            try:
-                v = float(raw)
-            except (TypeError, ValueError):
+            v = feature_value(r, strat.feature)
+            if v is None:
                 continue
             ok = (v >= strat.threshold if strat.operator == ">=" else v <= strat.threshold)
             if not ok:
@@ -171,4 +169,208 @@ class Backtester:
                 continue
             w = (chunk[0].get("game_date", ""), chunk[-1].get("game_date", ""))
             out[name] = self.run(strat, chunk, label=name, window=w)
+        return out
+
+
+# ===================================================================== priced backtests
+PRICED_CAVEAT = ("Entry price = Kalshi {point} candle yes_ask (real, timestamped). Flat 1-unit "
+                 "stakes. Kalshi's general taker fee 0.07*C*P*(1-P) (fee schedule effective "
+                 "2026-07-07) is deducted; the bid/ask spread is paid by buying the offer. "
+                 "Treat ROI with the reported CI and against the market baseline.")
+
+
+@dataclass
+class PricedResult:
+    strategy_id: str
+    version: int
+    label: str
+    n_bets: int
+    n_wins: int
+    n_losses: int
+    staked: float
+    pnl: float
+    roi: float | None
+    avg_price: float | None
+    avg_edge: float | None
+    clv: float | None
+    max_drawdown: float
+    sharpe: float | None
+    hit_rate: float | None
+    ci_low: float | None
+    ci_high: float | None
+    base_rate: float | None
+    n_games: int
+    price_basis: str
+    window: tuple[str, str]
+    bets: list[dict[str, Any]]
+
+
+def _pnl_curve(pnls: Sequence[float]) -> tuple[float, float | None]:
+    """(max drawdown of cumulative PnL, per-bet Sharpe-like ratio)."""
+    peak = cum = 0.0
+    mdd = 0.0
+    for x in pnls:
+        cum += x
+        peak = max(peak, cum)
+        mdd = max(mdd, peak - cum)
+    n = len(pnls)
+    if n < 2:
+        return round(mdd, 4), None
+    mean = sum(pnls) / n
+    var = sum((x - mean) ** 2 for x in pnls) / (n - 1)
+    sd = math.sqrt(var)
+    return round(mdd, 4), (round(mean / sd, 4) if sd > 0 else None)
+
+
+def trigger_roi(rows: Sequence[dict[str, Any]], *, feature: str, operator: str, threshold: float,
+                bet_side: str, point: str = "close", fees: bool = True) -> dict[str, Any]:
+    """Flat-stake ROI of buying ``bet_side`` at the named candle offer whenever the trigger
+    fires -- no model, no edge filter.  This is the cleanest test of whether a situational
+    trigger beats the market price.  Kalshi's published taker fee is deducted per unit
+    staked unless ``fees`` is False."""
+    pnls: list[float] = []
+    asks: list[float] = []
+    wins = 0
+    for r in rows:
+        w = r.get("_winner")
+        if w is None:
+            continue
+        v = feature_value(r, feature)
+        if v is None:
+            continue
+        ok = v >= threshold if operator == ">=" else v <= threshold
+        if not ok:
+            continue
+        ask = r.get(f"mkt_{point}_{bet_side}_ask")
+        if ask is None or not (0 < ask < 1) or r.get("mkt_close_is_latest"):
+            continue
+        won = (r["home_id"] if bet_side == "home" else r["away_id"]) == w
+        wins += int(won)
+        asks.append(ask)
+        fee = kalshi_fee_per_unit_staked(ask) if fees else 0.0
+        pnls.append(((1 - ask) / ask if won else -1.0) - fee)
+    n = len(pnls)
+    if n == 0:
+        return {"n": 0, "roi": None, "pnl": 0.0, "avg_price": None, "hit": None, "mdd": None}
+    mdd, sharpe = _pnl_curve(pnls)
+    return {"n": n, "roi": round(sum(pnls) / n, 4), "pnl": round(sum(pnls), 4),
+            "avg_price": round(sum(asks) / n, 4), "hit": round(wins / n, 4),
+            "mdd": mdd, "sharpe": sharpe}
+
+
+def market_baseline(rows: Sequence[dict[str, Any]], *, bet_side: str, point: str = "close",
+                    fees: bool = True) -> dict[str, Any]:
+    """ROI of blindly buying one side at the offer for every priced game (~ minus the vig
+    and fees).  Every strategy's priced ROI should be read against this number."""
+    return trigger_roi(rows, feature="mkt_has_close", operator=">=", threshold=1,
+                       bet_side=bet_side, point=point, fees=fees)
+
+
+class PricedBacktester:
+    """Priced backtests against recovered Kalshi candle prices."""
+
+    def __init__(self, store: Store):
+        self.store = store
+
+    def run(self, strat: Strategy, rows: Sequence[dict[str, Any]], *, label: str = "priced_all",
+            point: str = "close", persist: bool = True) -> PricedResult | None:
+        if not isinstance(strat, ThresholdStrategy):
+            return None
+        if getattr(strat, "blocked_reason", None) or strat.use_model == "sportsbook":
+            return None   # nothing to price: blocked, or needs a feed with no history
+        priced = [r for r in rows if r.get("_winner") is not None
+                  and r.get(f"mkt_{point}_home_ask") is not None
+                  and not r.get("mkt_close_is_latest")]
+        if not priced:
+            return None
+        bets: list[dict[str, Any]] = []
+        side = strat.bet_side
+        for r in priced:
+            v = feature_value(r, strat.feature)
+            if v is None:
+                continue
+            ok = (v >= strat.threshold if strat.operator == ">=" else v <= strat.threshold)
+            if not ok:
+                continue
+            p = (r.get("p_home_ml") if side == "home" else r.get("p_away_ml"))
+            if strat.use_model == "elo":
+                p = (r.get("p_home_elo") if side == "home" else r.get("p_away_elo")) or p
+            if strat.use_model == "logistic":
+                p = (r.get("p_home_logit") if side == "home" else r.get("p_away_logit")) or p
+            if strat.use_model == "market":
+                p = None
+            ask = r.get(f"mkt_{point}_{side}_ask")
+            if ask is None or not (0 < ask < 1) or ask < strat.min_price:
+                continue
+            if strat.requires_goalie and not r.get("both_starters_known"):
+                continue
+            if p is not None and ask > p - strat.min_edge:
+                continue   # the strategy's own price rule says no
+            won = (r["home_id"] if side == "home" else r["away_id"]) == r["_winner"]
+            fee = kalshi_fee_per_unit_staked(ask)
+            pnl = ((1 - ask) / ask if won else -1.0) - fee
+            close_mid = r.get(f"mkt_close_{side}_mid")
+            bets.append({"game_id": r["game_id"], "game_date": r["game_date"], "side": side,
+                         "ask": ask, "p": p, "won": won, "pnl": round(pnl, 4),
+                         "edge": (round(p - ask, 4) if p is not None else None),
+                         "clv": (round(close_mid - ask, 4) if (close_mid is not None and point != "close") else None),
+                         "ts": r.get(f"mkt_{point}_ts")})
+        n = len(bets)
+        window = (priced[0].get("game_date", ""), priced[-1].get("game_date", ""))
+        basis = f"kalshi candle {point} ask"
+        if n == 0:
+            res = PricedResult(strat.strategy_id, strat.version, label, 0, 0, 0, 0.0, 0.0, None,
+                               None, None, None, 0.0, None, None, None, None, None, len(priced),
+                               basis, window, [])
+        else:
+            wins = sum(int(b["won"]) for b in bets)
+            pnls = [b["pnl"] for b in bets]
+            mdd, sharpe = _pnl_curve(pnls)
+            lo, hi = wilson_interval(wins, n)
+            edges = [b["edge"] for b in bets if b["edge"] is not None]
+            clvs = [b["clv"] for b in bets if b["clv"] is not None]
+            base = sum(int((r["home_id"] if side == "home" else r["away_id"]) == r["_winner"])
+                       for r in priced) / len(priced)
+            res = PricedResult(
+                strategy_id=strat.strategy_id, version=strat.version, label=label, n_bets=n,
+                n_wins=wins, n_losses=n - wins, staked=float(n), pnl=round(sum(pnls), 4),
+                roi=round(sum(pnls) / n, 4), avg_price=round(sum(b["ask"] for b in bets) / n, 4),
+                avg_edge=(round(sum(edges) / len(edges), 4) if edges else None),
+                clv=(round(sum(clvs) / len(clvs), 4) if clvs else None),
+                max_drawdown=mdd, sharpe=sharpe, hit_rate=round(wins / n, 4),
+                ci_low=round(lo, 4), ci_high=round(hi, 4), base_rate=round(base, 4),
+                n_games=len(priced), price_basis=basis, window=window, bets=bets)
+        if persist:
+            self.persist(res, point=point)
+        return res
+
+    def persist(self, res: PricedResult, *, point: str) -> None:
+        self.store.execute(
+            """INSERT INTO backtests(strategy_id, version, label, test_from, test_to, n_bets,
+                                     n_wins, n_losses, n_push, staked, pnl, roi, max_drawdown,
+                                     sharpe, avg_price, clv, data_sufficient, caveat, created_at,
+                                     avg_edge, hit_rate, base_rate, n_games, price_basis)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(strategy_id, version, label) DO UPDATE SET
+                 test_from=excluded.test_from, test_to=excluded.test_to,
+                 n_bets=excluded.n_bets, n_wins=excluded.n_wins, n_losses=excluded.n_losses,
+                 staked=excluded.staked, pnl=excluded.pnl, roi=excluded.roi,
+                 max_drawdown=excluded.max_drawdown, sharpe=excluded.sharpe,
+                 avg_price=excluded.avg_price, clv=excluded.clv,
+                 data_sufficient=excluded.data_sufficient, caveat=excluded.caveat,
+                 created_at=excluded.created_at, avg_edge=excluded.avg_edge,
+                 hit_rate=excluded.hit_rate, base_rate=excluded.base_rate,
+                 n_games=excluded.n_games, price_basis=excluded.price_basis""",
+            (res.strategy_id, res.version, res.label, res.window[0], res.window[1], res.n_bets,
+             res.n_wins, res.n_losses, 0, res.staked, res.pnl, res.roi, res.max_drawdown,
+             res.sharpe, res.avg_price, res.clv, 1, PRICED_CAVEAT.format(point=point), utcnow(),
+             res.avg_edge, res.hit_rate, res.base_rate, res.n_games, res.price_basis))
+        self.store.commit()
+
+    def run_splits(self, strat: Strategy, rows: Sequence[dict[str, Any]], *, point: str = "close"
+                   ) -> dict[str, PricedResult | None]:
+        parts = Backtester.split(rows)
+        out: dict[str, PricedResult | None] = {}
+        for name, chunk in parts.items():
+            out[name] = self.run(strat, chunk, label=f"priced_{name}", point=point) if chunk else None
         return out

@@ -13,6 +13,14 @@ from typing import Any, Iterable, Sequence
 from .store import Store, utcnow
 
 
+def _col(row: Any, name: str) -> Any:
+    """Column value or None when an older ledger lacks the column."""
+    try:
+        return row[name]
+    except (IndexError, KeyError):
+        return None
+
+
 class Verifier:
     def __init__(self, store: Store):
         self.store = store
@@ -92,8 +100,10 @@ class Verifier:
                 pnl = float(b["pnl"] or 0)
                 if b["odds_format"] == "binary":
                     contracts = float(b["filled_size"] or 0)
-                    exp_win = contracts * (1 - float(b["entry_price"] or 0))
-                    exp_loss = -contracts * float(b["entry_price"] or 0)
+                    # settled P&L is net of the exchange fee recorded on the row
+                    fee = float(_col(b, "fee") or 0.0)
+                    exp_win = contracts * (1 - float(b["entry_price"] or 0)) - fee
+                    exp_loss = -contracts * float(b["entry_price"] or 0) - fee
                     if not (abs(pnl - exp_win) < 0.01 or abs(pnl - exp_loss) < 0.01):
                         counts["bad_pnl"] += 1
                         self.store.flag("incorrect_pnl",

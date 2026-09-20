@@ -217,9 +217,17 @@ class TestPaperEngine(_StoreTestCase):
         n = eng.settle_game(1, home_id=1, away_id=2, home_score=3, away_score=1, state="FINAL",
                             last_period_type="REG")
         self.assertEqual(n, 1)
-        row = self.s.one("SELECT result, pnl FROM bets WHERE bet_id=?", (bid,))
+        row = self.s.one("SELECT result, pnl, fee, entry_price, filled_size FROM bets WHERE bet_id=?",
+                         (bid,))
         self.assertEqual(row["result"], "WIN")
-        self.assertAlmostEqual(float(row["pnl"]), 50.0)
+        # gross = contracts * (1 - price); Kalshi's published taker fee 0.07*C*P*(1-P)
+        # (rounded up to the cent) is charged at the fill and deducted from the result
+        from nhlcomp.market import kalshi_taker_fee
+        contracts, price = float(row["filled_size"]), float(row["entry_price"])
+        fee = kalshi_taker_fee(price, contracts)
+        self.assertAlmostEqual(float(row["fee"]), fee)
+        self.assertGreater(fee, 0)
+        self.assertAlmostEqual(float(row["pnl"]), contracts * (1 - price) - fee, places=4)
 
     def test_tied_final_score_is_flagged_and_not_settled(self):
         from nhlcomp.strategies import Signal

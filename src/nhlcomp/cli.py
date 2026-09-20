@@ -42,6 +42,13 @@ def _ingest_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--clubs", default="", help="comma list of club abbreviations")
     parser.add_argument("--settled-pages", type=int, default=5)
     parser.add_argument("--cross-check-clubs", default="")
+    parser.add_argument("--kalshi-budget", type=int, default=1500,
+                        help="max Kalshi historical/candle calls per run (the walk resumes next run)")
+    parser.add_argument("--live-points-budget", type=int, default=120,
+                        help="max live-tier candlestick calls per run for open contracts")
+    parser.add_argument("--stats-seasons", default="",
+                        help="comma list of seasons for the per-game stats REST reports "
+                             "(defaults to --seasons)")
 
 
 def _seasons(args: argparse.Namespace) -> list[int]:
@@ -92,7 +99,9 @@ def cmd_ingest(args: argparse.Namespace) -> int:
     out = pipe.stage_ingest(
         seasons=_seasons(args), scoreboard_days=_days(args), club_abbrevs=_clubs(args),
         ingest_settled_pages=args.settled_pages,
-        cross_check_abbrevs=[c for c in args.cross_check_clubs.split(",") if c.strip()])
+        cross_check_abbrevs=[c for c in args.cross_check_clubs.split(",") if c.strip()],
+        kalshi_budget=args.kalshi_budget, live_points_budget=args.live_points_budget,
+        stats_seasons=[int(x) for x in args.stats_seasons.split(",") if x.strip()] or None)
     print(json.dumps({k: v for k, v in out.items() if k != "probes"}, indent=1, default=str))
     return 0
 
@@ -108,7 +117,11 @@ def cmd_run(args: argparse.Namespace) -> int:
                             club_abbrevs=_clubs(args),
                             ingest_settled_pages=args.settled_pages,
                             cross_check_abbrevs=[c for c in args.cross_check_clubs.split(",")
-                                                 if c.strip()])
+                                                 if c.strip()],
+                            kalshi_budget=args.kalshi_budget,
+                            live_points_budget=args.live_points_budget,
+                            stats_seasons=[int(x) for x in args.stats_seasons.split(",")
+                                           if x.strip()] or None)
     kw["features"] = {"game_types": tuple(int(x) for x in (args.game_types or "2").split(","))}
     kw["prior_season"] = prior if not args.no_prior else None
     report = pipe.run_all(**kw)
@@ -135,17 +148,34 @@ def cmd_verify(args: argparse.Namespace) -> int:
 def cmd_report(args: argparse.Namespace) -> int:
     store, _ = _ctx(args)
     perf = Performance(store)
-    tot = perf.competition_totals()
-    print("NHLComp competition status")
-    print(f"  strategies: {tot['strategies']}  bets: {tot['bets']}  settled: {tot['settled']}  "
-          f"open: {tot['open']}")
-    print(f"  pnl: {tot['pnl']}  staked: {tot['staked']}  roi: {tot['roi']}  "
-          f"win rate: {tot['win_rate']}")
-    print("\nleaderboard")
-    for r in perf.leaderboard()[:20]:
-        print(f"  {r['rank']:>3}. {r['username']:<28} n={r['n_settled']:<4} "
-              f"pnl={str(r['pnl']):>8} roi={r['roi']} dd={r['max_drawdown']} "
-              f"wr_ci={r['win_rate_ci']}")
+    print("NHLComp competition status (BACKTEST and FORWARD TEST are reported separately)")
+    for mode in ("FORWARD TEST", "BACKTEST"):
+        tot = perf.competition_totals(test_mode=mode)
+        print(f"[{mode}] strategies: {tot['strategies']}  bets: {tot['bets']}  "
+              f"settled: {tot['settled']}  open: {tot['open']}")
+        print(f"[{mode}] pnl: {tot['pnl']}  staked: {tot['staked']}  roi: {tot['roi']}  "
+              f"win rate: {tot['win_rate']}")
+        print(f"\n{mode.lower()} leaderboard (settled wagers only)")
+        shown = 0
+        for r in perf.leaderboard(test_mode=mode):
+            if not r["n_settled"]:
+                continue
+            shown += 1
+            print(f"  {shown:>3}. {r['username']:<28} n={r['n_settled']:<4} "
+                  f"pnl={str(r['pnl']):>8} roi={r['roi']} dd={r['max_drawdown']} "
+                  f"wr_ci={r['win_rate_ci']}")
+            if shown >= 20:
+                break
+        if not shown:
+            print("  (none settled yet)")
+        print()
+    base = store.one("SELECT evidence FROM findings WHERE finding_id='FIND_MARKET_BASELINE'")
+    if base:
+        print(f"market baseline (buy every side at the close, net of fees): {base['evidence']}")
+    cov = store.one(
+        """SELECT COUNT(*) c, SUM(CASE WHEN candles_state='ok' THEN 1 ELSE 0 END) ok
+             FROM market_settlements WHERE provider='kalshi' AND result IN ('yes','no')""")
+    print(f"kalshi settled contracts: {cov['c']}  with pre-game candle: {cov['ok'] or 0}")
     irr = store.one("SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"]
     print(f"\nopen irregularities: {irr}")
     return 0

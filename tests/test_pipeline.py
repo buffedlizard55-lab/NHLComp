@@ -137,8 +137,10 @@ class TestPipelineEndToEnd(unittest.TestCase):
             self.assertIsNotNone(b["pnl"])
             price = float(b["entry_price"])
             contracts = float(b["filled_size"])
-            expected = contracts * (1 - price) if b["result"] == "WIN" else -contracts * price
-            self.assertAlmostEqual(float(b["pnl"]), expected, places=2)
+            gross = contracts * (1 - price) if b["result"] == "WIN" else -contracts * price
+            # net of Kalshi's published taker fee, which is recorded on the row
+            self.assertIsNotNone(b["fee"])
+            self.assertAlmostEqual(float(b["pnl"]), gross - float(b["fee"]), places=2)
 
     def test_05b_strategy_refuses_a_price_that_is_not_value(self):
         """A strategy must not chase: if the offer is worse than model_prob - min_edge it waits."""
@@ -223,7 +225,13 @@ class TestPipelineEndToEnd(unittest.TestCase):
         idx = open(os.path.join(outdir, "index.html"), encoding="utf-8").read()
         self.assertIn("Dashboard", idx)
         with open(os.path.join(outdir, "data", "leaderboard.json"), encoding="utf-8") as fh:
-            self.assertIsInstance(json.load(fh), list)
+            lb = json.load(fh)
+        # the machine-readable leaderboard keeps the two test modes apart
+        self.assertEqual(set(lb), {"FORWARD TEST", "BACKTEST"})
+        self.assertIsInstance(lb["FORWARD TEST"], list)
+        lbp = open(os.path.join(outdir, "leaderboard.html"), encoding="utf-8").read()
+        self.assertIn("Forward test (live paper trading)", lbp)
+        self.assertIn("Backtest (Kalshi closing candles", lbp)
 
     def test_10_post_settlement_analysis_flags_small_samples(self):
         bet = self.store.one("SELECT bet_id FROM bets WHERE result IN ('WIN','LOSS') LIMIT 1")
