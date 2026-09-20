@@ -110,7 +110,25 @@ jobs:
             echo "no changes to commit"
           else
             git commit -m "chore: refresh ledger, logs and site (generated from live public APIs)"
-            git push
+            # A push and a pull_request run for the same SHA overlap, and an earlier
+            # commit-back may have advanced the branch underneath this checkout.  Rebase
+            # onto whatever is actually on the remote and retry, rather than failing the
+            # whole job over a bookkeeping commit.
+            branch="${GITHUB_REF#refs/heads/}"
+            for attempt in 1 2 3; do
+              if git push origin "HEAD:refs/heads/${branch}"; then
+                echo "pushed on attempt ${attempt}"
+                break
+              fi
+              echo "push rejected (attempt ${attempt}); rebasing onto the remote branch"
+              git fetch origin "${branch}"
+              git -c user.name="nhlcomp-bot" -c user.email="nhlcomp-bot@users.noreply.github.com" \
+                rebase "origin/${branch}" || git rebase --abort
+              if [ "${attempt}" -eq 3 ]; then
+                echo "::warning::could not commit regenerated artefacts back after 3 attempts"
+              fi
+              sleep 5
+            done
           fi
 
       - name: Configure Pages
