@@ -2,12 +2,16 @@
 [ingest] nhl.stats_rest: reachable (200) https://api.nhle.com/stats/rest/en/team
 [ingest] nhl.api_v1: unreachable (None) https://api.nhl.com/api/v1/teams
 [ingest] nhl.legacy_statsapi: unreachable (None) https://statsapi.web.nhl.com/api/v1/teams
-[ingest] nhl.edge: unreachable (None) https://www.nhl.com/stats/edge
+[ingest] nhl.edge: reachable (200) https://api-web.nhle.com/v1/edge/skater-speed-top-10/F/max/20252026/2
+[ingest] nhl.stats_rest_game: reachable (200) https://api.nhle.com/stats/rest/en/goalie/summary?isAggregate=false&isGame=true&limit=1&cayenneExp=seasonId=20252026%20and%20gameTypeId=2
+[ingest] nhl.partner_odds: reachable (200) https://api-web.nhle.com/v1/partner-game/US/now
 [ingest] kalshi.trade_api: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=5
-[ingest] kalshi.candles: unreachable (404) https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/candles?start_ts=1789603200&end_ts=1789905600&period_interval=60
+[ingest] kalshi.candles: reachable (200) https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/candlesticks?start_ts=1789603200&end_ts=1789905600&period_interval=60
+[ingest] kalshi.historical: reachable (200) https://api.elections.kalshi.com/trade-api/v2/historical/cutoff
 [ingest] kalshi.settled_markets: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=3&status=settled
 [ingest] espn.nhl_api: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries
 [ingest] openmeteo.archive: reachable (200) https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-73.99&current=temperature_2m
+[ingest] moneypuck.downloads: reachable (200) https://moneypuck.com/data.htm
 {
  "nhl.api_web": {
   "status_code": 200,
@@ -30,9 +34,19 @@
   "url": "https://statsapi.web.nhl.com/api/v1/teams"
  },
  "nhl.edge": {
-  "status_code": null,
-  "verdict": "unreachable",
-  "url": "https://www.nhl.com/stats/edge"
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api-web.nhle.com/v1/edge/skater-speed-top-10/F/max/20252026/2"
+ },
+ "nhl.stats_rest_game": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.nhle.com/stats/rest/en/goalie/summary?isAggregate=false&isGame=true&limit=1&cayenneExp=seasonId=20252026%20and%20gameTypeId=2"
+ },
+ "nhl.partner_odds": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api-web.nhle.com/v1/partner-game/US/now"
  },
  "kalshi.trade_api": {
   "status_code": 200,
@@ -40,9 +54,14 @@
   "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=5"
  },
  "kalshi.candles": {
-  "status_code": 404,
-  "verdict": "unreachable",
-  "url": "https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/candles?start_ts=1789603200&end_ts=1789905600&period_interval=60"
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/candlesticks?start_ts=1789603200&end_ts=1789905600&period_interval=60"
+ },
+ "kalshi.historical": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/historical/cutoff"
  },
  "kalshi.settled_markets": {
   "status_code": 200,
@@ -66,6 +85,11 @@
  "nst.money_puck_evolved": {
   "status": "rejected",
   "probe": "skipped (no probe url)"
+ },
+ "moneypuck.downloads": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://moneypuck.com/data.htm"
  },
  "research.public": {
   "status": "candidate",
