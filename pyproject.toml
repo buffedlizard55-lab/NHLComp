@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nhlcomp"
+version = "0.1.0"
+description = "Autonomous NHL betting-strategy research, backtesting, forward-testing and paper-trading platform"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = []          # standard library only, by design: CI must never fail on a dep
+
+[project.scripts]
+nhlcomp = "nhlcomp.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
