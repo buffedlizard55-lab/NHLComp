@@ -621,7 +621,8 @@ class Pipeline:
                         clv = (round(close_mid - float(sig.quote.ask), 4)
                                if close_mid is not None and entry_point != "close" else None)
                         self.store.settle_bet(
-                            bid, result="WIN" if won else "LOSS", pnl=_settle_pnl(sig, won),
+                            bid, result="WIN" if won else "LOSS",
+                            pnl=_settle_pnl(self.store, bid, won),
                             close_price=close_mid, clv=clv, settle_ts=ms["settlement_ts"],
                             reason=f"kalshi contract settled {ms['result']}")
                         self.store.execute(
@@ -853,9 +854,12 @@ def build_team_names(store: Store) -> dict[int, list[str]]:
     return out
 
 
-def _settle_pnl(sig: Any, won: bool) -> float:
-    from .market import kalshi_taker_fee
+def _settle_pnl(store: Store, bet_id: str, won: bool) -> float:
+    """P&L from the fill actually recorded on the bet row (contracts, price, fee), so the
+    settlement and the verifier's recomputation agree to the cent."""
     from .paper import binary_settlement
-    price = float(sig.quote.ask)
-    contracts = float(sig.stake) / price
-    return binary_settlement(price, contracts, won, fee=kalshi_taker_fee(price, contracts))
+    b = store.one("SELECT entry_price, price, filled_size, stake, fee FROM bets WHERE bet_id=?",
+                  (bet_id,))
+    price = float(b["entry_price"] or b["price"])
+    contracts = float(b["filled_size"] or (float(b["stake"]) / price if price else 0))
+    return binary_settlement(price, contracts, won, fee=float(b["fee"] or 0.0))

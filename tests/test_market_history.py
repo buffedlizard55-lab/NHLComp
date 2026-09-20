@@ -531,6 +531,18 @@ class TestHistoryToBacktest(unittest.TestCase):
         # the schedule row itself was not touched
         g = self.store.one("SELECT home_score FROM games WHERE game_id=?", (self.games[3]["game_id"],))
         self.assertEqual(g["home_score"], self.games[3]["hs"])
+        # shootout definition: the stats REST line omits the deciding goal (verified on
+        # 2024-25 data: 2-1 SO shows GF 1 / GA 1).  That is consistent, not a conflict.
+        so = self.games[6]
+        self.store.execute("UPDATE games SET last_period_type='SO', home_score=2, away_score=1 WHERE game_id=?",
+                           (so["game_id"],))
+        self.store.execute("UPDATE team_game_stats SET gf=1, ga=1 WHERE game_id=?", (so["game_id"],))
+        self.store.commit()
+        before = self.store.one("SELECT COUNT(*) c FROM irregularities WHERE kind='conflicting_source'")["c"]
+        cv = self.pipe.stage_verify()["cross_validation"]
+        self.assertEqual(cv["shootout_goal_definition_adjusted"], 2)
+        self.assertEqual(self.store.one("SELECT COUNT(*) c FROM irregularities WHERE kind='conflicting_source'")["c"],
+                         before)
 
     def test_08_hydrated_market_strategy_keeps_flat_staking(self):
         row = self.store.one("SELECT * FROM strategies WHERE strategy_id='NHL_STEAM_FOLLOW'")

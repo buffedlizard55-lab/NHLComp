@@ -218,9 +218,10 @@ class Verifier:
         (goalsFor / goalsAgainst, one row per team) against the schedule feed's score.
         Both are NHL first-party feeds but different systems; a disagreement is recorded with
         both values and left for review -- never resolved by picking one."""
-        compared = conflicts = 0
+        compared = conflicts = so_adjusted = 0
         for r in self.store.query(
-                """SELECT g.game_id, g.home_score, g.away_score, t.team_id, t.gf, t.ga, t.home_road
+                """SELECT g.game_id, g.home_score, g.away_score, g.last_period_type, t.team_id, t.gf,
+                          t.ga, t.home_road
                      FROM team_game_stats t JOIN games g ON g.game_id = t.game_id
                     WHERE g.home_score IS NOT NULL AND g.away_score IS NOT NULL
                       AND t.gf IS NOT NULL AND t.ga IS NOT NULL"""):
@@ -228,14 +229,29 @@ class Verifier:
             is_home = (r["home_road"] == "H")
             exp_gf, exp_ga = ((r["home_score"], r["away_score"]) if is_home
                               else (r["away_score"], r["home_score"]))
-            if (int(r["gf"]), int(r["ga"])) != (int(exp_gf), int(exp_ga)):
-                conflicts += 1
-                self.store.flag(
-                    "conflicting_source",
-                    f"game {r['game_id']} team {r['team_id']}: schedule says GF {exp_gf} / GA {exp_ga}, "
-                    f"stats REST team/summary says GF {r['gf']} / GA {r['ga']}",
-                    entity_type="game", entity_id=str(r["game_id"]), severity="error",
-                    sources="nhl.api_web|nhl.stats_rest_game")
+            got = (int(r["gf"]), int(r["ga"]))
+            if got == (int(exp_gf), int(exp_ga)):
+                continue
+            if r["last_period_type"] == "SO":
+                # Definitional difference, verified on the 2024-25 data: the NHL stats REST
+                # team line excludes the shootout-deciding goal (a 2-1 SO win is GF 1 / GA 1),
+                # while the schedule feed credits it.  Consistent once that goal is removed.
+                hs, as_ = int(r["home_score"]), int(r["away_score"])
+                if hs > as_:
+                    hs -= 1
+                else:
+                    as_ -= 1
+                adj = (hs, as_) if is_home else (as_, hs)
+                if got == adj:
+                    so_adjusted += 1
+                    continue
+            conflicts += 1
+            self.store.flag(
+                "conflicting_source",
+                f"game {r['game_id']} team {r['team_id']}: schedule says GF {exp_gf} / GA {exp_ga}, "
+                f"stats REST team/summary says GF {r['gf']} / GA {r['ga']}",
+                entity_type="game", entity_id=str(r["game_id"]), severity="error",
+                sources="nhl.api_web|nhl.stats_rest_game")
         # settlement results vs the schedule winner: Kalshi 'yes' must be the actual winner
         settle_conf = 0
         for r in self.store.query(
@@ -258,6 +274,7 @@ class Verifier:
                     entity_type="quote", entity_id=r["contract"], severity="critical",
                     sources="kalshi.historical|nhl.api_web")
         return {"team_game_rows_compared": compared, "score_conflicts": conflicts,
+                "shootout_goal_definition_adjusted": so_adjusted,
                 "settlement_conflicts": settle_conf}
 
     def run_all(self) -> dict[str, Any]:
