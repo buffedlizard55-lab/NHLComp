@@ -8,3 +8,67 @@
 [ingest] kalshi.settled_markets: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=3&status=settled
 [ingest] espn.nhl_api: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries
 [ingest] openmeteo.archive: reachable (200) https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-73.99&current=temperature_2m
+{
+ "nhl.api_web": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api-web.nhle.com/v1/scoreboard/now"
+ },
+ "nhl.stats_rest": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.nhle.com/stats/rest/en/team"
+ },
+ "nhl.api_v1": {
+  "status_code": null,
+  "verdict": "unreachable",
+  "url": "https://api.nhl.com/api/v1/teams"
+ },
+ "nhl.legacy_statsapi": {
+  "status_code": null,
+  "verdict": "unreachable",
+  "url": "https://statsapi.web.nhl.com/api/v1/teams"
+ },
+ "nhl.edge": {
+  "status_code": null,
+  "verdict": "unreachable",
+  "url": "https://www.nhl.com/stats/edge"
+ },
+ "kalshi.trade_api": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=5"
+ },
+ "kalshi.candles": {
+  "status_code": 404,
+  "verdict": "unreachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/candles?start_ts=1789603200&end_ts=1789905600&period_interval=60"
+ },
+ "kalshi.settled_markets": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=3&status=settled"
+ },
+ "odds.the_odds_api": {
+  "status": "rejected",
+  "probe": "skipped (no probe url)"
+ },
+ "espn.nhl_api": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries"
+ },
+ "openmeteo.archive": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-73.99&current=temperature_2m"
+ },
+ "nst.money_puck_evolved": {
+  "status": "rejected",
+  "probe": "skipped (no probe url)"
+ },
+ "research.public": {
+  "status": "candidate",
+  "probe": "skipped (no probe url)"
+ }
+}

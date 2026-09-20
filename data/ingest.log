@@ -1,4 +1,31 @@
-usage: nhlcomp [-h] [--db DB] [--cache CACHE] [--site SITE] [--offline]
-               [--quiet]
-               {init,probe,ingest,run,build-site,verify,report} ...
-nhlcomp: error: unrecognized arguments: --db data/nhlcomp.db
+[ingest] nhl.api_web: reachable (200) https://api-web.nhle.com/v1/scoreboard/now
+[ingest] nhl.stats_rest: reachable (200) https://api.nhle.com/stats/rest/en/team
+[ingest] nhl.api_v1: unreachable (None) https://api.nhl.com/api/v1/teams
+[ingest] nhl.legacy_statsapi: unreachable (None) https://statsapi.web.nhl.com/api/v1/teams
+[ingest] nhl.edge: unreachable (None) https://www.nhl.com/stats/edge
+[ingest] kalshi.trade_api: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=5
+[ingest] kalshi.candles: unreachable (404) https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/candles?start_ts=1789603200&end_ts=1789905600&period_interval=60
+[ingest] kalshi.settled_markets: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=3&status=settled
+[ingest] espn.nhl_api: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries
+[ingest] openmeteo.archive: reachable (200) https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-73.99&current=temperature_2m
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/__main__.py", line 4, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/cli.py", line 193, in main
+    return args.fn(args)
+           ^^^^^^^^^^^^^
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/cli.py", line 92, in cmd_ingest
+    out = pipe.stage_ingest(
+          ^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/pipeline.py", line 48, in stage_ingest
+    out["teams"] = self.ing.teams()
+                   ^^^^^^^^^^^^^^^^
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/ingest.py", line 75, in teams
+    self.store.execute(
+  File "/home/runner/work/NHLComp/NHLComp/src/nhlcomp/store.py", line 528, in execute
+    return self.conn.execute(sql, tuple(params))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+sqlite3.IntegrityError: UNIQUE constraint failed: teams.abbrev
