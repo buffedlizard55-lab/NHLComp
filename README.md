@@ -64,7 +64,7 @@ dependency and the whole thing runs anywhere Python 3.10+ does.
 ## Quick start
 
 ```bash
-make test            # 66 unit tests, no network needed
+make test            # 104 unit tests, no network needed
 make probe           # HTTP-probe every registered source and record the verdict
 make ingest          # pull live data (needs outbound network)
 make run             # models -> discovery -> backtest -> forward -> settle -> verify

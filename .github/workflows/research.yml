@@ -143,4 +143,16 @@ jobs:
 
       - name: Deploy to GitHub Pages
         if: github.ref == 'refs/heads/main'
+        # This repository's Pages site is configured with build_type=legacy (publish from
+        # the main branch root), which actions/deploy-pages cannot target -- it needs
+        # build_type=workflow, and switching it requires an admin-scoped token this
+        # automation does not have (PUT /repos/{owner}/{repo}/pages returns 403).
+        #
+        # The site is therefore published by the legacy pipeline from main, where docs/ is
+        # committed alongside a root index.html that redirects to docs/index.html.  The
+        # steps above are kept so the moment someone flips Pages to "GitHub Actions" in the
+        # repository settings this job starts deploying docs/ directly with no code change.
+        # Until then a deploy failure is a configuration fact, not a pipeline failure, and
+        # must not fail an otherwise green run.
+        continue-on-error: true
         uses: actions/deploy-pages@v4
