@@ -962,7 +962,7 @@
   "decision_ts": "2026-09-17T16:05:00.826856Z",
   "status": "WATCHING",
   "blocking_reason": "condition not met (home_only_b2b=0.0)",
-  "supporting_data": "{\"trigger\": \"home_only_b2b=0.0\", \"feature\": \"home_only_b2b\", \"feature_value\": 0, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0235}}",
+  "supporting_data": "{\"trigger\": \"home_only_b2b=0.0\", \"feature\": \"home_only_b2b\", \"feature_value\": 0, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0035}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
  },
  {
@@ -4228,7 +4228,7 @@
   "decision_ts": "2026-09-17T16:05:00.826856Z",
   "status": "QUALIFIED",
   "blocking_reason": "condition met and priced, but no quote published for this market yet",
-  "supporting_data": "{\"trigger\": \"away_games_last_7=1.0\", \"feature\": \"away_games_last_7\", \"feature_value\": 1, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0235}}",
+  "supporting_data": "{\"trigger\": \"away_games_last_7=1.0\", \"feature\": \"away_games_last_7\", \"feature_value\": 1, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0035}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
  },
  {
@@ -5838,7 +5838,7 @@
   "decision_ts": "2026-09-17T16:05:00.826856Z",
   "status": "QUALIFIED",
   "blocking_reason": "condition met and priced, but no quote published for this market yet",
-  "supporting_data": "{\"trigger\": \"home_exp_goals=2.9421\", \"feature\": \"home_exp_goals\", \"feature_value\": 2.9421, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0235}}",
+  "supporting_data": "{\"trigger\": \"home_exp_goals=2.9421\", \"feature\": \"home_exp_goals\", \"feature_value\": 2.9421, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0035}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
  },
  {
@@ -6896,7 +6896,7 @@
   "decision_ts": "2026-09-17T16:05:00.826856Z",
   "status": "WATCHING",
   "blocking_reason": "condition not met (home_streak_losses=0.0)",
-  "supporting_data": "{\"trigger\": \"home_streak_losses=0.0\", \"feature\": \"home_streak_losses\", \"feature_value\": 0, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0235}}",
+  "supporting_data": "{\"trigger\": \"home_streak_losses=0.0\", \"feature\": \"home_streak_losses\", \"feature_value\": 0, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0035}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
  },
  {
@@ -18695,7 +18695,7 @@
   "decision_ts": "2026-09-17T16:05:00.826856Z",
   "status": "QUALIFIED",
   "blocking_reason": "condition met and priced, but no quote published for this market yet",
-  "supporting_data": "{\"trigger\": \"away_rest_days=156.917\", \"feature\": \"away_rest_days\", \"feature_value\": 156.917, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0235}}",
+  "supporting_data": "{\"trigger\": \"away_rest_days=156.917\", \"feature\": \"away_rest_days\", \"feature_value\": 156.917, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0035}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
  },
  {
@@ -19615,7 +19615,7 @@
   "decision_ts": "2026-09-17T16:05:00.826856Z",
   "status": "WATCHING",
   "blocking_reason": "condition not met (home_g3_in_4+home_prev_so=0.0)",
-  "supporting_data": "{\"trigger\": \"home_g3_in_4+home_prev_so=0.0\", \"feature\": \"home_g3_in_4+home_prev_so\", \"feature_value\": null, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0235}}",
+  "supporting_data": "{\"trigger\": \"home_g3_in_4+home_prev_so=0.0\", \"feature\": \"home_g3_in_4+home_prev_so\", \"feature_value\": null, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0035}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
  },
  {
@@ -20972,7 +20972,7 @@
   "decision_ts": "2026-09-17T16:05:00.826856Z",
   "status": "WATCHING",
   "blocking_reason": "condition not met (home_pk_pct_l10=0.7967)",
-  "supporting_data": "{\"trigger\": \"home_pk_pct_l10=0.7967\", \"feature\": \"home_pk_pct_l10\", \"feature_value\": 0.7967, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0235}}",
+  "supporting_data": "{\"trigger\": \"home_pk_pct_l10=0.7967\", \"feature\": \"home_pk_pct_l10\", \"feature_value\": 0.7967, \"decision_ts\": \"2026-09-17T16:05:00.826856Z\", \"price_point\": \"live_quote\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-20T23:30:38Z\", \"devigged_prob\": 0.4365, \"kalshi_ask_minus_book_prob\": 0.0035}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
  },
  {

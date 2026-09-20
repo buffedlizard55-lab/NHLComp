@@ -182,19 +182,19 @@
 [ingest] stats REST goalie game rows 20262027/2: 0
 [ingest] kalshi series: 81 hockey series, NHL: ['KXNHL', 'KXNHL1P', 'KXNHL1PSPREAD', 'KXNHL1PTOTAL', 'KXNHL2OT', 'KXNHL2P', 'KXNHL2PSPREAD', 'KXNHL2PTOTAL', 'KXNHL30COMEBACK', 'KXNHL3P', 'KXNHL3PSPREAD', 'KXNHL3PTOTAL', 'KXNHL4NATIONS', 'KXNHLADAMS', 'KXNHLANYGOAL', 'KXNHLAST', 'KXNHLATLANTIC', 'KXNHLCALDER', 'KXNHLCENTRAL', 'KXNHLDRAFTPICK', 'KXNHLDRAFTTOP', 'KXNHLEAST', 'KXNHLEXPANSION', 'KXNHLFINALSEXACT', 'KXNHLFIRSTGOAL', 'KXNHLGAME', 'KXNHLGOAL', 'KXNHLHART', 'KXNHLMETROPOLITAN', 'KXNHLNEXTGM', 'KXNHLNEXTTEAM', 'KXNHLNORRIS', 'KXNHLOVERTIME', 'KXNHLPACIFIC', 'KXNHLPLAYOFF', 'KXNHLPLAYOFFGOALS', 'KXNHLPRES', 'KXNHLPTS', 'KXNHLRETIRE', 'KXNHLRICHARD', 'KXNHLROSS', 'KXNHLSAVES', 'KXNHLSEASONGOALS', 'KXNHLSEASONPTS', 'KXNHLSERIES', 'KXNHLSERIESGAMES', 'KXNHLSERIESOT', 'KXNHLSERIESSCORE', 'KXNHLSERIESSPREAD', 'KXNHLSERIESTOTALGOAL', 'KXNHLSERIESTOTALGOALS', 'KXNHLSPREAD', 'KXNHLTOTAL', 'KXNHLVEZINA', 'KXNHLWEST', 'KXNHLWINS']
 [ingest] kalshi: 50 contracts -> 100 quote rows
-[ingest] kalshi history KXNHLGAME: cutoff=2026-07-22T00:00:00Z live=12 hist=1000 (new 0, unmatched 2) candles ok=95 empty=0 err=0 pending=0 calls=98
-[ingest] kalshi settled: 12 contracts (2 unmatched to an NHL game)
+[ingest] kalshi history KXNHLGAME: cutoff=2026-07-22T00:00:00Z live=14 hist=1000 (new 0, unmatched 2) candles ok=2 empty=0 err=0 pending=0 calls=5
+[ingest] kalshi settled: 14 contracts (2 unmatched to an NHL game)
 [ingest] kalshi live price points: 42 open contracts
 [ingest] NHL partner odds (DraftKings): 21 rows for 7 games
 [ingest] NHL EDGE team snapshots 20262027/2: 0
 [ingest] NHL EDGE team snapshots 20252026/2: 32
-[ingest] espn injuries: 56 entries at 2026-09-20T23:34:07Z
+[ingest] espn injuries: 56 entries at 2026-09-20T23:38:09Z
 {
  "teams": 62,
  "active_teams_20242025": 32,
  "active_teams_20252026": 32,
  "active_teams_20262027": 0,
- "winners_derived": 1,
+ "winners_derived": 0,
  "team_game_rows": 8820,
  "team_game_stats": 5248,
  "goalie_game_stats": 5532,
@@ -204,18 +204,18 @@
   "series": "KXNHLGAME",
   "calls_start": 2,
   "cutoff": "2026-07-22T00:00:00Z",
-  "live_settled": 12,
+  "live_settled": 14,
   "historical_rows": 1000,
   "historical_new": 0,
   "historical_pages": 1,
   "unmatched_contracts": 2,
-  "candles_ok": 95,
+  "candles_ok": 2,
   "candles_empty": 0,
   "candles_error": 0,
   "candles_pending": 0,
-  "calls_used": 98
+  "calls_used": 5
  },
- "kalshi_settled": 12,
+ "kalshi_settled": 14,
  "kalshi_live_points": 42,
  "partner_odds": 21,
  "edge_snapshots": 0,
