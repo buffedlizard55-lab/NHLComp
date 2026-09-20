@@ -1,0 +1,72 @@
+[
+ {
+  "id": 6,
+  "ts_utc": "2026-09-20T19:53:40Z",
+  "kind": "duplicate_game",
+  "severity": "warn",
+  "entity_type": "game",
+  "entity_id": "2024-09-22:13:18",
+  "detail": "2024-09-22 18@13 appears 2 times",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 7,
+  "ts_utc": "2026-09-20T19:53:40Z",
+  "kind": "duplicate_game",
+  "severity": "warn",
+  "entity_type": "game",
+  "entity_id": "2025-09-21:18:13",
+  "detail": "2025-09-21 13@18 appears 2 times",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 2,
+  "ts_utc": "2026-09-20T19:53:33Z",
+  "kind": "unmatched_market",
+  "severity": "warn",
+  "entity_type": "quote",
+  "entity_id": "KXNHLGAME-26SEP22UTALA",
+  "detail": "kalshi KXNHLGAME-26SEP22UTALA could not be matched to an NHL game (2026-09-22 ('UTA', 'LAK'))",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 4,
+  "ts_utc": "2026-09-20T19:53:33Z",
+  "kind": "unmatched_market",
+  "severity": "warn",
+  "entity_type": "quote",
+  "entity_id": "KXNHLGAME-26SEP20UTACOL",
+  "detail": "kalshi KXNHLGAME-26SEP20UTACOL could not be matched to an NHL game (2026-09-20 ('UTA', 'COL'))",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 1,
+  "ts_utc": "2026-09-20T19:52:52Z",
+  "kind": "unknown_team",
+  "severity": "error",
+  "entity_type": "game",
+  "entity_id": "2024010106",
+  "detail": "game 2024010106 on 2024-09-27 references team id(s) [7509] which are not in the teams table; game skipped rather than attached to a guessed franchise",
+  "sources": "nhl.api_web",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ }
+]
