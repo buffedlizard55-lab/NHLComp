@@ -49,6 +49,7 @@ class Pipeline:
         for season in seasons:
             try:
                 self.ing.standings(f"{season // 10000 + 1}-04-17")
+                out[f"active_teams_{season}"] = self.store.mark_current_teams(season)
             except NetworkUnavailable as exc:
                 self.log(f"standings {season} skipped: {exc}")
         for season in seasons:

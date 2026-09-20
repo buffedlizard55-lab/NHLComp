@@ -92,15 +92,20 @@ class Ingestor:
         rows = parse_standings(payload)
         n = 0
         for r in rows:
-            t = self.store.one("SELECT team_id FROM teams WHERE abbrev=?", (r["abbrev"],))
-            if t is None:
-                self.store.flag("unknown_team", f"standings row for unknown abbrev {r['abbrev']}",
-                                entity_type="team", entity_id=r["abbrev"], severity="warn")
+            tid = self.store.team_id_for(r["abbrev"], r.get("full_name"))
+            if tid is None:
+                self.store.flag(
+                    "ambiguous_team",
+                    f"standings row for '{r['abbrev']}' ({r.get('full_name')}) cannot be resolved "
+                    f"to a single franchise",
+                    entity_type="team", entity_id=r["abbrev"], severity="warn")
                 continue
+            t = {"team_id": tid}
             # conference/division and venue-free metadata come along for the ride
             self.store.execute(
                 "UPDATE teams SET conference=?, division=?, full_name=? WHERE team_id=?",
                 (r.get("conference"), r.get("division"), r.get("full_name") or "", t["team_id"]))
+            self.store.execute("UPDATE teams SET active=1 WHERE team_id=?", (t["team_id"],))
             cols = ["as_of", "season", "team_id", "gp", "wins", "losses", "otl", "points", "gf",
                     "ga", "home_wins", "home_losses", "home_otl", "home_gf", "home_ga",
                     "road_wins", "road_losses", "road_otl", "road_gf", "road_ga", "l10_wins",
@@ -286,13 +291,16 @@ class Ingestor:
             return None
         name = name.strip()
         t = self.store.one(
-            "SELECT abbrev FROM teams WHERE upper(full_name)=upper(?) OR abbrev=?",
-            (name, name.upper()))
+            "SELECT abbrev FROM teams WHERE active=1 AND upper(full_name)=upper(?)", (name,))
         if t:
             return t["abbrev"]
         cands = self.store.query(
             "SELECT abbrev, full_name FROM teams WHERE active=1 AND upper(full_name) LIKE ?",
             (name.upper() + "%",))
+        if not cands:
+            cands = self.store.query(
+                "SELECT abbrev, full_name FROM teams WHERE upper(full_name) LIKE ?",
+                (name.upper() + "%",))
         if len(cands) == 1:
             return cands[0]["abbrev"]
         # handle short codes like "LA" -> "LAK"

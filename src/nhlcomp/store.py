@@ -90,7 +90,10 @@ CREATE INDEX IF NOT EXISTS idx_raw_url ON raw_response(url);
 -- ---------------------------------------------------------------- reference
 CREATE TABLE IF NOT EXISTS teams (
     team_id     INTEGER PRIMARY KEY,
-    abbrev      TEXT NOT NULL UNIQUE,
+    -- NOT unique: the records API returns one row per franchise, and a triCode repeats
+    -- across renames (Utah Hockey Club and Utah Mammoth are both UTA; the 1917 and modern
+    -- Ottawa Senators are both SEN). Disambiguation is by team_id + full_name + active.
+    abbrev      TEXT NOT NULL,
     full_name   TEXT NOT NULL,
     franchise_id INTEGER,
     conference  TEXT,
@@ -103,6 +106,8 @@ CREATE TABLE IF NOT EXISTS teams (
     active      INTEGER NOT NULL DEFAULT 1,
     provenance  TEXT NOT NULL DEFAULT 'SOURCE'
 );
+
+CREATE INDEX IF NOT EXISTS idx_teams_abbrev ON teams(abbrev);
 
 CREATE TABLE IF NOT EXISTS players (
     player_id   INTEGER PRIMARY KEY,
@@ -548,6 +553,36 @@ class Store:
         except Exception:
             self.conn.rollback()
             raise
+
+    def team_id_for(self, abbrev: str, full_name: str | None = None) -> int | None:
+        """Resolve an abbreviation to a team_id, preferring the active franchise and an
+        exact full-name match.  Returns None when the source cannot disambiguate."""
+        rows = self.query("SELECT team_id, full_name, active FROM teams WHERE abbrev=?", (abbrev,))
+        if not rows:
+            return None
+        if len(rows) == 1:
+            return int(rows[0]["team_id"])
+        if full_name:
+            exact = [r for r in rows if (r["full_name"] or "") == full_name]
+            if len(exact) == 1:
+                return int(exact[0]["team_id"])
+        act = [r for r in rows if r["active"]]
+        if len(act) == 1:
+            return int(act[0]["team_id"])
+        return None
+
+    def mark_current_teams(self, season: int) -> int:
+        """Flag the franchises that actually played in ``season`` as active, using the
+        standings as the authority rather than a hard-coded club list."""
+        ids = {int(r["team_id"]) for r in self.query(
+            "SELECT DISTINCT team_id FROM standings_snapshot WHERE season=?", (season,))}
+        if not ids:
+            return 0
+        self.execute("UPDATE teams SET active=0")
+        qmarks = ",".join("?" * len(ids))
+        self.execute(f"UPDATE teams SET active=1 WHERE team_id IN ({qmarks})", tuple(ids))
+        self.commit()
+        return len(ids)
 
     def audit(self, actor: str, action: str, entity: str = "", detail: str = "") -> None:
         self.execute(

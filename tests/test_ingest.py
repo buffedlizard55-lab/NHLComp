@@ -97,6 +97,47 @@ class TestRealPayloadParsing(unittest.TestCase):
         self.assertIn("no verified first-party coordinate source", v["notes"])
 
 
+class TestFranchiseDisambiguation(unittest.TestCase):
+    """The records API returns one row per franchise, and triCodes repeat across renames.
+
+    Real examples from api.nhle.com/stats/rest/en/team (captured 2026-09-20):
+    team 59 'Utah Hockey Club' and team 68 'Utah Mammoth' are both UTA;
+    team 36 'Ottawa Senators (1917)' and team 9 'Ottawa Senators' are both SEN.
+    """
+
+    def setUp(self):
+        fd, self.dbpath = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        self.store = Store(self.dbpath)
+        for tid, name, ab in ((59, "Utah Hockey Club", "UTA"), (68, "Utah Mammoth", "UTA"),
+                              (36, "Ottawa Senators (1917)", "SEN"),
+                              (9, "Ottawa Senators", "SEN")):
+            self.store.execute("INSERT INTO teams(team_id, abbrev, full_name) VALUES(?,?,?)",
+                               (tid, ab, name))
+        self.store.commit()
+
+    def tearDown(self):
+        self.store.close()
+
+    def test_duplicate_abbrevs_coexist(self):
+        rows = self.store.query("SELECT team_id FROM teams WHERE abbrev='UTA'")
+        self.assertEqual(sorted(r["team_id"] for r in rows), [59, 68])
+
+    def test_full_name_disambiguates(self):
+        self.assertEqual(self.store.team_id_for("UTA", "Utah Mammoth"), 68)
+        self.assertEqual(self.store.team_id_for("UTA", "Utah Hockey Club"), 59)
+        self.assertEqual(self.store.team_id_for("SEN", "Ottawa Senators"), 9)
+
+    def test_ambiguous_without_a_full_name_returns_none(self):
+        self.assertIsNone(self.store.team_id_for("UTA"))
+
+    def test_active_flag_disambiguates_when_only_one_is_current(self):
+        self.store.execute("UPDATE teams SET active=0")
+        self.store.execute("UPDATE teams SET active=1 WHERE team_id=68")
+        self.store.commit()
+        self.assertEqual(self.store.team_id_for("UTA"), 68)
+
+
 class TestKalshiMatching(unittest.TestCase):
     def setUp(self):
         fd, self.dbpath = tempfile.mkstemp(suffix=".db")
