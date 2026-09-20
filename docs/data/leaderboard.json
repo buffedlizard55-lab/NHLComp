@@ -877,9 +877,9 @@
   },
   {
    "strategy_id": "NHL_GOALIE_NEWS",
-   "version": 1,
+   "version": 2,
    "username": "NHL_GOALIE_NEWS_012",
-   "name": "Market reaction to a goalie announcement",
+   "name": "Market reaction to a goalie announcement (blocked)",
    "category": "goalie_news",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -1017,9 +1017,9 @@
   },
   {
    "strategy_id": "NHL_INJURY_IMPACT",
-   "version": 1,
+   "version": 2,
    "username": "NHL_INJURY_IMPACT_021",
-   "name": "Fade the side with an unresolved key injury",
+   "name": "Fade the side with an unresolved key injury (forward only)",
    "category": "injury",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -1788,6 +1788,41 @@
    "rank": 5
   },
   {
+   "strategy_id": "NHL_GOALIE_EDGE",
+   "version": 2,
+   "username": "NHL_GOALIE_EDGE_011",
+   "name": "Goaltending matchup edge (starter SV% last 10 starts)",
+   "category": "goaltending",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 58,
+   "n_settled": 58,
+   "wins": 32,
+   "losses": 26,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": 0.5517,
+   "win_rate_ci": [
+    0.4245,
+    0.6725
+   ],
+   "pnl": 471.55,
+   "staked": 1773.83,
+   "roi": 0.2658,
+   "bankroll": 1471.55,
+   "open_exposure": 0,
+   "max_drawdown": -168.25,
+   "volatility": 39.965,
+   "longest_losing_streak": 5,
+   "avg_price": 0.4222,
+   "avg_edge": 0.0714,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 6
+  },
+  {
    "strategy_id": "NHL_GEN_AWAY_G3_IN_4_AND_AWAY_G4_IN_",
    "version": 1,
    "username": "NHL_GEN_AWAY_G3_IN_4_AND_AWAY_G4_IN__001",
@@ -1816,41 +1851,6 @@
    "longest_losing_streak": 4,
    "avg_price": 0.42,
    "avg_edge": 0.0698,
-   "clv_beat_close": null,
-   "clv_avg": null,
-   "n_clv": 0,
-   "starting_bankroll": 1000.0,
-   "rank": 6
-  },
-  {
-   "strategy_id": "NHL_GOALIE_EDGE",
-   "version": 2,
-   "username": "NHL_GOALIE_EDGE_011",
-   "name": "Goaltending matchup edge (starter SV% last 10 starts)",
-   "category": "goaltending",
-   "status": "active",
-   "test_mode": "FORWARD TEST",
-   "n_bets": 56,
-   "n_settled": 56,
-   "wins": 31,
-   "losses": 25,
-   "pushes": 0,
-   "open": 0,
-   "win_rate": 0.5536,
-   "win_rate_ci": [
-    0.4241,
-    0.6761
-   ],
-   "pnl": 447.72,
-   "staked": 1726.2,
-   "roi": 0.2594,
-   "bankroll": 1447.72,
-   "open_exposure": 0,
-   "max_drawdown": -168.25,
-   "volatility": 40.1855,
-   "longest_losing_streak": 5,
-   "avg_price": 0.4218,
-   "avg_edge": 0.0719,
    "clv_beat_close": null,
    "clv_avg": null,
    "n_clv": 0,
@@ -2243,76 +2243,6 @@
    "rank": 18
   },
   {
-   "strategy_id": "NHL_GOALIE_NEWS",
-   "version": 1,
-   "username": "NHL_GOALIE_NEWS_012",
-   "name": "Market reaction to a goalie announcement",
-   "category": "goalie_news",
-   "status": "active",
-   "test_mode": "FORWARD TEST",
-   "n_bets": 111,
-   "n_settled": 111,
-   "wins": 44,
-   "losses": 67,
-   "pushes": 0,
-   "open": 0,
-   "win_rate": 0.3964,
-   "win_rate_ci": [
-    0.3103,
-    0.4894
-   ],
-   "pnl": 175.38,
-   "staked": 4024.46,
-   "roi": 0.0436,
-   "bankroll": 1175.38,
-   "open_exposure": 0,
-   "max_drawdown": -448.0674,
-   "volatility": 50.4535,
-   "longest_losing_streak": 7,
-   "avg_price": 0.387,
-   "avg_edge": 0.0895,
-   "clv_beat_close": null,
-   "clv_avg": null,
-   "n_clv": 0,
-   "starting_bankroll": 1000.0,
-   "rank": 19
-  },
-  {
-   "strategy_id": "NHL_INJURY_IMPACT",
-   "version": 1,
-   "username": "NHL_INJURY_IMPACT_021",
-   "name": "Fade the side with an unresolved key injury",
-   "category": "injury",
-   "status": "active",
-   "test_mode": "FORWARD TEST",
-   "n_bets": 139,
-   "n_settled": 139,
-   "wins": 57,
-   "losses": 82,
-   "pushes": 0,
-   "open": 0,
-   "win_rate": 0.4101,
-   "win_rate_ci": [
-    0.3318,
-    0.4932
-   ],
-   "pnl": 174.3,
-   "staked": 4749.19,
-   "roi": 0.0367,
-   "bankroll": 1174.3,
-   "open_exposure": 0,
-   "max_drawdown": -492.9887,
-   "volatility": 47.0463,
-   "longest_losing_streak": 9,
-   "avg_price": 0.3976,
-   "avg_edge": 0.0831,
-   "clv_beat_close": null,
-   "clv_avg": null,
-   "n_clv": 0,
-   "starting_bankroll": 1000.0,
-   "rank": 20
-  },
-  {
    "strategy_id": "NHL_POISSON_ML",
    "version": 1,
    "username": "NHL_POISSON_ML_008",
@@ -2345,7 +2275,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 21
+   "rank": 19
   },
   {
    "strategy_id": "NHL_SHOT_SHARE",
@@ -2380,7 +2310,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 22
+   "rank": 20
   },
   {
    "strategy_id": "NHL_ROADTRIP_END",
@@ -2415,7 +2345,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 23
+   "rank": 21
   },
   {
    "strategy_id": "NHL_B2B_FADE",
@@ -2450,7 +2380,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 24
+   "rank": 22
   },
   {
    "strategy_id": "NHL_GEN_MKT_CLOSE_HOME_MID",
@@ -2485,7 +2415,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 25
+   "rank": 23
   },
   {
    "strategy_id": "NHL_B2B_HOME_FADE",
@@ -2520,7 +2450,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 26
+   "rank": 24
   },
   {
    "strategy_id": "NHL_GEN_HOME_G3_IN_4_AND_HOME_PREV_S",
@@ -2555,7 +2485,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 27
+   "rank": 25
   },
   {
    "strategy_id": "NHL_BOOK_VS_EXCHANGE",
@@ -2590,7 +2520,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 28
+   "rank": 26
   },
   {
    "strategy_id": "NHL_EDGE_TRACKING",
@@ -2625,7 +2555,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 29
+   "rank": 27
   },
   {
    "strategy_id": "NHL_GOALIE_FATIGUE",
@@ -2633,6 +2563,76 @@
    "username": "NHL_GOALIE_FATIGUE_022",
    "name": "Fade the goalie on consecutive-night starts",
    "category": "goaltending",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 28
+  },
+  {
+   "strategy_id": "NHL_GOALIE_NEWS",
+   "version": 2,
+   "username": "NHL_GOALIE_NEWS_012",
+   "name": "Market reaction to a goalie announcement (blocked)",
+   "category": "goalie_news",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 29
+  },
+  {
+   "strategy_id": "NHL_INJURY_IMPACT",
+   "version": 2,
+   "username": "NHL_INJURY_IMPACT_021",
+   "name": "Fade the side with an unresolved key injury (forward only)",
+   "category": "injury",
    "status": "active",
    "test_mode": "FORWARD TEST",
    "n_bets": 0,
