@@ -68,7 +68,10 @@ jobs:
         run: PYTHONPATH=src python -m nhlcomp report --db data/nhlcomp.db | tee data/report.txt
 
       - name: Build the GitHub Pages site from the ledger
-        run: PYTHONPATH=src python -m nhlcomp build-site --db data/nhlcomp.db --site docs
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          PYTHONPATH=src python -m nhlcomp build-site --db data/nhlcomp.db --site docs 2>&1 | tee data/site.log
 
       - name: Upload run artefacts
         uses: actions/upload-artifact@v4
@@ -84,18 +87,22 @@ jobs:
           if-no-files-found: ignore
 
       - name: Commit regenerated site and ledger snapshot
-        if: github.event_name != 'pull_request'
+        if: always() && github.event_name != 'pull_request'
         run: |
           set -e
           git config user.name "nhlcomp-bot"
           git config user.email "nhlcomp-bot@users.noreply.github.com"
           mkdir -p data
           cp data/nhlcomp.db data/ledger.db || true
-          git add -f docs data/ledger.db data/probe.json data/verify.json data/report.txt
+          for f in data/ledger.db data/probe.json data/verify.json data/report.txt \
+                   data/ingest.log data/run.log data/site.log; do
+            [ -f "$f" ] && git add -f "$f" || true
+          done
+          [ -d docs ] && git add -f docs || true
           if git diff --cached --quiet; then
             echo "no changes to commit"
           else
-            git commit -m "chore: refresh ledger, site and verification snapshot (generated from live public APIs; see data/report.txt and data/verify.json)"
+            git commit -m "chore: refresh ledger, logs and site (generated from live public APIs)"
             git push
           fi
 

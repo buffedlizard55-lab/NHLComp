@@ -321,8 +321,15 @@ ROI {pct(b.get('roi'))}</td></tr>
                                               "Price data OK?", "Caveat"], rows,
                                 numeric=(1, 2, 3, 4)))
         parts.append("<h2 style='font-size:13px'>Wagers</h2>")
+        total_bets = store.one(
+            "SELECT COUNT(*) c FROM bets WHERE strategy_id=? AND strategy_version=?",
+            (s["strategy_id"], s["version"]))["c"]
         bets = store.query("SELECT * FROM bets WHERE strategy_id=? AND strategy_version=? "
-                           "ORDER BY bet_ts DESC LIMIT 200", (s["strategy_id"], s["version"]))
+                           "ORDER BY bet_ts DESC LIMIT 50", (s["strategy_id"], s["version"]))
+        if total_bets > len(bets):
+            parts.append(f'<p class="small">showing the {len(bets)} most recent of '
+                         f'{total_bets} wagers — the full ledger is in '
+                         f'<code>data/bets.json</code> and the SQLite database.</p>')
         parts.append(_bets_table(f"bets_{key}", bets))
         parts.append("</details>")
     return _page("Strategies", "strategies.html", "".join(parts), gen)
@@ -398,7 +405,11 @@ def page_history(store: Store, gen: str) -> str:
             'written as amendments with a before/after audit row.</p>',
             '<div class="controls"><input placeholder="filter by id, team, mode…" '
             'oninput="filterTable(\'th\', this.value)"></div>']
-    bets = store.query("SELECT * FROM bets ORDER BY bet_ts DESC LIMIT 3000")
+    bets = store.query("SELECT * FROM bets ORDER BY bet_ts DESC LIMIT 1500")
+    total = store.one("SELECT COUNT(*) c FROM bets")["c"]
+    if total > len(bets):
+        body.append(f'<p class="small">showing the {len(bets)} most recent of {total} wagers; '
+                    f'the complete ledger is in <code>data/bets.json</code>.</p>')
     body.append(_bets_table("th", bets))
     aud = store.one("SELECT COUNT(*) c FROM bet_audit")["c"]
     body.append(f'<p class="small">{aud} audit rows in <code>bet_audit</code>.</p>')
