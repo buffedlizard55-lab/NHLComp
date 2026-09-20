@@ -172,7 +172,7 @@
 [ingest] team_game rebuilt: 8820 rows from 4410 games
 [ingest] kalshi: 52 contracts -> 104 quote rows
 [ingest] kalshi settled: 12 contracts (0 unmatched to an NHL game)
-[ingest] espn injuries: 56 entries at 2026-09-20T20:35:39Z
+[ingest] espn injuries: 56 entries at 2026-09-20T20:37:29Z
 {
  "teams": 62,
  "active_teams_20242025": 32,
