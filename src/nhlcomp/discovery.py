@@ -12,9 +12,11 @@ it have predicted the outcome?* -- mechanically:
 5. Emit the survivors as *candidate* strategies with a recorded rationale, and emit the
    failures as findings -- a rejected hypothesis is data too.
 
-Nothing here is allowed to see a price, because no verified historical price feed exists.
-Discovery therefore scores predictive accuracy, not profit; profit only ever comes from
-forward tests against real quotes.
+Two scores are kept apart.  *Accuracy* (hit rate vs. base rate) is computed on every decided
+game.  *Priced ROI* is computed only on games whose Kalshi closing candle was recovered --
+flat stakes at the offer, net of the published taker fee -- and a market-family trigger
+(one that *is* the price) is judged on price alone.  Survivors are CANDIDATES; only forward
+tests against live quotes can promote them.
 """
 
 from __future__ import annotations

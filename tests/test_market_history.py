@@ -242,6 +242,75 @@ class TestMarketHelpers(unittest.TestCase):
         self.assertAlmostEqual(h, 0.6 / 1.1, places=3)
 
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+CAPTURED = os.path.normpath(os.path.join(HERE, "..", "data", "captured"))
+
+
+def _captured(name: str) -> dict:
+    with open(os.path.join(CAPTURED, name), encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+class TestCapturedKalshiPayloads(unittest.TestCase):
+    """Real payloads captured on 2026-09-20 (see data/captured/MANIFEST.md): a historical-tier
+    market page and the hourly candlesticks of one Stanley Cup Final contract."""
+
+    def test_historical_market_rows_parse_and_match_a_game(self):
+        page = _captured("kalshi_historical_markets_kxnhlgame_limit2.json")
+        fd, path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        store = Store(path)
+        http = HttpClient(tempfile.mkdtemp(), offline=True)
+        pipe = Pipeline(store, http, verbose=False)
+        store.execute("INSERT OR REPLACE INTO teams(team_id, abbrev, full_name, active) VALUES(12,'CAR','Carolina Hurricanes',1)")
+        store.execute("INSERT OR REPLACE INTO teams(team_id, abbrev, full_name, active) VALUES(54,'VGK','Vegas Golden Knights',1)")
+        # NHL schedule row: 8pm ET on Jun 14 = 2026-06-15T00:00:00Z; game_date is the local date
+        store.execute(
+            "INSERT INTO games(game_id, season, game_type, game_date, start_time_utc, home_id, away_id,"
+            " venue, utc_offset, state, home_score, away_score, last_period_type, source_id, provenance)"
+            " VALUES(2025030416, 20252026, 3, '2026-06-14', '2026-06-15T00:00:00Z', 54, 12, 'T-Mobile Arena',"
+            " '-07:00', 'OFF', 2, 3, 'REG', 'test', 'SOURCE')")
+        store.commit()
+        for m in page["markets"]:
+            gid = pipe.ing._upsert_settlement(m, tier="historical", source_url="u", ts=utcnow())
+            self.assertEqual(gid, 2025030416)
+        rows = {r["contract"]: r for r in store.query("SELECT * FROM market_settlements")}
+        car = rows["KXNHLGAME-26JUN14CARVGK-CAR"]
+        vgk = rows["KXNHLGAME-26JUN14CARVGK-VGK"]
+        self.assertEqual((car["team_abbrev"], car["result"]), ("CAR", "yes"))
+        self.assertEqual((vgk["team_abbrev"], vgk["result"]), ("VGK", "no"))
+        self.assertEqual(car["series_ticker"], "KXNHLGAME")
+        self.assertEqual(car["market_type"], "moneyline")
+        self.assertAlmostEqual(float(car["volume"]), 5825067.90)
+        self.assertEqual(car["settlement_ts"], "2026-06-15T02:58:59.495517Z")
+        # side resolution goes through the team code, not the title
+        g = pipe.game_refs(game_types=(3,))[0]
+        self.assertEqual(pipe._side_for_contract(dict(car), g, {}), "away")
+        self.assertEqual(pipe._side_for_contract(dict(vgk), g, {}), "home")
+        store.close()
+
+    def test_historical_candles_give_a_pre_game_close_and_in_game_points(self):
+        payload = _captured("kalshi_historical_candlesticks_26JUN14CARVGK_CAR.json")
+        candles = [normalize_candle(c) for c in payload["candlesticks"]]
+        self.assertEqual(candles[0]["ask_close"], 0.53)
+        self.assertEqual(candles[0]["bid_close"], 0.52)
+        self.assertAlmostEqual(candles[0]["volume"], 647423.42)
+        start_ts = 1_781_481_600           # NHL scheduled start 2026-06-15T00:00:00Z
+        pts = derive_price_points(candles, start_ts=start_ts)
+        # the close is the candle ending AT puck drop (covering the hour before it) ...
+        self.assertEqual(pts["close"]["end_period_ts"], start_ts)
+        self.assertEqual(pts["close"]["ask"], 0.53)
+        # ... and never a later one, even though CAR traded up to 0.99 during the game
+        self.assertEqual(pts["ig60"]["ask"], 0.65)
+        self.assertEqual(pts["ig120"]["ask"], 0.88)
+        self.assertEqual(pts["final"]["end_period_ts"], 1_781_492_400)
+        # Kalshi's occurrence_datetime (03:00Z) is the expected expiration, NOT the start:
+        # using it as the start would make the 0.99 in-game candle the "close"
+        wrong = derive_price_points(candles, start_ts=1_781_492_400)
+        self.assertEqual(wrong["close"]["end_period_ts"], 1_781_492_400)
+        self.assertNotEqual(wrong["close"]["ask"], pts["close"]["ask"])
+
+
 class TestHistoryToBacktest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
