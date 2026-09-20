@@ -103,25 +103,62 @@ See **Data Sources** on the site, or `source_registry` in the ledger. A source i
 `verified` after an automated probe is written to `source_verification`. "Free tier" is never
 recorded as free: anything needing a key, a trial or paid credits is marked `freemium`.
 
-Verified reachable from the development environment on 2026-09-20:
+### Probes run from the GitHub Actions runner (real internet, 2026-09-20)
 
-| Source | Verdict | Evidence |
+These verdicts come from `data/probe.json` committed by CI, not from the development sandbox:
+
+| Source | HTTP | Verdict |
 |---|---|---|
-| `api-web.nhle.com/v1` | reachable | live scoreboard JSON incl. 2026-09-19 results |
-| `api.nhle.com/stats/rest/en` | reachable | 62 franchise rows |
-| `api.elections.kalshi.com/trade-api/v2` | reachable | live `KXNHLGAME` contracts with bid/ask/size |
-| `site.api.espn.com/.../nhl/injuries` | reachable | dated injury entries |
-| `archive-api.open-meteo.com` | reachable | hourly historical weather, no key |
+| `api-web.nhle.com/v1/scoreboard/now` | 200 | reachable |
+| `api.nhle.com/stats/rest/en/team` | 200 | reachable |
+| `api.elections.kalshi.com/trade-api/v2/markets` | 200 | reachable |
+| Kalshi settled markets (`status=settled`) | 200 | reachable |
+| `site.api.espn.com/.../nhl/injuries` | 200 | reachable |
+| `api.open-meteo.com/v1/forecast` | 200 | reachable |
+| `api.nhl.com/api/v1/teams` | — | **unreachable from a normal network too**, not just the sandbox |
+| `statsapi.web.nhl.com/api/v1/teams` | — | **unreachable** — this was the only first-party arena-coordinate source |
+| Kalshi candles | 404 | **confirmed unavailable** at both documented path shapes |
+| `www.nhl.com/stats/edge` | — | unreachable as a plain GET |
 
-Flagged or rejected:
+Two consequences that shape the whole project: because `statsapi` is gone there are no
+first-party arena coordinates, and because Kalshi candles 404 there is no intraday price
+history.
 
-| Source | Status | Reason |
-|---|---|---|
-| `api.nhl.com/api/v1` | flagged | two fetch attempts failed from the sandbox; may be egress, not death — CI re-probes |
-| `statsapi.web.nhl.com/api/v1` | flagged | fetch failed; would have been the only first-party arena-coordinate source |
-| Kalshi candles | rejected | HTTP 404 at both documented path shapes |
-| The Odds API | rejected | paid key required; none invented |
-| Natural Stat Trick / MoneyPuck / Evolving-Hockey | rejected | no API; scraping conflicts with site terms; xG is a model output, not source data |
+Rejected outright:
+
+| Source | Reason |
+|---|---|
+| The Odds API | paid key required; none invented |
+| Natural Stat Trick / MoneyPuck / Evolving-Hockey | no API; scraping conflicts with site terms; xG is a model output, not source data |
+
+### What one real ingest actually returned
+
+From `data/ingest.log` committed by CI on 2026-09-20:
+
+```
+teams: 62 franchise rows from api.nhle.com/stats/rest/en/team
+standings: 32 team rows as of 2025-04-17
+team_game rebuilt: 8820 rows from 4410 games
+kalshi settled: 10 contracts (0 unmatched to an NHL game)
+espn injuries: 56 entries at 2026-09-20T19:49:44Z
+cross_validation_conflicts: 0
+active_teams_20242025: 32   active_teams_20252026: 32   active_teams_20262027: 0
+```
+
+`active_teams_20262027` is 0 because the 2026-27 season is in preseason and has no
+standings yet — that is the correct answer, not a failure.
+
+**Only 10 settled NHL contracts are available from Kalshi.** That is the entire verified
+historical price sample, so price-based backtesting rests on roughly ten wagers. It is
+reported as such rather than padded.
+
+### Kalshi status filters
+
+`status=active` and `status=finalized` are **not** valid — the API returns
+`{"error":{"code":"bad_request","details":"invalid status filter"}}`. The live filter is
+`open`. `markets()` raises `KalshiApiError` on an application-level error so a rejected
+request cannot be mistaken for "no markets".
+
 
 ## Known limitations
 
