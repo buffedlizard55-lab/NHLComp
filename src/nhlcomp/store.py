@@ -21,7 +21,14 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Iterable, Iterator
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
+
+# Columns added after their table already shipped.  Applied by Store._migrate so a
+# committed ledger.db from an earlier version gains them without a destructive rebuild.
+ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
+    ("injuries", "position", "TEXT"),
+    ("injuries", "long_comment", "TEXT"),
+)
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -197,6 +204,8 @@ CREATE TABLE IF NOT EXISTS injuries (
     team_abbrev   TEXT,
     status        TEXT,
     detail        TEXT,
+    position      TEXT,                 -- 'G' marks a goalie; drives WAITING FOR GOALIE
+    long_comment  TEXT,
     reported_at   TEXT,                 -- when the source says it was reported
     retrieved_at  TEXT NOT NULL,
     provenance    TEXT NOT NULL DEFAULT 'SOURCE',
@@ -519,6 +528,7 @@ class Store:
         self.conn = sqlite3.connect(path)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
+        self._migrate()
         self.conn.commit()
         cur = self.conn.execute("SELECT value FROM meta WHERE key='schema_version'")
         row = cur.fetchone()
@@ -527,6 +537,27 @@ class Store:
                 "INSERT INTO meta(key, value) VALUES('schema_version', ?)", (str(SCHEMA_VERSION),)
             )
             self.conn.commit()
+        elif row["value"] != str(SCHEMA_VERSION):
+            self.conn.execute(
+                "UPDATE meta SET value=? WHERE key='schema_version'", (str(SCHEMA_VERSION),))
+            self.conn.commit()
+
+    def _migrate(self) -> None:
+        """Additive migrations for a ledger.db that predates the current schema.
+
+        ``CREATE TABLE IF NOT EXISTS`` never alters a table that already exists, and
+        data/ledger.db is committed to the repo and reused by CI.  Without this, adding a
+        column to the schema would leave the live database without it and the next INSERT
+        would fail on a column that plainly exists in the source.  Only ADD COLUMN is
+        performed -- never a drop or a rewrite, so historical rows are never touched.
+        """
+        for table, column, decl in ADDITIVE_COLUMNS:
+            have = {r[1] for r in self.conn.execute(f"PRAGMA table_info({table})")}
+            if table not in {r[0] for r in self.conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'")}:
+                continue
+            if column not in have:
+                self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
 
     # ------------------------------------------------------------- helpers
     def execute(self, sql: str, params: Iterable[Any] = ()) -> sqlite3.Cursor:
@@ -570,6 +601,40 @@ class Store:
         if len(act) == 1:
             return int(act[0]["team_id"])
         return None
+
+    def derive_winners(self) -> int:
+        """Fill games.winner_id from the published final scores.
+
+        winner_id is DERIVED DATA: it is not a field the NHL API returns, it is computed
+        from home_score/away_score, which are.  A game is only marked when the score is
+        unambiguous -- a tie after regulation means the source data we hold is incomplete,
+        and we leave winner_id NULL rather than guess which side took the extra point.
+        """
+        cur = self.execute(
+            """UPDATE games SET winner_id = CASE
+                   WHEN home_score > away_score THEN home_id
+                   WHEN away_score > home_score THEN away_id
+                   ELSE NULL END
+               WHERE winner_id IS NULL
+                 AND home_score IS NOT NULL AND away_score IS NOT NULL
+                 AND state IN ('FINAL','OFF')""")
+        n = cur.rowcount
+        ties = self.one(
+            """SELECT COUNT(*) AS c FROM games
+               WHERE winner_id IS NULL AND home_score IS NOT NULL
+                 AND away_score IS NOT NULL AND home_score = away_score
+                 AND state IN ('FINAL','OFF')""")
+        self.commit()
+        n_ties = int(ties["c"]) if ties else 0
+        if n_ties:
+            # A regulation tie with no winner is not possible in the NHL, so a tie here
+            # means our score snapshot is stale or partial.  Recorded, never guessed.
+            self.flag(
+                "ambiguous_result",
+                f"{n_ties} completed game(s) carry equal home/away scores; winner_id left "
+                f"NULL rather than inferred -- the score snapshot needs re-ingest",
+                severity="error", entity_type="dataset", entity_id="games")
+        return int(n)
 
     def mark_current_teams(self, season: int) -> int:
         """Flag the franchises that actually played in ``season`` as active, using the

@@ -436,10 +436,12 @@ class Ingestor:
                 tm = (ath.get("team") or {}).get("abbreviation") or team.get("displayName")
                 self.store.execute(
                     """INSERT OR IGNORE INTO injuries(source_id, player_name, team_abbrev, status,
-                                                      detail, reported_at, retrieved_at, provenance)
-                       VALUES('espn.nhl_api',?,?,?,?,?,?, 'SOURCE')""",
+                                                      detail, position, long_comment,
+                                                      reported_at, retrieved_at, provenance)
+                       VALUES('espn.nhl_api',?,?,?,?,?,?,?,?, 'SOURCE')""",
                     (name, tm, inj.get("status"), inj.get("shortComment") or inj.get("longComment"),
-                     inj.get("date") or ts, ts))
+                     ((ath.get("position") or {}).get("abbreviation")),
+                     inj.get("longComment"), inj.get("date") or ts, ts))
                 n += 1
         self.store.commit()
         self.log(f"espn injuries: {n} entries at {ts}")

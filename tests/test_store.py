@@ -2,6 +2,7 @@
 
 import json
 import os
+import shutil
 import tempfile
 import unittest
 
@@ -124,3 +125,59 @@ class TestRawProvenance(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDerivedWinnersAndMigration(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.store = Store(os.path.join(self.tmp, "l.db"))
+        self.store.execute("INSERT INTO teams(team_id, abbrev, full_name, active) VALUES(1,'BOS','Boston Bruins',1)")
+        self.store.execute("INSERT INTO teams(team_id, abbrev, full_name, active) VALUES(2,'NYR','New York Rangers',1)")
+        self.store.commit()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def _game(self, gid, hs, as_, state="OFF"):
+        self.store.execute(
+            "INSERT INTO games(game_id, season, game_type, game_date, start_time_utc, home_id,"
+            " away_id, state, home_score, away_score, provenance)"
+            " VALUES(?,20252026,2,?,?,1,2,?,?,?,'SOURCE')",
+            (gid, "2025-10-01", "2025-10-01T23:00:00Z", state, hs, as_))
+        self.store.commit()
+
+    def test_winner_is_derived_from_published_scores(self):
+        self._game(1, 4, 2)          # home wins
+        self._game(2, 1, 3)          # away wins
+        self.assertEqual(self.store.derive_winners(), 2)
+        self.assertEqual(self.store.one("SELECT winner_id FROM games WHERE game_id=1")["winner_id"], 1)
+        self.assertEqual(self.store.one("SELECT winner_id FROM games WHERE game_id=2")["winner_id"], 2)
+
+    def test_unfinished_games_get_no_winner(self):
+        self._game(3, 0, 0, state="FUT")
+        self.store.derive_winners()
+        self.assertIsNone(self.store.one("SELECT winner_id FROM games WHERE game_id=3")["winner_id"])
+
+    def test_a_tie_is_flagged_not_guessed(self):
+        # Equal scores after regulation is impossible in the NHL, so this means our
+        # snapshot is stale.  It must be recorded, and winner_id must stay NULL.
+        self._game(4, 3, 3)
+        self.store.derive_winners()
+        self.assertIsNone(self.store.one("SELECT winner_id FROM games WHERE game_id=4")["winner_id"])
+        flag = self.store.one("SELECT * FROM irregularities WHERE kind='ambiguous_result'")
+        self.assertIsNotNone(flag)
+        self.assertEqual(flag["severity"], "error")
+
+    def test_opening_an_old_database_adds_the_new_columns(self):
+        path = os.path.join(self.tmp, "l.db")
+        self.store.conn.execute("ALTER TABLE injuries DROP COLUMN position")
+        self.store.conn.execute("ALTER TABLE injuries DROP COLUMN long_comment")
+        self.store.conn.execute("UPDATE meta SET value='3' WHERE key='schema_version'")
+        self.store.conn.commit()
+        self.store.conn.close()
+        reopened = Store(path)
+        cols = {r[1] for r in reopened.conn.execute("PRAGMA table_info(injuries)")}
+        self.assertIn("position", cols)
+        self.assertIn("long_comment", cols)
+        self.assertEqual(
+            reopened.one("SELECT value FROM meta WHERE key='schema_version'")["value"], "4")

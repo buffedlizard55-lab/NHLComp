@@ -184,7 +184,9 @@ class ThresholdStrategy(Strategy):
 
     def __init__(self, *, feature: str, side_feature: str = "home", operator: str = ">=",
                  threshold: float = 0.0, bet_side: str = "home", market: str = "moneyline",
-                 use_model: str = "poisson", **kw: Any):
+                 use_model: str = "poisson", requires_goalie: bool = False,
+                 requires_lineup: bool = False, injury_sensitive: bool = False,
+                 min_price: float = 0.05, blocked_reason: str | None = None, **kw: Any):
         super().__init__(**kw)
         self.feature = feature
         self.side_feature = side_feature
@@ -193,9 +195,18 @@ class ThresholdStrategy(Strategy):
         self.bet_side = bet_side
         self.market = market
         self.use_model = use_model
+        self.requires_goalie = bool(requires_goalie)
+        self.requires_lineup = bool(requires_lineup)
+        self.injury_sensitive = bool(injury_sensitive)
+        self.min_price = float(min_price)
+        self.blocked_reason = blocked_reason
         self.params = {"feature": feature, "side_feature": side_feature, "operator": operator,
                        "threshold": threshold, "bet_side": bet_side, "market": market,
                        "use_model": use_model, "min_edge": self.min_edge,
+                       "requires_goalie": self.requires_goalie,
+                       "requires_lineup": self.requires_lineup,
+                       "injury_sensitive": self.injury_sensitive, "min_price": self.min_price,
+                       "blocked_reason": self.blocked_reason,
                        "stake_fraction": self.stake_fraction}
         self.hypothesis = (f"When {feature} {operator} {threshold} the {bet_side} side wins more "
                            f"often than the market price implies.")
@@ -233,6 +244,58 @@ class ThresholdStrategy(Strategy):
             p = preds.get("p_home_ml" if self.bet_side == "home" else "p_away_ml")
         return None if p is None else float(p)
 
+    #: Injury statuses that are genuinely undecided.  "Out" and "Injured Reserve" are
+    #: *resolved* facts -- the player will not play -- so they never justify waiting.
+    #: Only a game-time-decision style status leaves the lineup actually unknown.
+    UNRESOLVED_INJURY_STATUSES = ("day-to-day", "questionable", "game time decision", "gtd")
+
+    def _information_gates(self, ctx: DecisionContext) -> tuple[str, str] | None:
+        """Return (status, reason) when a required input is missing, else None.
+
+        These gates are deliberately conservative: a strategy that declares a dependency
+        refuses to bet rather than betting on an assumed lineup.  Where no verified public
+        source supplies the input at all, the reason says so plainly instead of implying
+        the data merely had not arrived yet.
+        """
+        if self.blocked_reason:
+            return ("WAITING FOR OTHER INFORMATION", self.blocked_reason)
+
+        f = ctx.features
+        home, away = f.get("home_id"), f.get("away_id")
+        sides = [t for t in (home, away) if t is not None]
+
+        if self.requires_goalie:
+            unknown = [t for t in sides if not ctx.starters.get(t)]
+            if unknown:
+                return ("WAITING FOR GOALIE",
+                        f"confirmed starter unknown for team id(s) {unknown}; no verified "
+                        f"public source publishes starting goalies before game time, so this "
+                        f"strategy stays gated rather than assume a starter")
+
+        if self.requires_lineup:
+            unknown = [t for t in sides if not ctx.features.get(f"lines_confirmed_{t}")]
+            if unknown:
+                return ("WAITING FOR LINEUP",
+                        f"forward lines unconfirmed for team id(s) {unknown}; no verified "
+                        f"public source publishes confirmed line combinations")
+
+        if self.injury_sensitive:
+            pending: list[str] = []
+            for t in sides:
+                for name in ctx.injuries.get(t, []):
+                    if isinstance(name, tuple):
+                        nm, st = name
+                    else:
+                        nm, st = name, ""
+                    if str(st).strip().lower() in self.UNRESOLVED_INJURY_STATUSES:
+                        pending.append(f"{nm} ({st})")
+            if pending:
+                return ("WAITING FOR INJURY",
+                        f"game-time-decision injury(ies) on the matchup: "
+                        f"{', '.join(sorted(pending))}")
+
+        return None
+
     def evaluate(self, ctx: DecisionContext) -> list[Signal]:
         ok, detail = self._passes(ctx)
         f = ctx.features
@@ -251,17 +314,29 @@ class ThresholdStrategy(Strategy):
         if not ok:
             return [Signal(status="WATCHING", blocking_reason=f"condition not met ({detail})", **base)]
 
+        blocked = self._information_gates(ctx)
+        if blocked is not None:
+            status, reason = blocked
+            return [Signal(status=status, blocking_reason=reason, **base)]
+
         quote = self.find_quote(ctx, self.market, self.bet_side, "YES")
         if quote is None:
-            return [Signal(status="WAITING FOR OTHER INFORMATION",
-                           blocking_reason="no executable quote found for this market",
-                           **base)]
+            # The trigger fired and the model has a number, so the opportunity has
+            # qualified -- it is a price that is missing, not information.
+            return [Signal(status="QUALIFIED",
+                           blocking_reason="condition met and priced, but no quote published "
+                                           "for this market yet", **base)]
         ask = quote.ask
         if ask is None or ask <= 0:
             return [Signal(status="PRICE TOO HIGH", blocking_reason="no offer on the book",
                            quote=quote, **base)]
         if ask >= 1.0:
             return [Signal(status="PRICE TOO HIGH", blocking_reason="offer at or above par",
+                           quote=quote, **base)]
+        if ask < self.min_price:
+            return [Signal(status="PRICE TOO LOW",
+                           blocking_reason=f"ask {ask:.2f} below floor {self.min_price:.2f}: the "
+                                           f"remaining payoff does not justify the variance",
                            quote=quote, **base)]
         required = round(p - self.min_edge, 4)
         base.update(fair_price=round(ask, 4), required_price=required, quote=quote)
@@ -360,5 +435,118 @@ def build_seed_strategies() -> list[Strategy]:
         hypothesis="Home advantage is not uniform across teams; a subset of teams holds a "
                    "persistently larger home edge than a single league constant implies.",
         min_edge=0.04)
+
+    # -- categories the brief requires but whose inputs are NOT yet verifiable.
+    # Each is registered with the real reason it cannot fire, rather than being quietly
+    # omitted or being pointed at a guessed data feed.
+    add(strategy_id="NHL_GOALIE_EDGE", username="NHL_GOALIE_EDGE_011", category="goaltending",
+        name="Goaltending matchup edge", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", requires_goalie=True, min_edge=0.05,
+        data_used="api-web.nhle.com schedule/results; kalshi.trade_api quotes. Starting-goalie "
+                  "confirmation: NO VERIFIED SOURCE.",
+        hypothesis="Save-percentage above expectation by the confirmed starter moves true win "
+                   "probability more than the moneyline reflects. UNTESTED: cannot be "
+                   "evaluated until confirmed starters are obtainable.",
+        entry_rule="Blocked: requires the confirmed starting goalie for both teams.")
+
+    add(strategy_id="NHL_GOALIE_NEWS", username="NHL_GOALIE_NEWS_012", category="goalie_news",
+        name="Market reaction to a goalie announcement", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", requires_goalie=True,
+        injury_sensitive=True, min_edge=0.06,
+        data_used="espn.nhl_api injuries (verified, cross-check only); kalshi.trade_api quotes. "
+                  "Goalie announcements: NO VERIFIED SOURCE.",
+        hypothesis="A starter announcement moves the price, and the first mover is paid. "
+                   "UNTESTED: neither the announcement feed nor intraday prices exist here.",
+        entry_rule="Blocked: requires the confirmed starter and a pre-announcement price.")
+
+    add(strategy_id="NHL_LINE_COMBO", username="NHL_LINE_COMBO_013", category="player_lines",
+        name="Top-line deployment edge", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", requires_lineup=True, min_edge=0.05,
+        data_used="NO VERIFIED SOURCE for forward-line combinations.",
+        hypothesis="Line combinations change scoring rate independently of roster quality. "
+                   "UNTESTED and unbacktestable with current sources.",
+        entry_rule="Blocked: requires confirmed forward lines for both teams.")
+
+    add(strategy_id="NHL_PROP_EDGE", username="NHL_PROP_EDGE_014", category="player_props",
+        name="Player prop mispricing", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", requires_lineup=True, min_edge=0.05,
+        data_used="NO VERIFIED SOURCE for player-level projections or prop markets. Kalshi "
+                  "KXNHLGAME is game-level only.",
+        hypothesis="Player props are softer than game markets. UNTESTED: no prop market and no "
+                   "player-level feed is verified in this system.",
+        entry_rule="Blocked: requires a player prop market and player-level data.")
+
+    add(strategy_id="NHL_SPECIAL_TEAMS", username="NHL_SPECIAL_TEAMS_015",
+        category="special_teams", name="Power-play / penalty-kill differential",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home", min_edge=0.04,
+        blocked_reason="no verified play-by-play source: PP% and PK% are not obtainable from "
+                       "the endpoints recorded as reachable in data/probe.json, so special-teams "
+                       "features cannot be built without inventing them",
+        data_used="NONE VERIFIED for special teams.",
+        hypothesis="A PP/PK differential is predictive beyond goal differential. UNTESTED.",
+        entry_rule="Blocked: requires a verified play-by-play or special-teams feed.")
+
+    add(strategy_id="NHL_EDGE_TRACKING", username="NHL_EDGE_TRACKING_016",
+        category="edge_tracking", name="NHL EDGE tracking variables",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home", min_edge=0.04,
+        blocked_reason="nhl.com/stats/edge is not reachable as a plain GET and has no published "
+                       "API; recorded unreachable in data/probe.json. EDGE variables are not "
+                       "assumed predictive and cannot be sourced, so nothing is fabricated",
+        data_used="NONE VERIFIED for NHL EDGE.",
+        hypothesis="Skate distance / shot speed / high-danger chances are predictive. UNTESTED "
+                   "and, per the brief, not assumed predictive in advance.",
+        entry_rule="Blocked: requires a verified NHL EDGE feed.")
+
+    add(strategy_id="NHL_WEATHER_OUTDOOR", username="NHL_WEATHER_OUTDOOR_017",
+        category="weather_arena", name="Outdoor-game weather effect",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home", min_edge=0.04,
+        blocked_reason="open-meteo archive is verified reachable, but arena coordinates are not: "
+                       "statsapi.web.nhl.com (the only first-party lat/lon source) is "
+                       "unreachable from the CI runner, so venues.lat/lon are NULL by design "
+                       "and outdoor games cannot be identified without guessing",
+        data_used="archive-api.open-meteo.com (verified, CC BY 4.0); arena coordinates NONE.",
+        hypothesis="Weather affects outdoor games. UNTESTED: outdoor games cannot be identified.",
+        entry_rule="Blocked: requires arena coordinates and an outdoor-game flag.")
+
+    add(strategy_id="NHL_LIVE_INGAME", username="NHL_LIVE_INGAME_018", category="live_in_game",
+        name="In-game momentum reaction", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", min_edge=0.06,
+        blocked_reason="Kalshi candle history returns 404 on both documented path shapes "
+                       "(confirmed from CI, recorded in data/probe.json), so there is no "
+                       "intraday price series to react to; the scoreboard does carry LIVE state "
+                       "but no verified live price feed exists to trade against",
+        data_used="api-web.nhle.com scoreboard (verified, LIVE state available); "
+                  "kalshi.trade_api candles NOT AVAILABLE.",
+        hypothesis="Live prices overreact to goals. UNTESTED: no intraday price history.",
+        entry_rule="Blocked: requires an intraday price feed.")
+
+    add(strategy_id="NHL_PERIOD_BET", username="NHL_PERIOD_BET_019", category="period_betting",
+        name="Period-specific value", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", min_edge=0.05,
+        blocked_reason="Kalshi KXNHLGAME exposes game-level moneyline contracts only; no "
+                       "verified first-period or period-specific market was found, and none is "
+                       "assumed to exist",
+        data_used="kalshi.trade_api KXNHLGAME (game-level only, verified).",
+        hypothesis="Period markets are less efficient than game markets. UNTESTED.",
+        entry_rule="Blocked: requires a verified period-level market.")
+
+    add(strategy_id="NHL_OT_SURVIVAL", username="NHL_OT_SURVIVAL_020", category="ot_shootout",
+        name="Extra-time specialists are underpriced in close games", feature="ot_rate",
+        operator=">=", threshold=0.20, bet_side="home", min_edge=0.05,
+        data_used="api-web.nhle.com gameOutcome.lastPeriodType (REG/OT/SO) -- real, verified, "
+                  "3,008 decided games. kalshi.trade_api quotes.",
+        hypothesis="Teams that reach extra time often have above-average expected points, and a "
+                   "moneyline priced for regulation-only outcomes under-values them. This one "
+                   "uses real data and is testable, unlike the blocked categories above.",
+        entry_rule="home ot_rate >= 0.20 over the prior window.")
+
+    add(strategy_id="NHL_INJURY_IMPACT", username="NHL_INJURY_IMPACT_021", category="injury",
+        name="Fade the side with an unresolved key injury", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", injury_sensitive=True, min_edge=0.05,
+        data_used="site.api.espn.com NHL injuries (verified 200, no key); cross-check only, "
+                  "not treated as authoritative.",
+        hypothesis="A game-time-decision injury is not yet priced in. Held for confirmation "
+                   "rather than bet on assumption.",
+        entry_rule="Condition met, but any day-to-day injury on either team blocks entry.")
 
     return out

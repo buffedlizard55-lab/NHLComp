@@ -340,3 +340,94 @@ class TestBacktestLabels(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestStatusGates(unittest.TestCase):
+    """Every status in STATUSES must be reachable, and gates must never invent an input.
+
+    The brief lists eleven upcoming-bet statuses.  Five of them (QUALIFIED, PRICE TOO LOW,
+    WAITING FOR GOALIE, WAITING FOR LINEUP, WAITING FOR INJURY) were declared but never
+    assigned anywhere, so the site could never show them.  These pin each one down.
+    """
+
+    FEATS = {"game_id": 1, "game_date": "2026-01-01", "home_id": 1, "away_id": 2, "f": 5.0}
+
+    def _ctx(self, quotes=(), preds=None, starters=None, injuries=None):
+        return DecisionContext(decision_ts="2026-01-01T00:00:00Z", features=dict(self.FEATS),
+                               predictions=preds if preds is not None else {"p_home_ml": 0.60},
+                               quotes=list(quotes), starters=starters or {},
+                               injuries=injuries or {}, bankroll=1000.0, open_exposure=0.0)
+
+    def _quote(self, ask, bid=None, size=1000.0):
+        return Quote(provider="kalshi", market_key="moneyline", contract="C-1", game_id=1,
+                     game_date="2026-01-01", market_type="moneyline", selection="home",
+                     side="YES", bid=ask - 0.02 if bid is None else bid, ask=ask,
+                     bid_size=size, ask_size=size, volume=size, liquidity=1000.0,
+                     ts_utc="2026-01-01T00:00:00Z")
+
+    def _strat(self, **kw):
+        kw.setdefault("bet_side", "home")
+        kw.setdefault("min_edge", 0.05)
+        return ThresholdStrategy(strategy_id="G", version=1, username="G_001", feature="f", **kw)
+
+    def test_qualified_when_condition_met_but_no_quote_yet(self):
+        sig = self._strat().evaluate(self._ctx(quotes=[]))[0]
+        self.assertEqual(sig.status, "QUALIFIED")
+
+    def test_price_too_low_below_the_floor(self):
+        sig = self._strat(min_price=0.10).evaluate(self._ctx(quotes=[self._quote(0.03)]))[0]
+        self.assertEqual(sig.status, "PRICE TOO LOW")
+
+    def test_ready_to_bet_still_works_above_the_floor(self):
+        sig = self._strat().evaluate(self._ctx(quotes=[self._quote(0.40)]))[0]
+        self.assertEqual(sig.status, "READY TO BET")
+
+    def test_waiting_for_goalie_when_no_confirmed_starter(self):
+        sig = self._strat(requires_goalie=True).evaluate(
+            self._ctx(quotes=[self._quote(0.40)], starters={1: None, 2: None}))[0]
+        self.assertEqual(sig.status, "WAITING FOR GOALIE")
+        self.assertIn("no verified public source", sig.blocking_reason)
+
+    def test_goalie_gate_clears_when_a_starter_is_known(self):
+        sig = self._strat(requires_goalie=True).evaluate(
+            self._ctx(quotes=[self._quote(0.40)], starters={1: "A. Goalie", 2: "B. Goalie"}))[0]
+        self.assertEqual(sig.status, "READY TO BET")
+
+    def test_waiting_for_lineup(self):
+        sig = self._strat(requires_lineup=True).evaluate(self._ctx(quotes=[self._quote(0.40)]))[0]
+        self.assertEqual(sig.status, "WAITING FOR LINEUP")
+
+    def test_waiting_for_injury_only_for_unresolved_statuses(self):
+        s = self._strat(injury_sensitive=True)
+        blocked = s.evaluate(self._ctx(quotes=[self._quote(0.40)],
+                              injuries={1: [("Player A", "Day-To-Day")]}))[0]
+        self.assertEqual(blocked.status, "WAITING FOR INJURY")
+        # "Out" and "Injured Reserve" are settled facts: the player will not play, so
+        # there is nothing to wait for and the bet must be allowed through.
+        resolved = s.evaluate(self._ctx(quotes=[self._quote(0.40)],
+                               injuries={1: [("Player B", "Out"),
+                                             ("Player C", "Injured Reserve")]}))[0]
+        self.assertEqual(resolved.status, "READY TO BET")
+
+    def test_blocked_reason_gates_a_category_with_no_data_source(self):
+        s = self._strat(blocked_reason="no verified play-by-play source")
+        sig = s.evaluate(self._ctx(quotes=[self._quote(0.40)]))[0]
+        self.assertEqual(sig.status, "WAITING FOR OTHER INFORMATION")
+        self.assertEqual(sig.blocking_reason, "no verified play-by-play source")
+
+    def test_every_declared_status_is_assigned_somewhere_in_source(self):
+        """Guard against a status being declared but unreachable again."""
+        import os
+        from nhlcomp.strategies import STATUSES
+        root = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
+        blob = ""
+        for dirpath, _, files in os.walk(root):
+            for fn in files:
+                if fn.endswith(".py"):
+                    with open(os.path.join(dirpath, fn), encoding="utf-8") as fh:
+                        blob += fh.read()
+        for status in STATUSES:
+            # A bare mention in the STATUSES tuple is not enough; it must be assigned.
+            self.assertIn(f'"{status}"', blob, f"{status} never appears as a value")
+            occurrences = blob.count(f'"{status}"')
+            self.assertGreater(occurrences, 1, f"{status} is declared but never assigned")

@@ -57,6 +57,7 @@ class Pipeline:
                 self.ing.club_season(ab, season)
         for day in scoreboard_days:
             self.ing.scoreboard_window(day)
+        out["winners_derived"] = self.store.derive_winners()
         out["team_game_rows"] = self.ing.rebuild_team_games()
         out["kalshi_active"] = self.ing.kalshi_nhl()
         out["kalshi_settled"] = self.ing.kalshi_settled(max_pages=ingest_settled_pages)
@@ -252,6 +253,44 @@ class Pipeline:
                  f"{len(self.store.latest_versions())} total")
         return self.report["discovery"]
 
+    def _injury_map(self) -> dict[int, list[tuple[str, str]]]:
+        """team_id -> [(player, status)] from the verified ESPN feed.
+
+        Mapped through Store.team_id_for so a triCode shared by two franchises resolves to
+        the active club rather than an arbitrary row.  Entries that cannot be mapped are
+        counted and reported, not dropped in silence.
+        """
+        out: dict[int, list[tuple[str, str]]] = {}
+        unmapped: list[str] = []
+        for r in self.store.query(
+                "SELECT player_name, team_abbrev, status FROM injuries"):
+            ab = r["team_abbrev"]
+            tid = self.store.team_id_for(ab) if ab else None
+            if tid is None:
+                unmapped.append(f"{r['player_name']} ({ab})")
+                continue
+            out.setdefault(tid, []).append((r["player_name"], r["status"] or ""))
+        if unmapped:
+            self.store.flag(
+                "unmapped_injury",
+                f"{len(unmapped)} injury entr(ies) could not be mapped to a team id: "
+                f"{', '.join(sorted(unmapped)[:8])}"
+                + (" ..." if len(unmapped) > 8 else ""),
+                severity="warn", entity_type="dataset", entity_id="injuries",
+                sources="espn.nhl_api")
+        return out
+
+    def _starters(self) -> dict[int, str | None]:
+        """Confirmed starting goalies, keyed by team id.
+
+        Deliberately returns an empty mapping: no verified public source publishes
+        starting goalies before game time (probes against the NHL endpoints are recorded
+        in data/probe.json).  An empty map means "unknown", which is what gates
+        goalie-dependent strategies into WAITING FOR GOALIE instead of letting them bet on
+        an assumed starter.  This is not a stub to be filled in with a guess.
+        """
+        return {}
+
     def stage_backtest(self, rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
         bt = Backtester(self.store)
         out = {}
@@ -289,6 +328,7 @@ class Pipeline:
 
         placed = {"BACKTEST": 0, "FORWARD TEST": 0}
         skipped = 0
+        inj = self._injury_map()
         for s in self.store.latest_versions():
             if s["status"] == "rejected":
                 continue
@@ -328,6 +368,7 @@ class Pipeline:
                           liquidity=None, ts_utc=ms["open_time"] or ms["retrieved_at"])
                 ctx = DecisionContext(decision_ts=ms["open_time"] or ms["retrieved_at"],
                                       features=f, predictions=pred, quotes=[q],
+                                      starters=self._starters(), injuries=inj,
                                       bankroll=bankroll, open_exposure=open_exp)
                 strat.bet_side = sel if strat.category == "kalshi_both_sides" else strat.bet_side
                 for sig in strat.evaluate(ctx):
@@ -371,7 +412,8 @@ class Pipeline:
                 pred["p_home_elo"], pred["p_away_elo"] = pe, 1 - pe
                 pred["p_home_logit"], pred["p_away_logit"] = pred["p_home_ml"], pred["p_away_ml"]
                 ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred,
-                                      quotes=[q], bankroll=bankroll, open_exposure=open_exp)
+                                      quotes=[q], starters=self._starters(), injuries=inj,
+                                      bankroll=bankroll, open_exposure=open_exp)
                 for sig in strat.evaluate(ctx):
                     sig.supporting["decision_ts"] = q.ts_utc
                     self.paper.record_upcoming(
@@ -465,8 +507,24 @@ def _parse(ts: str) -> datetime:
 
 
 def _hydrate(row: Any):
+    """Rebuild a strategy from its stored row.
+
+    Everything the strategy persisted into params_json is passed back through, so a
+    reloaded strategy behaves exactly like the one that was saved.  An earlier version of
+    this function named each parameter by hand, which meant any field added later was
+    silently dropped on reload -- gating flags such as requires_goalie simply evaporated
+    and the strategy started betting as though it had never been gated.
+    """
     from .strategies import ThresholdStrategy
     params = json.loads(row["params_json"] or "{}")
+    kw = dict(params)
+    kw.pop("min_edge", None)
+    kw.pop("stake_fraction", None)
+    kw.setdefault("feature", "home_n_prior")
+    kw.setdefault("operator", ">=")
+    kw.setdefault("threshold", 0)
+    kw.setdefault("bet_side", "home")
+    kw.setdefault("use_model", "poisson")
     return ThresholdStrategy(
         strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
         name=row["name"], category=row["category"],
@@ -474,10 +532,8 @@ def _hydrate(row: Any):
         price_rule=row["price_rule"], settlement_rule=row["settlement_rule"],
         markets=row["markets"], origin=row["origin"], origin_ref=row["origin_ref"],
         starting_bankroll=float(row["starting_bankroll"]),
-        feature=params.get("feature", "home_n_prior"), operator=params.get("operator", ">="),
-        threshold=params.get("threshold", 0), bet_side=params.get("bet_side", "home"),
-        use_model=params.get("use_model", "poisson"), min_edge=params.get("min_edge", 0.03),
-        stake_fraction=params.get("stake_fraction", 0.25))
+        min_edge=params.get("min_edge", 0.03),
+        stake_fraction=params.get("stake_fraction", 0.25), **kw)
 
 
 def _side_for_selection(selection: str | None, g: GameRef,

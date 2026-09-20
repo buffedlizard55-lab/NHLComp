@@ -251,3 +251,56 @@ class TestSideResolutionAgainstSyntheticTeams(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestHydrateRoundTrip(unittest.TestCase):
+    """A strategy reloaded from the DB must behave like the one that was saved.
+
+    _hydrate used to name each parameter by hand, so requires_goalie / requires_lineup /
+    injury_sensitive / blocked_reason were dropped on reload and gated strategies started
+    betting as though they had never been gated.
+    """
+
+    def test_every_persisted_param_survives_a_round_trip(self):
+        import json
+        from nhlcomp.pipeline import _hydrate
+        from nhlcomp.strategies import ThresholdStrategy
+
+        original = ThresholdStrategy(
+            strategy_id="NHL_GOALIE_EDGE", version=1, username="NHL_GOALIE_EDGE_011",
+            name="Goaltending matchup edge", category="goaltending", hypothesis="h",
+            data_used="d", entry_rule="e", price_rule="p", settlement_rule="s",
+            markets="moneyline", origin="seed", origin_ref=None, starting_bankroll=1000.0,
+            feature="home_n_prior", operator=">=", threshold=10, bet_side="home",
+            requires_goalie=True, requires_lineup=True, injury_sensitive=True,
+            min_price=0.07, min_edge=0.05, stake_fraction=0.3,
+            blocked_reason="no verified source for X")
+        row = original.describe()
+
+        revived = _hydrate(row)
+        self.assertTrue(revived.requires_goalie)
+        self.assertTrue(revived.requires_lineup)
+        self.assertTrue(revived.injury_sensitive)
+        self.assertEqual(revived.min_price, 0.07)
+        self.assertEqual(revived.blocked_reason, "no verified source for X")
+        self.assertEqual(revived.min_edge, 0.05)
+        self.assertEqual(revived.feature, "home_n_prior")
+        self.assertEqual(revived.threshold, 10)
+
+    def test_a_legacy_row_without_the_new_params_still_hydrates(self):
+        import json
+        from nhlcomp.pipeline import _hydrate
+        legacy = {
+            "strategy_id": "OLD", "version": 1, "username": "OLD_001", "name": "old",
+            "category": "fatigue", "hypothesis": "h", "data_used": "d", "entry_rule": "e",
+            "price_rule": "p", "settlement_rule": "s", "markets": "moneyline",
+            "origin": "seed", "origin_ref": None, "starting_bankroll": 1000.0,
+            "params_json": json.dumps({"feature": "back_to_back", "threshold": 1,
+                                       "operator": ">=", "bet_side": "home",
+                                       "use_model": "poisson", "min_edge": 0.03,
+                                       "stake_fraction": 0.25}),
+        }
+        revived = _hydrate(legacy)
+        self.assertFalse(revived.requires_goalie)
+        self.assertIsNone(revived.blocked_reason)
+        self.assertEqual(revived.feature, "back_to_back")
