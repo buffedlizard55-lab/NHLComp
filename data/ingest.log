@@ -188,7 +188,7 @@
 [ingest] NHL partner odds (DraftKings): 21 rows for 7 games
 [ingest] NHL EDGE team snapshots 20262027/2: 0
 [ingest] NHL EDGE team snapshots 20252026/2: 32
-[ingest] espn injuries: 56 entries at 2026-09-20T23:38:09Z
+[ingest] espn injuries: 56 entries at 2026-09-20T23:44:42Z
 {
  "teams": 62,
  "active_teams_20242025": 32,
