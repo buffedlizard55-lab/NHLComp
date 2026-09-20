@@ -1,7 +1,7 @@
 [
  {
-  "id": 2,
-  "ts_utc": "2026-09-20T20:12:00Z",
+  "id": 3,
+  "ts_utc": "2026-09-20T20:36:27Z",
   "kind": "duplicate_game",
   "severity": "warn",
   "entity_type": "game",
@@ -14,8 +14,8 @@
   "resolved_at": null
  },
  {
-  "id": 3,
-  "ts_utc": "2026-09-20T20:12:00Z",
+  "id": 4,
+  "ts_utc": "2026-09-20T20:36:27Z",
   "kind": "duplicate_game",
   "severity": "warn",
   "entity_type": "game",
@@ -28,8 +28,22 @@
   "resolved_at": null
  },
  {
+  "id": 2,
+  "ts_utc": "2026-09-20T20:36:26Z",
+  "kind": "unmapped_injury",
+  "severity": "warn",
+  "entity_type": "dataset",
+  "entity_id": "injuries",
+  "detail": "11 injury entr(ies) could not be mapped to a team id: Adam Gaudette (SJ), Cam Lund (SJ), Dominic James (TB), Jan Jenik (LA), Johnathan Kovacevic (NJ), Kevin Fiala (LA), Kyle Keyser (SJ), Mats Zuccarello (LA) ...",
+  "sources": "espn.nhl_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
   "id": 1,
-  "ts_utc": "2026-09-20T20:11:13Z",
+  "ts_utc": "2026-09-20T20:35:45Z",
   "kind": "unknown_team",
   "severity": "error",
   "entity_type": "game",

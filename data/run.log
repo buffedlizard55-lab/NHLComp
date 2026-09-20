@@ -2,19 +2,19 @@
 [pipeline] features: 3968 rows, 0 leakage problems
 [pipeline] elo prior from 20242025 standings for 32 teams
 [pipeline] models: {"poisson": {"n": 0, "log_loss": null, "brier": null}, "elo": {"n": 0, "log_loss": null, "brier": null}, "logistic": {"n": 0, "log_loss": null, "brier": null}, "home_ice_constant": {"n": 0, "log_loss": null, "brier": null}}
-[pipeline] strategies: 370 triggers tested, 12 promoted, 19 total
-[pipeline] forward: {'BACKTEST': 12, 'FORWARD TEST': 0}
-[pipeline] verification: {"games": {"missing_start": 0, "missing_result": 0, "tied_final": 0, "impossible_score": 0, "duplicate": 2, "bad_season": 0}, "bets": {"impossible_odds": 0, "missing_timestamp": 0, "bad_pnl": 0, "duplicate_bet": 0, "stake_exceeds_bankroll": 0, "unmapped": 0}, "quotes": {"crossed_book": 0, "impossible_price": 0, "zero_liquidity": 0, "missing_ts": 0}, "open_irregularities": 3}
+[pipeline] strategies: 370 triggers tested, 12 promoted, 30 total
+[pipeline] forward: {'BACKTEST': 13, 'FORWARD TEST': 0}
+[pipeline] verification: {"games": {"missing_start": 0, "missing_result": 0, "tied_final": 0, "impossible_score": 0, "duplicate": 2, "bad_season": 0}, "bets": {"impossible_odds": 0, "missing_timestamp": 0, "bad_pnl": 0, "duplicate_bet": 0, "stake_exceeds_bankroll": 0, "unmapped": 0}, "quotes": {"crossed_book": 0, "impossible_price": 0, "zero_liquidity": 0, "missing_ts": 0}, "open_irregularities": 4}
 site written to docs
 {
- "strategies": 19,
- "bets": 12,
- "settled": 12,
+ "strategies": 30,
+ "bets": 13,
+ "settled": 13,
  "open": 0,
  "wins": 7,
- "losses": 5,
- "pnl": -68.22,
- "staked": 613.98,
- "roi": -0.1111,
- "win_rate": 0.5833
+ "losses": 6,
+ "pnl": -112.34,
+ "staked": 660.94,
+ "roi": -0.17,
+ "win_rate": 0.5385
 }

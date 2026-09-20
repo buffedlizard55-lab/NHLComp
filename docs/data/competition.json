@@ -1,12 +1,12 @@
 {
- "strategies": 19,
- "bets": 12,
- "settled": 12,
+ "strategies": 30,
+ "bets": 13,
+ "settled": 13,
  "open": 0,
  "wins": 7,
- "losses": 5,
- "pnl": -68.22,
- "staked": 613.98,
- "roi": -0.1111,
- "win_rate": 0.5833
+ "losses": 6,
+ "pnl": -112.34,
+ "staked": 660.94,
+ "roi": -0.17,
+ "win_rate": 0.5385
 }
