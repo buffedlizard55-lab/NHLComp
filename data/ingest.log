@@ -182,13 +182,13 @@
 [ingest] stats REST goalie game rows 20262027/2: 0
 [ingest] kalshi series: 81 hockey series, NHL: ['KXNHL', 'KXNHL1P', 'KXNHL1PSPREAD', 'KXNHL1PTOTAL', 'KXNHL2OT', 'KXNHL2P', 'KXNHL2PSPREAD', 'KXNHL2PTOTAL', 'KXNHL30COMEBACK', 'KXNHL3P', 'KXNHL3PSPREAD', 'KXNHL3PTOTAL', 'KXNHL4NATIONS', 'KXNHLADAMS', 'KXNHLANYGOAL', 'KXNHLAST', 'KXNHLATLANTIC', 'KXNHLCALDER', 'KXNHLCENTRAL', 'KXNHLDRAFTPICK', 'KXNHLDRAFTTOP', 'KXNHLEAST', 'KXNHLEXPANSION', 'KXNHLFINALSEXACT', 'KXNHLFIRSTGOAL', 'KXNHLGAME', 'KXNHLGOAL', 'KXNHLHART', 'KXNHLMETROPOLITAN', 'KXNHLNEXTGM', 'KXNHLNEXTTEAM', 'KXNHLNORRIS', 'KXNHLOVERTIME', 'KXNHLPACIFIC', 'KXNHLPLAYOFF', 'KXNHLPLAYOFFGOALS', 'KXNHLPRES', 'KXNHLPTS', 'KXNHLRETIRE', 'KXNHLRICHARD', 'KXNHLROSS', 'KXNHLSAVES', 'KXNHLSEASONGOALS', 'KXNHLSEASONPTS', 'KXNHLSERIES', 'KXNHLSERIESGAMES', 'KXNHLSERIESOT', 'KXNHLSERIESSCORE', 'KXNHLSERIESSPREAD', 'KXNHLSERIESTOTALGOAL', 'KXNHLSERIESTOTALGOALS', 'KXNHLSPREAD', 'KXNHLTOTAL', 'KXNHLVEZINA', 'KXNHLWEST', 'KXNHLWINS']
 [ingest] kalshi: 50 contracts -> 100 quote rows
-[ingest] kalshi history KXNHLGAME: cutoff=2026-07-22T00:00:00Z live=14 hist=1000 (new 0, unmatched 2) candles ok=2 empty=0 err=0 pending=0 calls=5
+[ingest] kalshi history KXNHLGAME: cutoff=2026-07-22T00:00:00Z live=14 hist=1000 (new 0, unmatched 2) candles ok=0 empty=0 err=0 pending=0 calls=3
 [ingest] kalshi settled: 14 contracts (2 unmatched to an NHL game)
 [ingest] kalshi live price points: 42 open contracts
 [ingest] NHL partner odds (DraftKings): 21 rows for 7 games
 [ingest] NHL EDGE team snapshots 20262027/2: 0
 [ingest] NHL EDGE team snapshots 20252026/2: 32
-[ingest] espn injuries: 56 entries at 2026-09-20T23:44:42Z
+[ingest] espn injuries: 56 entries at 2026-09-20T23:47:19Z
 {
  "teams": 62,
  "active_teams_20242025": 32,
@@ -209,11 +209,11 @@
   "historical_new": 0,
   "historical_pages": 1,
   "unmatched_contracts": 2,
-  "candles_ok": 2,
+  "candles_ok": 0,
   "candles_empty": 0,
   "candles_error": 0,
   "candles_pending": 0,
-  "calls_used": 5
+  "calls_used": 3
  },
  "kalshi_settled": 14,
  "kalshi_live_points": 42,
