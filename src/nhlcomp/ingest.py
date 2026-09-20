@@ -126,6 +126,20 @@ class Ingestor:
     def _insert_games(self, games: Sequence[dict], source_id: str) -> tuple[int, int]:
         inserted = updated = 0
         for g in games:
+            # Never insert a game referencing a team we have not loaded: the foreign key
+            # would reject it anyway, and silently dropping it would hide a data problem.
+            missing = [t for t in (g["home_id"], g["away_id"])
+                       if self.store.one("SELECT 1 FROM teams WHERE team_id=?", (t,)) is None]
+            if missing:
+                self.store.flag(
+                    "unknown_team",
+                    f"game {g['game_id']} on {g.get('game_date')} references team id(s) "
+                    f"{missing} which are not in the teams table; game skipped rather than "
+                    f"attached to a guessed franchise",
+                    severity="error", entity_type="game", entity_id=str(g["game_id"]),
+                    sources=source_id)
+                self.log(f"game {g['game_id']}: unknown team id {missing} - skipped")
+                continue
             existing = self.store.one("SELECT * FROM games WHERE game_id=?", (g["game_id"],))
             row = dict(g)
             row.pop("home_abbrev", None)

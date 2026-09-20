@@ -82,6 +82,26 @@ class TestRealPayloadParsing(unittest.TestCase):
         self.assertEqual(tg[8]["result"], "W")     # Montreal won 4-3 in OT
         self.assertEqual(tg[10]["result"], "OTL")  # Toronto lost in OT
 
+    def test_game_referencing_an_unknown_team_is_skipped_and_flagged(self):
+        """A game must never be attached to a guessed franchise, and must not crash ingest."""
+        prime_cache(self.http, "https://api.nhle.com/stats/rest/en/team",
+                    load("nhl_stats_rest_team.json"))
+        self.ing.teams()
+        bogus = {"_capture": {}, "gamesByDate": [{"date": "2026-09-19", "games": [
+            {"id": 999, "season": 20262027, "gameType": 2, "gameDate": "2026-09-19",
+             "startTimeUTC": "2026-09-19T23:00:00Z", "venueUTCOffset": "-05:00",
+             "gameState": "FINAL",
+             "awayTeam": {"id": 4242, "abbrev": "ZZZ", "score": 1},
+             "homeTeam": {"id": 19, "abbrev": "STL", "score": 3},
+             "periodDescriptor": {"number": 3, "periodType": "REG"}}]}]}
+        prime_cache(self.http, "https://api-web.nhle.com/v1/scoreboard/2026-09-19", bogus)
+        n = self.ing.scoreboard_window("2026-09-19")
+        self.assertEqual(n, 1)                      # parsed...
+        self.assertIsNone(self.store.one("SELECT * FROM games WHERE game_id=999"))  # ...not stored
+        irr = self.store.one("SELECT * FROM irregularities WHERE kind='unknown_team'")
+        self.assertIsNotNone(irr)
+        self.assertIn("4242", irr["detail"])
+
     def test_venues_populated_without_invented_coordinates(self):
         url = "https://api-web.nhle.com/v1/scoreboard/2026-09-19"
         prime_cache(self.http, url, load("nhl_scoreboard_20260919.json"))
