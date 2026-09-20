@@ -440,7 +440,10 @@ class Pipeline:
 
     # ------------------------------------------------------------- all
     def run_all(self, **kw: Any) -> dict[str, Any]:
-        self.stage_ingest(**kw.get("ingest", {}))
+        if "ingest" in kw:
+            self.stage_ingest(**kw["ingest"])
+        else:
+            self.log("skipping ingest (no ingest config supplied)")
         rows = self.stage_features(**kw.get("features", {}))
         refs = self.game_refs(**kw.get("features", {}))
         self.stage_models(rows, refs, prior_season=kw.get("prior_season"))

@@ -14,7 +14,8 @@ from nhlcomp.http import HttpClient
 from nhlcomp.ingest import Ingestor
 from nhlcomp.pipeline import build_team_names, _side_for_selection
 from nhlcomp.features import GameRef
-from nhlcomp.sources.kalshi import KalshiApi, binary_price_to_decimal, normalize_market
+from nhlcomp.sources.kalshi import (KalshiApi, KalshiApiError, binary_price_to_decimal,
+                                    normalize_market)
 from nhlcomp.sources.nhl import derive_team_games, normalize_game, parse_scoreboard_games
 from nhlcomp.sources.registry import SOURCES, seed_registry
 from nhlcomp.store import Store
@@ -226,6 +227,34 @@ class TestKalshiMatching(unittest.TestCase):
     def test_binary_price_to_decimal(self):
         self.assertAlmostEqual(binary_price_to_decimal(0.5), 2.0)
         self.assertTrue(binary_price_to_decimal(0.0) != binary_price_to_decimal(0.0))  # nan
+
+
+class TestKalshiStatusFilter(unittest.TestCase):
+    """Kalshi rejects unknown status filters. Verified 2026-09-20:
+    status=finalized -> {"error":{"code":"bad_request","details":"invalid status filter"}}.
+    An empty result and a rejected request must not look the same to the caller."""
+
+    def test_invalid_status_raises_instead_of_returning_empty(self):
+        api = KalshiApi(HttpClient(tempfile.mkdtemp()))
+        with self.assertRaises(KalshiApiError):
+            api.markets("KXNHLGAME", status="active")
+        with self.assertRaises(KalshiApiError):
+            api.markets("KXNHLGAME", status="finalized")
+
+    def test_valid_statuses_accepted(self):
+        api = KalshiApi(HttpClient(tempfile.mkdtemp()))
+        for st in ("open", "settled", "closed", "unopened"):
+            self.assertIn(st, api.VALID_STATUSES)
+
+    def test_api_error_body_is_surfaced_not_swallowed(self):
+        http = HttpClient(tempfile.mkdtemp())
+        http._store("https://api.elections.kalshi.com/trade-api/v2/markets"
+                    "?series_ticker=KXNHLGAME&limit=200&status=open",
+                    200, json.dumps({"error": {"code": "bad_request",
+                                               "message": "bad request"}}))
+        api = KalshiApi(http)
+        with self.assertRaises(KalshiApiError):
+            api.markets("KXNHLGAME", status="open")
 
 
 class TestSideResolution(unittest.TestCase):

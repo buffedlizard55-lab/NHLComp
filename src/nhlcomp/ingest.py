@@ -14,7 +14,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Iterable, Sequence
 
 from .http import HttpClient, NetworkUnavailable, parse_iso
-from .sources.kalshi import KalshiApi, normalize_market
+from .sources.kalshi import KalshiApi, KalshiApiError, normalize_market
 from .sources.nhl import (NhlApi, NhlStatsRest, daterange, normalize_game,
                           parse_scoreboard_games, parse_standings)
 from .sources.registry import SOURCES, probe_urls_for, seed_registry
@@ -226,8 +226,15 @@ class Ingestor:
         return len(tg)
 
     # ------------------------------------------------------------------ markets
-    def kalshi_nhl(self, *, status: str = "active", series: str = "KXNHLGAME") -> int:
-        markets = self.kalshi.markets(series, status=status)
+    def kalshi_nhl(self, *, status: str = "open", series: str = "KXNHLGAME") -> int:
+        try:
+            markets = self.kalshi.markets(series, status=status)
+        except KalshiApiError as exc:
+            self.store.flag("broken_api", f"kalshi markets status={status}: {exc}",
+                            severity="error", entity_type="source",
+                            entity_id="kalshi.trade_api")
+            self.log(f"kalshi {status}: {exc}")
+            return 0
         if not markets:
             self.store.flag("no_markets", f"no {series} markets with status={status}",
                             severity="info", entity_type="source", entity_id="kalshi.trade_api")
@@ -337,7 +344,13 @@ class Ingestor:
         Kalshi does not document that field's timestamp every bet derived from it is stamped
         ``single_source_timing_unverified`` instead of being presented as precisely timed.
         """
-        markets = self.kalshi.settled_markets(series, max_pages=max_pages)
+        try:
+            markets = self.kalshi.settled_markets(series, max_pages=max_pages)
+        except KalshiApiError as exc:
+            self.store.flag("broken_api", f"kalshi settled markets: {exc}", severity="error",
+                            entity_type="source", entity_id="kalshi.settled_markets")
+            self.log(f"kalshi settled: {exc}")
+            return 0
         if not markets:
             self.store.flag("no_markets", f"no settled {series} markets returned",
                             severity="warn", entity_type="source",

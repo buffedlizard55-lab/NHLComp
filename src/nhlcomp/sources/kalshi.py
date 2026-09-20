@@ -30,6 +30,10 @@ CANDIDATE_SERIES = [
 ]
 
 
+class KalshiApiError(RuntimeError):
+    """Kalshi returned an application-level error rather than market data."""
+
+
 def _f(d: dict, key: str) -> float | None:
     v = d.get(key)
     if v in (None, "", "-"):
@@ -60,20 +64,37 @@ class KalshiApi:
         except Exception:
             return []
 
-    def markets(self, series_ticker: str, *, limit: int = 200, status: str = "active",
+    #: Kalshi rejects unknown status values with {"error":{"code":"bad_request",
+    #: "details":"invalid status filter"}} -- verified 2026-09-20 for "finalized".
+    #: The live filter is "open", not "active".
+    VALID_STATUSES = ("unopened", "open", "closed", "settled")
+
+    def markets(self, series_ticker: str, *, limit: int = 200, status: str = "open",
                 cursor: str | None = None, max_pages: int = 5) -> list[dict]:
+        """Fetch contracts.  Raises ``KalshiApiError`` on an API-level error instead of
+        returning an empty list, because an empty list and a rejected request look identical
+        to the caller and would silently understate the market."""
+        if status not in self.VALID_STATUSES:
+            raise KalshiApiError(f"invalid status filter {status!r}; "
+                                 f"expected one of {self.VALID_STATUSES}")
         out: list[dict] = []
+        seen: set[str] = set()
         for _ in range(max_pages):
             url = f"{BASE}/markets?series_ticker={series_ticker}&limit={limit}&status={status}"
             if cursor:
                 url += f"&cursor={cursor}"
-            try:
-                payload = self.http.get(url).json
-            except Exception:
-                break
-            out.extend(payload.get("markets", []))
+            payload = self.http.get(url).json
+            if isinstance(payload, dict) and payload.get("error"):
+                raise KalshiApiError(f"GET {url} -> {payload['error']}")
+            page = payload.get("markets", [])
+            for m in page:
+                key = (m.get("ticker"), m.get("side"))
+                if key in seen:
+                    continue
+                seen.add(key)
+                out.append(m)
             cursor = payload.get("cursor")
-            if not cursor:
+            if not cursor or not page:
                 break
         return out
 
