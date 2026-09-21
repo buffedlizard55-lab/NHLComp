@@ -35,6 +35,14 @@ status.
   recorded 183 opportunities as "no quote published for this market yet" while holding **zero**
   forward wagers. Re-running that ledger after the fix placed 40 forward wagers; the regression
   test reproduces the production wording (`test_a_live_quote_worded_the_way_kalshi_words_it_is_traded`).
+* **A strategy with no fills has no win rate.** It is reported as `null` (rendered "—"), never as
+  0%, and it is never summed into a bankroll or ranked against strategies that actually traded.
+* **A totals market is a ladder, not a line.** Kalshi lists one "Over k.5" contract per strike
+  — eight on the 2026-09-24 slate, 1.5 through 8.5 — so a rule must declare which rung it means.
+  `TotalsStrategy.target_strike` is declared in the seed before any price is seen, and
+  `_pick_strike` trades the offered strike nearest it inside `[4.5, 8.5]`, recording
+  `strikes_offered` on every signal. Before that, the rule was handed whichever strike sorted
+  first (1.5) and refused all 84 totals opportunities on the 2026-09-21 CI run.
 * **Totals are traded, and the two sides are not symmetric.** An **Over** is the YES side of an
   "Over k.5" contract, whose offer the candlestick history publishes, so it backtests at real
   prices. An **Under** is the NO side; the candle feed publishes no NO offer and
@@ -154,6 +162,8 @@ how many hypotheses it tested so a lucky survivor is visible as such.
 | Modes never merge | separate leaderboards / totals per `test_mode`; backtest P&L never funds a bankroll | `test_09_site_builds_every_section`, `test_05_*` |
 | No unlimited liquidity | `simulate_fill` caps at `yes_ask_size_fp` | `test_partial_fill_when_stake_exceeds_liquidity` |
 | A quoted contract is tradeable | `_live_quotes` maps the exchange's wording to home/away/over/under | `test_a_live_quote_worded_the_way_kalshi_words_it_is_traded` |
+| The right rung of the totals ladder is traded | `_pick_strike` takes the offered strike nearest a declared target; `find_quotes` returns every rung | `test_the_rule_trades_its_declared_strike_not_the_first_one_in_the_book` |
+| An empty priced backtest says why | `_totals_coverage` flags `totals_price_coverage` with the counts | `test_a_price_with_no_features_is_flagged_not_silently_dropped` |
 | No invented Under price | the Under side is forward-only; `no_history_reason` blocks its priced backtest | `test_an_under_rule_declares_that_it_has_no_history_and_is_not_priced` |
 | Totals settle from the official score | `PaperEngine._settle_total`; exchange result cross-checked | `test_a_forward_totals_bet_settles_from_the_official_final_score`, `test_a_disagreement_is_recorded_with_both_values_and_left_open` |
 | No line is guessed | a totals contract without `floor_strike`/`strike_type` is skipped | `test_a_contract_with_no_readable_line_is_never_traded` |
@@ -238,10 +248,14 @@ application-level error so a rejected request cannot be mistaken for "no markets
   games (verified 2026-09-21 on the 2025-11-15 slate), and the NHL partner feed covers the
   current slate only. Sportsbook lines are therefore a forward-only reference, never a backtest
   price.
-* **Totals price history is still filling in.** KXNHLTOTAL settled contracts exist back to the
-  2026 Stanley Cup Final (verified 2026-09-21) and the walk is budgeted separately
-  (`--totals-budget`), so the totals backtest covers only the games whose candles have been
-  recovered so far; the totals accuracy row says which strikes it used.
+* **Totals price history and feature history do not overlap yet.** The Kalshi candle walk and
+  the NHL season-stats walk are budgeted separately and move in opposite directions. On the
+  2026-09-21 CI ledger the candle walk held 577 settled contracts with a pre-puck-drop offer
+  across 73 games (64 of them 2025-26 playoff games) while `team_game_stats` covered only
+  2024-25 — so **no** game had both a price and a point-in-time feature row, and the priced
+  totals backtest is empty. That is recorded as an open `totals_price_coverage` irregularity
+  with the counts, not left as an empty table that looks like "the rules found no value".
+  Totals are accuracy-only in BACKTEST and forward-test at live offers until the walks meet.
 * **Starting goalies for upcoming games have no verified pre-game source.** Goalie-gated
   strategies forward-test only when a starter is known; their backtests rely on the post-game
   log (an explicit ASSUMPTION recorded on the strategy).

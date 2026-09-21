@@ -442,3 +442,138 @@ class TestStrikeParsing(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestStrikeSelection(ForwardAndTotalsBase):
+    """The bug that kept the totals market at zero wagers.
+
+    Kalshi lists a ladder of "Over k.5" contracts per game -- eight of them on the
+    2026-09-24 slate (1.5 through 8.5), captured verbatim in the ledger's 464 totals quote
+    rows.  `find_quote` returned the *first* match for the side "over", which in book order
+    was strike 1.5, so every totals rule saw only 1.5 and refused it as outside the traded
+    range.  The CI run of 2026-09-21 recorded that refusal on all 84 totals opportunities
+    ("strike 1.5 outside the traded range [4.5, 8.5]") while holding 7,885 settled totals
+    contracts and zero totals wagers.
+    """
+
+    LADDER = [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]
+
+    def ladder_ctx(self, ask_for=None):
+        """The eight contracts Kalshi actually quoted, lowest strike first."""
+        f = self.feature_row(self.gid_future, self.future)
+        quotes = []
+        for k in self.LADDER:
+            ask = (ask_for or {}).get(k, 0.50)
+            quotes.append(Quote(provider="kalshi", market_key="KXNHLTOTAL-26OCT01ANATOR",
+                                contract=f"KXNHLTOTAL-26OCT01ANATOR-{int(k)}",
+                                game_id=self.gid_future, game_date=f["game_date"],
+                                market_type="total", selection="over", side="YES",
+                                bid=round(ask - 0.02, 4), ask=ask, bid_size=50, ask_size=50,
+                                volume=5, liquidity=5, ts_utc=utcnow(),
+                                label=f"Full Game: Over {k} goals scored", strike=k))
+        return DecisionContext(decision_ts=quotes[0].ts_utc, features=f,
+                               predictions={"lam_home": f["lam_home"], "lam_away": f["lam_away"]},
+                               quotes=quotes, bankroll=1000.0), f
+
+    def test_the_rule_trades_its_declared_strike_not_the_first_one_in_the_book(self):
+        strat = TotalsStrategy(strategy_id="NHL_TOTALS_OVER", username="T1", name="t",
+                               direction="over", min_edge=0.04, target_strike=6.5)
+        ctx, f = self.ladder_ctx()
+        sig = strat.evaluate(ctx)[0]
+        self.assertEqual(sig.quote.strike, 6.5)
+        self.assertEqual(sig.quote.contract, "KXNHLTOTAL-26OCT01ANATOR-6")
+        self.assertEqual(sig.supporting["strikes_offered"], self.LADDER)
+        self.assertEqual(sig.supporting["target_strike"], 6.5)
+        # the probability is the one for the strike actually traded, not for 1.5
+        self.assertAlmostEqual(sig.model_prob, p_total_over(f["lam_home"], f["lam_away"], 6.5))
+        self.assertNotAlmostEqual(sig.model_prob, p_total_over(f["lam_home"], f["lam_away"], 1.5))
+
+    def test_a_tighter_variant_trades_a_different_rung_of_the_same_ladder(self):
+        ctx, _ = self.ladder_ctx()
+        tight = TotalsStrategy(strategy_id="NHL_TOTALS_OVER_TIGHT", username="T2", name="t",
+                               direction="over", min_edge=0.02, target_strike=5.5)
+        self.assertEqual(tight.evaluate(ctx)[0].quote.strike, 5.5)
+
+    def test_the_nearest_tradable_strike_wins_when_the_target_is_not_offered(self):
+        # 6.5 is absent from the book; 7.5 and 5.5 are equidistant, and the tie goes to the
+        # lower strike so the choice is deterministic and reproducible.
+        ctx, _ = self.ladder_ctx()
+        ctx.quotes = [q for q in ctx.quotes if q.strike != 6.5]
+        sig = TotalsStrategy(strategy_id="NHL_TOTALS_OVER", username="T1", name="t",
+                             direction="over", target_strike=6.5).evaluate(ctx)[0]
+        self.assertEqual(sig.quote.strike, 5.5)
+
+    def test_a_book_of_only_deep_strikes_reports_the_book_it_was_shown(self):
+        # A near-certain "Over 1.5" is not a totals bet, and the ledger says what was on
+        # offer instead of a bare "no".
+        strat = TotalsStrategy(strategy_id="NHL_TOTALS_OVER", username="T1", name="t",
+                               direction="over", min_strike=4.5, max_strike=8.5)
+        ctx, _ = self.ladder_ctx()
+        ctx.quotes = [q for q in ctx.quotes if q.strike < 4.5]
+        sig = strat.evaluate(ctx)[0]
+        self.assertEqual(sig.status, "WATCHING")
+        self.assertIn("1.5", sig.blocking_reason)
+        self.assertIn("3.5", sig.blocking_reason)
+        self.assertIn("[4.5, 8.5]", sig.blocking_reason)
+
+    def test_the_under_side_picks_its_own_rung_from_the_no_offers(self):
+        ctx, _ = self.ladder_ctx()
+        for q in ctx.quotes:
+            q.side, q.selection = "NO", "under"
+            q.label = q.label.replace("Over", "Over")     # the NO side of an Over contract
+        strat = TotalsStrategy(strategy_id="NHL_TOTALS_UNDER", username="T3", name="t",
+                               direction="under", target_strike=6.5)
+        sig = strat.evaluate(ctx)[0]
+        self.assertEqual(sig.side, "NO")
+        self.assertEqual(sig.quote.strike, 6.5)
+        self.assertEqual(sig.quote.contract, "KXNHLTOTAL-26OCT01ANATOR-6")
+
+    def test_the_pipeline_hands_every_rung_to_the_rule(self):
+        """`_live_quotes` must not collapse the ladder down to one quote per game."""
+        for k in self.LADDER:
+            self.quote_row(contract=f"KXNHLTOTAL-26OCT01ANATOR-{int(k)}",
+                           market_key="KXNHLTOTAL-26OCT01ANATOR", gid=self.gid_future,
+                           day=self.future, market_type="total",
+                           title=f"Full Game: Over {k} goals scored", side="YES",
+                           bid=0.48, ask=0.50, strike=k, strike_type="greater")
+        quotes = [q for q in self.pipe._live_quotes() if q.market_type == "total"]
+        self.assertEqual(sorted(q.strike for q in quotes), self.LADDER)
+
+
+class TestTotalsPriceCoverage(ForwardAndTotalsBase):
+    """An empty priced backtest must say why it is empty.
+
+    On the 2026-09-21 CI ledger the totals candle walk held 577 settled contracts with a
+    pre-puck-drop offer across 73 games (64 of them 2025-26 playoff games) while the season
+    stats walk covered only 2024-25 -- so no game had both a price and a point-in-time
+    feature row, and the priced totals backtest was empty.  Empty because of a coverage gap
+    and empty because the rules found no value are different statements, and the ledger has
+    to tell them apart.
+    """
+
+    def totals_rows(self, *contracts):
+        return [{"game_id": self.gid_past, "contract": c, "direction": "over", "strike": 6.5,
+                 "line_basis": "strike_type+floor_strike", "result": "no", "points": {
+                     "close": {"ask": 0.5, "bid": 0.48, "ts": "2026-03-04T00:00:00Z"}}}
+                for c in contracts]
+
+    def test_a_price_with_no_features_is_flagged_not_silently_dropped(self):
+        gap = self.pipe._totals_coverage(self.totals_rows("K-6"), {}, {})
+        self.assertEqual(gap["contracts_with_a_pregame_offer"], 1)
+        self.assertEqual(gap["games_with_a_pregame_offer"], 1)
+        self.assertEqual(gap["of_those_games_with_point_in_time_features"], 0)
+        self.assertEqual(gap["backtestable_games"], 0)
+        self.assertIn("have not reached the same games", gap["reason"])
+        row = self.store.one("SELECT * FROM irregularities WHERE kind='totals_price_coverage'")
+        self.assertIsNotNone(row)
+        self.assertEqual(row["status"], "open")
+        self.assertIn("KXNHLTOTAL", row["entity_id"])
+
+    def test_a_game_with_both_a_price_and_features_is_counted_backtestable(self):
+        refs = {g.game_id: g for g in self.pipe.game_refs(game_types=(1, 2, 3))}
+        gap = self.pipe._totals_coverage(self.totals_rows("K-6"), refs,
+                                         {self.gid_past: {"lam_home": 3.0, "lam_away": 2.8}})
+        self.assertEqual(gap["backtestable_games"], 1)
+        self.assertNotIn("reason", gap)
+        self.assertIsNone(self.store.one(
+            "SELECT * FROM irregularities WHERE kind='totals_price_coverage'"))

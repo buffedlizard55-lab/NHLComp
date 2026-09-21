@@ -502,6 +502,53 @@ class Pipeline:
             out.append(d)
         return out
 
+    def _totals_coverage(self, totals: Sequence[dict[str, Any]], refs: dict[int, GameRef],
+                         pit: dict[int, dict[str, Any]]) -> dict[str, Any]:
+        """Record how much totals price history is actually usable, and why the rest is not.
+
+        A priced totals BACKTEST needs two things for the same game: a candlestick offer from
+        Kalshi and a point-in-time feature row from the NHL stats feed.  The two walks are
+        budgeted separately and move in opposite directions -- the candle walk starts from the
+        most recent contracts, the stats walk works forward through a season -- so they can
+        hold a lot of data each and still not overlap.  On the 2026-09-21 CI ledger they did
+        not: 577 settled contracts had a pre-puck-drop offer across 73 games (64 of them
+        2025-26 playoff games, 9 pre-season), while ``team_game_stats`` covered only the
+        2024-25 season, so **no** game had both.  That is a coverage gap, not a result, and
+        it is written to the ledger as one rather than being left as an empty backtest that
+        looks like "the totals rules found nothing".
+        """
+        with_offer = [t for t in totals if t.get("points", {}).get(self.entry_point_default)]
+        games_offer = {int(t["game_id"]) for t in with_offer}
+        scored = {g for g in games_offer
+                  if pit.get(g) is not None and pit[g].get("lam_home") is not None}
+        decided = {g for g in games_offer
+                   if refs.get(g) is not None and refs[g].decided}
+        gap = {"settled_totals_contracts": len(totals),
+               "contracts_with_a_pregame_offer": len(with_offer),
+               "games_with_a_pregame_offer": len(games_offer),
+               "of_those_games_decided_in_the_ledger": len(decided),
+               "of_those_games_with_point_in_time_features": len(scored),
+               "backtestable_games": len(scored & decided)}
+        if gap["backtestable_games"] == 0 and gap["contracts_with_a_pregame_offer"]:
+            gap["reason"] = (
+                "The Kalshi totals candle walk and the NHL season-stats walk have not reached "
+                "the same games yet: every contract with a pre-puck-drop offer belongs to a "
+                "game with no point-in-time feature row, so no totals entry can be priced "
+                "honestly. Totals are therefore accuracy-only (BACKTEST) and forward-test at "
+                "live offers until the two walks overlap. Nothing was inferred to fill the gap.")
+            self.store.flag("totals_price_coverage",
+                            "Totals price history and feature history do not overlap yet, so no "
+                            "totals entry can be priced honestly. " + json.dumps(gap, indent=1),
+                            severity="warn", entity_type="market", entity_id="KXNHLTOTAL",
+                            sources="kalshi.candles,nhl.stats_rest")
+        self.report["totals_price_coverage"] = gap
+        self.log(f"totals price coverage: {gap['contracts_with_a_pregame_offer']} contracts with "
+                 f"a pre-game offer across {gap['games_with_a_pregame_offer']} games; "
+                 f"{gap['backtestable_games']} backtestable")
+        return gap
+
+    entry_point_default = "close"
+
     def _backtest_totals(self, strat: Any, *, refs: dict[int, GameRef],
                          pit: dict[int, dict[str, Any]], totals: Sequence[dict[str, Any]],
                          entry_point: str) -> int:
@@ -681,7 +728,19 @@ class Pipeline:
         dk = self._dk_reference()
         settled = self._settled_contracts()
         totals = self._settled_totals()
+        self._totals_coverage(totals, refs, pit)
         live = self._live_quotes(refs, names)
+        # Kalshi lists one "Over k.5" contract per strike, so a totals rule is handed the
+        # whole ladder for a game and chooses the rung it declares.  Evaluating one rung at a
+        # time would leave the rule staring at whichever strike sorted first -- 1.5 on the
+        # 2026-09-24 slate -- and refusing every game, which is what the 2026-09-21 CI run
+        # recorded on all 84 totals opportunities.
+        ladder: dict[tuple, list[Quote]] = {}
+        for q in live:
+            if (q.market_type or "moneyline") == "total":
+                ladder.setdefault((q.game_id, q.selection, q.side), []).append(q)
+        for rungs in ladder.values():
+            rungs.sort(key=lambda z: float(z.strike) if z.strike is not None else 0.0)
         for s in self.store.latest_versions():
             if s["status"] == "rejected":
                 continue
@@ -782,6 +841,7 @@ class Pipeline:
             self.store.sync_bankroll(strat.strategy_id, strat.version)
 
             # ---------------------------------------------------- FORWARD TEST
+            seen_ladders: set[tuple] = set()
             for q in live:
                 gid = q.game_id
                 g = refs.get(gid) if gid else None
@@ -796,6 +856,10 @@ class Pipeline:
                     sel = q.selection            # 'over' | 'under', from the exchange's line
                     if sel != getattr(strat, "direction", None):
                         continue
+                    key = (gid, sel, q.side)
+                    if key in seen_ladders:
+                        continue   # the ladder for this game is decided once, as a whole
+                    seen_ladders.add(key)
                 else:
                     sel = _side_for_selection(q.selection, g, names)
                     if sel is None or sel != strat.bet_side:
@@ -807,16 +871,18 @@ class Pipeline:
                 ref = dk.get(gid) if (q.market_type or "moneyline") == "moneyline" else None
                 if ref and ref.get("home_prob") is not None:
                     pred = dict(pred, p_home_book=ref["home_prob"], p_away_book=ref["away_prob"])
+                rungs = ladder.get((gid, q.selection, q.side), [q]) if qtype == "total" else [q]
                 ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred,
-                                      quotes=[q], starters=starters_for(f), injuries=inj,
+                                      quotes=rungs, starters=starters_for(f), injuries=inj,
                                       bankroll=bankroll, open_exposure=open_exp)
                 for sig in strat.evaluate(ctx):
+                    traded = sig.quote if sig.quote is not None else q
                     sig.supporting["decision_ts"] = q.ts_utc
                     sig.supporting["price_point"] = "live_quote"
-                    sig.supporting["contract"] = q.contract
-                    sig.supporting["contract_label"] = q.label
-                    sig.supporting["strike"] = q.strike
-                    sig.supporting["quote_side"] = q.side
+                    sig.supporting["contract"] = traded.contract
+                    sig.supporting["contract_label"] = traded.label
+                    sig.supporting["strike"] = traded.strike
+                    sig.supporting["quote_side"] = traded.side
                     ref = dk.get(gid) if (q.market_type or "moneyline") == "moneyline" else None
                     if ref and ref.get("home_prob") is not None:
                         p_ref = ref["home_prob"] if sel == "home" else ref["away_prob"]

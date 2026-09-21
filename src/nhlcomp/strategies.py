@@ -181,6 +181,23 @@ class Strategy:
         "no quote published".  Substring matching is deliberately symmetric because the
         label may be a place name ("Vegas") or a full name ("Vegas Golden Knights").
         """
+        matches = self.find_quotes(ctx, market_type, selection, side)
+        return matches[0] if matches else None
+
+    def find_quotes(self, ctx: DecisionContext, market_type: str, selection: str,
+                    side: str) -> list[Quote]:
+        """Every quote that matches the side this rule trades, in book order.
+
+        A moneyline has one contract per team, so the first match is the only match.  A
+        totals market does not: Kalshi lists one "Over k.5" contract per strike (the
+        2026-09-24 slate carried eight, 1.5 through 8.5), and every one of them is a
+        legitimate quote for the side "over".  A caller that takes only the first match
+        silently trades whichever strike happened to sort first -- on the real ledger that
+        was 1.5, which every totals rule then refused, so the totals market never traded at
+        all.  Totals rules therefore ask for the whole list and choose the strike
+        themselves, from a target declared before any price is seen.
+        """
+        out: list[Quote] = []
         for q in ctx.quotes:
             if q.market_type != market_type or q.side != side:
                 continue
@@ -189,8 +206,9 @@ class Strategy:
                     continue
                 c = cand.lower().strip()
                 if selection.lower() in c or c in selection.lower():
-                    return q
-        return None
+                    out.append(q)
+                    break
+        return out
 
     def evaluate(self, ctx: DecisionContext) -> list[Signal]:   # pragma: no cover - abstract
         raise NotImplementedError
@@ -459,7 +477,7 @@ class TotalsStrategy(ThresholdStrategy):
 
     def __init__(self, *, direction: str = "over", min_edge: float = 0.04,
                  min_price: float = 0.05, min_strike: float = 4.5, max_strike: float = 8.5,
-                 no_history_reason: str | None = None, **kw: Any):
+                 target_strike: float = 6.5, no_history_reason: str | None = None, **kw: Any):
         # the threshold machinery is inherited only for the shared information gates and
         # sizing; a totals rule has no feature trigger of its own, so the trigger is set
         # to a condition that is always satisfied and says so.
@@ -476,6 +494,11 @@ class TotalsStrategy(ThresholdStrategy):
         self.markets = "total"
         self.min_strike = float(min_strike)
         self.max_strike = float(max_strike)
+        # The line this rule means by "the total".  Declared here, before any price is
+        # looked at, so which strike gets traded is part of the rule's definition and not a
+        # choice made after seeing the book.  The exchange offers many strikes; the rule
+        # trades the offered one nearest to this, and refuses if none is in range.
+        self.target_strike = float(target_strike)
         self.no_history_reason = no_history_reason
         self.settlement_rule = ("Official NHL final score. Kalshi settles an Over k.5 contract "
                                 "on regulation + overtime goals, with a shootout counted as one "
@@ -483,16 +506,21 @@ class TotalsStrategy(ThresholdStrategy):
                                 "already includes, so total = home_score + away_score.")
         self.params = {**self.params, "kind": "totals", "direction": direction,
                        "market": "total", "min_strike": self.min_strike,
-                       "max_strike": self.max_strike, "no_history_reason": no_history_reason}
+                       "max_strike": self.max_strike, "target_strike": self.target_strike,
+                       "no_history_reason": no_history_reason}
         side_word = "over" if direction == "over" else "under"
         self.hypothesis = (f"The independent-Poisson expected-goals model prices a {side_word} "
                            f"total more accurately than the exchange does, so buying the "
                            f"{side_word} side when the offer is at least {min_edge:.3f} below the "
-                           f"model probability earns the difference.")
+                           f"model probability earns the difference.  The exchange lists one "
+                           f"contract per strike; this rule trades the offered strike nearest "
+                           f"{self.target_strike:g}.")
         self.entry_rule = (f"At decision time compute expected goals from prior games only; buy "
                            f"the {side_word} side of the quoted strike when the offer is at or "
-                           f"below model P({side_word}) - {min_edge:.3f}. Strikes outside "
-                           f"[{self.min_strike}, {self.max_strike}] are not traded.")
+                           f"below model P({side_word}) - {min_edge:.3f}. The offered strike "
+                           f"nearest {self.target_strike:g} is traded; strikes outside "
+                           f"[{self.min_strike}, {self.max_strike}] are never traded, and a game "
+                           f"whose offered strikes are all outside that range is skipped.")
         self.price_rule = (f"Require an executable offer <= model P({side_word}) - "
                            f"{self.min_edge:.3f}; never bet into a stale or missing quote.")
         self.data_used = ("kalshi.trade_api KXNHLTOTAL contracts (floor_strike, yes/no offers, "
@@ -511,6 +539,51 @@ class TotalsStrategy(ThresholdStrategy):
         except (TypeError, ValueError):
             return None
 
+    def _pick_strike(self, ctx: DecisionContext, side: str
+                     ) -> tuple[Quote | None, list[float], tuple[str, str] | None]:
+        """Choose which of the exchange's offered strikes this rule trades.
+
+        Returns ``(quote, strikes_offered, blocking)``.  The exchange lists a whole ladder of
+        "Over k.5" contracts per game, so "the total" is ambiguous until the rule says which
+        rung it means.  The choice is made from :attr:`target_strike`, declared in the seed
+        before any price is seen:
+
+        * only strikes inside ``[min_strike, max_strike]`` are candidates -- an "Over 1.5"
+          contract is a near-certainty priced at 0.99 and is not a totals bet;
+        * among those, the one nearest the target wins, ties going to the lower strike so the
+          choice is deterministic and reproducible;
+        * a contract with no readable strike is never a candidate, and never guessed;
+        * if nothing is tradable the caller gets a blocking reason that lists what *was*
+          offered, so the ledger shows the book rather than a bare "no".
+        """
+        cands = self.find_quotes(ctx, "total", self.direction, side)
+        if not cands:
+            return None, [], ("WATCHING", "no KXNHLTOTAL contract quoted for this game")
+        known: list[tuple[float, Quote]] = []
+        for c in cands:
+            st = getattr(c, "strike", None)
+            if st is None:
+                continue
+            try:
+                known.append((float(st), c))
+            except (TypeError, ValueError):
+                continue
+        offered = sorted({k for k, _ in known})
+        if not known:
+            return None, offered, ("WAITING FOR OTHER INFORMATION",
+                                   f"{len(cands)} contract(s) quoted but none carries a readable "
+                                   "floor_strike/strike_type; the line is not known, so it is "
+                                   "not assumed")
+        in_range = [(k, c) for k, c in known
+                    if self.min_strike <= k <= self.max_strike]
+        if not in_range:
+            return None, offered, ("WATCHING",
+                                   f"strikes offered {[f'{k:g}' for k in offered]} are all "
+                                   f"outside the traded range "
+                                   f"[{self.min_strike:g}, {self.max_strike:g}]")
+        in_range.sort(key=lambda kc: (abs(kc[0] - self.target_strike), kc[0]))
+        return in_range[0][1], offered, None
+
     def evaluate(self, ctx: DecisionContext) -> list[Signal]:
         from .models import p_total_over      # local import: strategies stay import-light
         f = ctx.features
@@ -523,23 +596,17 @@ class TotalsStrategy(ThresholdStrategy):
             fair_price=float("nan"), required_price=float("nan"), stake=0.0,
             supporting={"market": "total", "direction": self.direction})
 
-        q = self.find_quote(ctx, "total", self.direction, side)
+        q, offered, why = self._pick_strike(ctx, side)
         if q is None:
-            return [Signal(status="WATCHING", quote=None,
-                           blocking_reason="no KXNHLTOTAL contract quoted for this game", **base)]
+            return [Signal(status=why[0], quote=None, blocking_reason=why[1], **base)]
         base["quote"] = q
-        strike = getattr(q, "strike", None)
-        if strike is None:
-            return [Signal(status="WAITING FOR OTHER INFORMATION",
-                           blocking_reason="contract carries no floor_strike; the line is not "
-                                           "known, so it is not assumed", **base)]
+        strike = float(q.strike)
         base["supporting"] = {**base["supporting"], "strike": strike,
                               "contract": q.contract, "contract_label": q.label,
-                              "price_basis": q.price_basis}
-        if not (self.min_strike <= float(strike) <= self.max_strike):
-            return [Signal(status="WATCHING",
-                           blocking_reason=f"strike {strike} outside the traded range "
-                                           f"[{self.min_strike}, {self.max_strike}]", **base)]
+                              "price_basis": q.price_basis,
+                              "strikes_offered": offered, "target_strike": self.target_strike,
+                              "strike_choice": f"offered strike nearest {self.target_strike:g} "
+                                               f"inside [{self.min_strike}, {self.max_strike}]"}
 
         lam = self._lambdas(ctx)
         if lam is None:
@@ -936,20 +1003,26 @@ def build_seed_strategies() -> list[Strategy]:
                    "rather than bet on assumption. Not backtestable: no historical injury data.",
         entry_rule="Condition met, but any day-to-day injury on either team blocks entry.")
 
-    # -- totals (KXNHLTOTAL).  The exchange lists one contract per strike ("Over k.5");
-    # buying YES is an Over bet and buying NO is an Under bet.  Only the Over side has a
-    # verified historical price (the candlestick feed publishes the YES ask), so the Under
-    # rule declares why it cannot be backtested instead of inventing a NO-side history.
+    # -- totals (KXNHLTOTAL).  The exchange lists one contract per strike ("Over k.5") --
+    # eight of them on the 2026-09-24 slate, 1.5 through 8.5 -- so each rule declares the
+    # strike it means (target_strike) before any price is seen and trades the offered rung
+    # nearest to it.  Buying YES is an Over bet and buying NO is an Under bet.  Only the Over
+    # side has a verified historical price (the candlestick feed publishes the YES ask), so
+    # the Under rule declares why it cannot be backtested instead of inventing a NO-side
+    # history.  6.5 is the NHL's most common full-game line; 5.5 is the low rung of the
+    # traded range and is paired with the tighter edge so the two variants differ in one
+    # dimension at a time.
     out.append(TotalsStrategy(
         strategy_id="NHL_TOTALS_OVER", username="NHL_TOTALS_OVER_030", category="totals",
         name="Expected-goals model over the exchange total", direction="over", min_edge=0.04,
+        target_strike=6.5,
         data_used="kalshi.trade_api KXNHLTOTAL floor_strike + yes_ask candlesticks (verified "
                   "2026-09-21, historical tier back to the 2026 Stanley Cup Final); "
                   "api-web.nhle.com results for expected goals."))
     out.append(TotalsStrategy(
         strategy_id="NHL_TOTALS_UNDER", username="NHL_TOTALS_UNDER_031", category="totals",
         name="Expected-goals model under the exchange total (forward only)", direction="under",
-        min_edge=0.04,
+        min_edge=0.04, target_strike=6.5,
         no_history_reason="Kalshi's candlestick feed publishes the YES bid/ask only, so no "
                           "historical NO-side offer exists to buy an Under at, and "
                           "no_ask = 1 - yes_bid does not hold on the quotes in this ledger "
@@ -961,7 +1034,7 @@ def build_seed_strategies() -> list[Strategy]:
     out.append(TotalsStrategy(
         strategy_id="NHL_TOTALS_OVER_TIGHT", username="NHL_TOTALS_OVER_TIGHT_032",
         category="totals", name="Expected-goals model over the exchange total (2c edge)",
-        direction="over", min_edge=0.02,
+        direction="over", min_edge=0.02, target_strike=5.5,
         data_used="kalshi.trade_api KXNHLTOTAL floor_strike + yes_ask candlesticks (verified); "
                   "api-web.nhle.com results for expected goals."))
 
