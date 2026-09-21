@@ -12,12 +12,12 @@
   "impossible_odds": 0,
   "missing_timestamp": 0,
   "bad_pnl": 0,
-  "duplicate_bet": 0,
+  "duplicate_bet": 64,
   "stake_exceeds_bankroll": 0,
   "unmapped": 0
  },
  "totals_bets": {
-  "totals_bets": 132,
+  "totals_bets": 295,
   "totals_missing_strike": 0
  },
  "quotes": {
@@ -69,9 +69,9 @@
   "overtime_unmapped_selection": 0,
   "bets_on_declared_depth_cap": 1,
   "bets_by_depth_basis": {
-   "traded_volume_at_entry_candle": 3150,
-   "published_offer_size": 80,
-   "declared_cap_no_published_size": 1
+   "declared_cap_no_published_size": 1,
+   "published_offer_size": 3,
+   "traded_volume_at_entry_candle": 128
   },
   "no_side_bets": 1
  },
@@ -98,18 +98,18 @@
     "line": null,
     "polymarket_outcome": "Red Wings",
     "polymarket_price": 0.475,
-    "polymarket_best_bid": 0.48,
-    "polymarket_best_ask": 0.52,
+    "polymarket_best_bid": 0.49,
+    "polymarket_best_ask": 0.51,
     "kalshi_contract": "KXNHLGAME-26SEP21DETCBJ-DET",
     "kalshi_side": "YES",
     "kalshi_selection": "Detroit wins",
-    "kalshi_bid": 0.49,
-    "kalshi_ask": 0.5,
-    "kalshi_mid": 0.495,
-    "difference_vs_kalshi_mid": -0.02,
+    "kalshi_bid": 0.48,
+    "kalshi_ask": 0.53,
+    "kalshi_mid": 0.505,
+    "difference_vs_kalshi_mid": -0.03,
     "kalshi_quote_ts": "2026-09-18T01:05:01.133233Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5647.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5681.7,
     "stale": true
    },
    {
@@ -120,8 +120,8 @@
     "line": null,
     "polymarket_outcome": "Blue Jackets",
     "polymarket_price": 0.525,
-    "polymarket_best_bid": 0.48,
-    "polymarket_best_ask": 0.52,
+    "polymarket_best_bid": 0.49,
+    "polymarket_best_ask": 0.51,
     "kalshi_contract": "KXNHLGAME-26SEP21DETCBJ-CBJ",
     "kalshi_side": "YES",
     "kalshi_selection": "Columbus wins",
@@ -130,8 +130,8 @@
     "kalshi_mid": 0.515,
     "difference_vs_kalshi_mid": 0.01,
     "kalshi_quote_ts": "2026-09-18T01:05:01.133233Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5647.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5681.7,
     "stale": true
    },
    {
@@ -142,18 +142,18 @@
     "line": 4.5,
     "polymarket_outcome": "Over",
     "polymarket_price": 0.72,
-    "polymarket_best_bid": 0.58,
-    "polymarket_best_ask": 0.91,
+    "polymarket_best_bid": 0.41,
+    "polymarket_best_ask": 0.52,
     "kalshi_contract": "KXNHLTOTAL-26SEP21DETCBJ-5",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 4.5 goals scored",
-    "kalshi_bid": 0.62,
-    "kalshi_ask": 0.89,
-    "kalshi_mid": 0.755,
-    "difference_vs_kalshi_mid": -0.035,
+    "kalshi_bid": 0.4,
+    "kalshi_ask": 0.69,
+    "kalshi_mid": 0.545,
+    "difference_vs_kalshi_mid": 0.175,
     "kalshi_quote_ts": "2026-09-18T01:13:02.659929Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -164,18 +164,18 @@
     "line": 4.5,
     "polymarket_outcome": "Under",
     "polymarket_price": 0.28,
-    "polymarket_best_bid": 0.58,
-    "polymarket_best_ask": 0.91,
+    "polymarket_best_bid": 0.41,
+    "polymarket_best_ask": 0.52,
     "kalshi_contract": "KXNHLTOTAL-26SEP21DETCBJ-5",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 4.5 goals scored",
-    "kalshi_bid": 0.11,
-    "kalshi_ask": 0.38,
-    "kalshi_mid": 0.245,
-    "difference_vs_kalshi_mid": 0.035,
+    "kalshi_bid": 0.31,
+    "kalshi_ask": 0.6,
+    "kalshi_mid": 0.455,
+    "difference_vs_kalshi_mid": -0.175,
     "kalshi_quote_ts": "2026-09-18T01:13:02.659929Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -186,18 +186,18 @@
     "line": 5.5,
     "polymarket_outcome": "Over",
     "polymarket_price": 0.505,
-    "polymarket_best_bid": 0.43,
-    "polymarket_best_ask": 0.64,
+    "polymarket_best_bid": 0.19,
+    "polymarket_best_ask": 0.34,
     "kalshi_contract": "KXNHLTOTAL-26SEP21DETCBJ-6",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 5.5 goals scored",
-    "kalshi_bid": 0.48,
-    "kalshi_ask": 0.52,
-    "kalshi_mid": 0.5,
-    "difference_vs_kalshi_mid": 0.005,
+    "kalshi_bid": 0.22,
+    "kalshi_ask": 0.51,
+    "kalshi_mid": 0.365,
+    "difference_vs_kalshi_mid": 0.14,
     "kalshi_quote_ts": "2026-09-18T01:13:02.659929Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -208,18 +208,18 @@
     "line": 5.5,
     "polymarket_outcome": "Under",
     "polymarket_price": 0.495,
-    "polymarket_best_bid": 0.43,
-    "polymarket_best_ask": 0.64,
+    "polymarket_best_bid": 0.19,
+    "polymarket_best_ask": 0.34,
     "kalshi_contract": "KXNHLTOTAL-26SEP21DETCBJ-6",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 5.5 goals scored",
-    "kalshi_bid": 0.48,
-    "kalshi_ask": 0.52,
-    "kalshi_mid": 0.5,
-    "difference_vs_kalshi_mid": -0.005,
+    "kalshi_bid": 0.49,
+    "kalshi_ask": 0.78,
+    "kalshi_mid": 0.635,
+    "difference_vs_kalshi_mid": -0.14,
     "kalshi_quote_ts": "2026-09-18T01:13:02.659929Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -230,18 +230,18 @@
     "line": 6.5,
     "polymarket_outcome": "Over",
     "polymarket_price": 0.41,
-    "polymarket_best_bid": 0.3,
-    "polymarket_best_ask": 0.42,
+    "polymarket_best_bid": 0.12,
+    "polymarket_best_ask": 0.28,
     "kalshi_contract": "KXNHLTOTAL-26SEP21DETCBJ-7",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 6.5 goals scored",
-    "kalshi_bid": 0.34,
+    "kalshi_bid": 0.13,
     "kalshi_ask": 0.38,
-    "kalshi_mid": 0.36,
-    "difference_vs_kalshi_mid": 0.05,
+    "kalshi_mid": 0.255,
+    "difference_vs_kalshi_mid": 0.155,
     "kalshi_quote_ts": "2026-09-18T01:13:02.659929Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -252,18 +252,18 @@
     "line": 6.5,
     "polymarket_outcome": "Under",
     "polymarket_price": 0.59,
-    "polymarket_best_bid": 0.3,
-    "polymarket_best_ask": 0.42,
+    "polymarket_best_bid": 0.12,
+    "polymarket_best_ask": 0.28,
     "kalshi_contract": "KXNHLTOTAL-26SEP21DETCBJ-7",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 6.5 goals scored",
     "kalshi_bid": 0.62,
-    "kalshi_ask": 0.66,
-    "kalshi_mid": 0.64,
-    "difference_vs_kalshi_mid": -0.05,
+    "kalshi_ask": 0.87,
+    "kalshi_mid": 0.745,
+    "difference_vs_kalshi_mid": -0.155,
     "kalshi_quote_ts": "2026-09-18T01:13:02.659929Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -274,18 +274,18 @@
     "line": 7.5,
     "polymarket_outcome": "Over",
     "polymarket_price": 0.27,
-    "polymarket_best_bid": 0.17,
-    "polymarket_best_ask": 0.54,
+    "polymarket_best_bid": 0.05,
+    "polymarket_best_ask": 0.23,
     "kalshi_contract": "KXNHLTOTAL-26SEP21DETCBJ-8",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 7.5 goals scored",
-    "kalshi_bid": 0.21,
-    "kalshi_ask": 0.5,
-    "kalshi_mid": 0.355,
-    "difference_vs_kalshi_mid": -0.085,
+    "kalshi_bid": 0.06,
+    "kalshi_ask": 0.42,
+    "kalshi_mid": 0.24,
+    "difference_vs_kalshi_mid": 0.03,
     "kalshi_quote_ts": "2026-09-18T01:13:02.659929Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -296,18 +296,18 @@
     "line": 7.5,
     "polymarket_outcome": "Under",
     "polymarket_price": 0.73,
-    "polymarket_best_bid": 0.17,
-    "polymarket_best_ask": 0.54,
+    "polymarket_best_bid": 0.05,
+    "polymarket_best_ask": 0.23,
     "kalshi_contract": "KXNHLTOTAL-26SEP21DETCBJ-8",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 7.5 goals scored",
-    "kalshi_bid": 0.5,
-    "kalshi_ask": 0.79,
-    "kalshi_mid": 0.645,
-    "difference_vs_kalshi_mid": 0.085,
+    "kalshi_bid": 0.58,
+    "kalshi_ask": 0.94,
+    "kalshi_mid": 0.76,
+    "difference_vs_kalshi_mid": -0.03,
     "kalshi_quote_ts": "2026-09-18T01:13:02.659929Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -318,18 +318,18 @@
     "line": null,
     "polymarket_outcome": "Sabres",
     "polymarket_price": 0.415,
-    "polymarket_best_bid": 0.36,
-    "polymarket_best_ask": 0.4,
+    "polymarket_best_bid": 0.23,
+    "polymarket_best_ask": 0.26,
     "kalshi_contract": "KXNHLGAME-26SEP21BUFPIT-BUF",
     "kalshi_side": "YES",
     "kalshi_selection": "Buffalo wins",
-    "kalshi_bid": 0.4,
-    "kalshi_ask": 0.41,
-    "kalshi_mid": 0.405,
-    "difference_vs_kalshi_mid": 0.01,
+    "kalshi_bid": 0.25,
+    "kalshi_ask": 0.26,
+    "kalshi_mid": 0.255,
+    "difference_vs_kalshi_mid": 0.16,
     "kalshi_quote_ts": "2026-09-21T19:29:10.20532Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 223.4,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 257.6,
     "stale": true
    },
    {
@@ -340,18 +340,18 @@
     "line": null,
     "polymarket_outcome": "Penguins",
     "polymarket_price": 0.585,
-    "polymarket_best_bid": 0.36,
-    "polymarket_best_ask": 0.4,
+    "polymarket_best_bid": 0.23,
+    "polymarket_best_ask": 0.26,
     "kalshi_contract": "KXNHLGAME-26SEP21BUFPIT-PIT",
     "kalshi_side": "YES",
     "kalshi_selection": "Pittsburgh wins",
-    "kalshi_bid": 0.59,
-    "kalshi_ask": 0.62,
-    "kalshi_mid": 0.605,
-    "difference_vs_kalshi_mid": -0.02,
+    "kalshi_bid": 0.76,
+    "kalshi_ask": 0.77,
+    "kalshi_mid": 0.765,
+    "difference_vs_kalshi_mid": -0.18,
     "kalshi_quote_ts": "2026-09-21T19:29:10.200914Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 223.4,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 257.6,
     "stale": true
    },
    {
@@ -362,18 +362,18 @@
     "line": 4.5,
     "polymarket_outcome": "Over",
     "polymarket_price": 0.73,
-    "polymarket_best_bid": 0.68,
-    "polymarket_best_ask": 0.93,
+    "polymarket_best_bid": 0.6,
+    "polymarket_best_ask": 0.86,
     "kalshi_contract": "KXNHLTOTAL-26SEP21BUFPIT-5",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 4.5 goals scored",
-    "kalshi_bid": 0.72,
-    "kalshi_ask": 0.9,
-    "kalshi_mid": 0.81,
-    "difference_vs_kalshi_mid": -0.08,
+    "kalshi_bid": 0.6,
+    "kalshi_ask": 0.85,
+    "kalshi_mid": 0.725,
+    "difference_vs_kalshi_mid": 0.005,
     "kalshi_quote_ts": "2026-09-18T01:13:02.111625Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -384,18 +384,18 @@
     "line": 4.5,
     "polymarket_outcome": "Under",
     "polymarket_price": 0.27,
-    "polymarket_best_bid": 0.68,
-    "polymarket_best_ask": 0.93,
+    "polymarket_best_bid": 0.6,
+    "polymarket_best_ask": 0.86,
     "kalshi_contract": "KXNHLTOTAL-26SEP21BUFPIT-5",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 4.5 goals scored",
-    "kalshi_bid": 0.1,
-    "kalshi_ask": 0.28,
-    "kalshi_mid": 0.19,
-    "difference_vs_kalshi_mid": 0.08,
+    "kalshi_bid": 0.15,
+    "kalshi_ask": 0.4,
+    "kalshi_mid": 0.275,
+    "difference_vs_kalshi_mid": -0.005,
     "kalshi_quote_ts": "2026-09-18T01:13:02.111625Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -406,18 +406,18 @@
     "line": 5.5,
     "polymarket_outcome": "Over",
     "polymarket_price": 0.53,
-    "polymarket_best_bid": 0.5,
-    "polymarket_best_ask": 0.62,
+    "polymarket_best_bid": 0.37,
+    "polymarket_best_ask": 0.76,
     "kalshi_contract": "KXNHLTOTAL-26SEP21BUFPIT-6",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 5.5 goals scored",
-    "kalshi_bid": 0.54,
-    "kalshi_ask": 0.57,
-    "kalshi_mid": 0.555,
-    "difference_vs_kalshi_mid": -0.025,
+    "kalshi_bid": 0.43,
+    "kalshi_ask": 0.62,
+    "kalshi_mid": 0.525,
+    "difference_vs_kalshi_mid": 0.005,
     "kalshi_quote_ts": "2026-09-18T01:13:02.111625Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -428,18 +428,18 @@
     "line": 5.5,
     "polymarket_outcome": "Under",
     "polymarket_price": 0.47,
-    "polymarket_best_bid": 0.5,
-    "polymarket_best_ask": 0.62,
+    "polymarket_best_bid": 0.37,
+    "polymarket_best_ask": 0.76,
     "kalshi_contract": "KXNHLTOTAL-26SEP21BUFPIT-6",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 5.5 goals scored",
-    "kalshi_bid": 0.43,
-    "kalshi_ask": 0.46,
-    "kalshi_mid": 0.445,
-    "difference_vs_kalshi_mid": 0.025,
+    "kalshi_bid": 0.38,
+    "kalshi_ask": 0.57,
+    "kalshi_mid": 0.475,
+    "difference_vs_kalshi_mid": -0.005,
     "kalshi_quote_ts": "2026-09-18T01:13:02.111625Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -450,18 +450,18 @@
     "line": 6.5,
     "polymarket_outcome": "Over",
     "polymarket_price": 0.4,
-    "polymarket_best_bid": 0.33,
-    "polymarket_best_ask": 0.45,
+    "polymarket_best_bid": 0.2,
+    "polymarket_best_ask": 0.49,
     "kalshi_contract": "KXNHLTOTAL-26SEP21BUFPIT-7",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 6.5 goals scored",
-    "kalshi_bid": 0.36,
+    "kalshi_bid": 0.26,
     "kalshi_ask": 0.41,
-    "kalshi_mid": 0.385,
-    "difference_vs_kalshi_mid": 0.015,
+    "kalshi_mid": 0.335,
+    "difference_vs_kalshi_mid": 0.065,
     "kalshi_quote_ts": "2026-09-18T01:13:02.111625Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -472,18 +472,18 @@
     "line": 6.5,
     "polymarket_outcome": "Under",
     "polymarket_price": 0.6,
-    "polymarket_best_bid": 0.33,
-    "polymarket_best_ask": 0.45,
+    "polymarket_best_bid": 0.2,
+    "polymarket_best_ask": 0.49,
     "kalshi_contract": "KXNHLTOTAL-26SEP21BUFPIT-7",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 6.5 goals scored",
     "kalshi_bid": 0.59,
-    "kalshi_ask": 0.64,
-    "kalshi_mid": 0.615,
-    "difference_vs_kalshi_mid": -0.015,
+    "kalshi_ask": 0.74,
+    "kalshi_mid": 0.665,
+    "difference_vs_kalshi_mid": -0.065,
     "kalshi_quote_ts": "2026-09-18T01:13:02.111625Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -494,18 +494,18 @@
     "line": 7.5,
     "polymarket_outcome": "Over",
     "polymarket_price": 0.25,
-    "polymarket_best_bid": 0.14,
-    "polymarket_best_ask": 0.41,
+    "polymarket_best_bid": 0.1,
+    "polymarket_best_ask": 0.53,
     "kalshi_contract": "KXNHLTOTAL-26SEP21BUFPIT-8",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 7.5 goals scored",
-    "kalshi_bid": 0.18,
-    "kalshi_ask": 0.29,
-    "kalshi_mid": 0.235,
-    "difference_vs_kalshi_mid": 0.015,
+    "kalshi_bid": 0.13,
+    "kalshi_ask": 0.49,
+    "kalshi_mid": 0.31,
+    "difference_vs_kalshi_mid": -0.06,
     "kalshi_quote_ts": "2026-09-18T01:13:02.111625Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -516,18 +516,18 @@
     "line": 7.5,
     "polymarket_outcome": "Under",
     "polymarket_price": 0.75,
-    "polymarket_best_bid": 0.14,
-    "polymarket_best_ask": 0.41,
+    "polymarket_best_bid": 0.1,
+    "polymarket_best_ask": 0.53,
     "kalshi_contract": "KXNHLTOTAL-26SEP21BUFPIT-8",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 7.5 goals scored",
-    "kalshi_bid": 0.71,
-    "kalshi_ask": 0.82,
-    "kalshi_mid": 0.765,
-    "difference_vs_kalshi_mid": -0.015,
+    "kalshi_bid": 0.51,
+    "kalshi_ask": 0.87,
+    "kalshi_mid": 0.69,
+    "difference_vs_kalshi_mid": 0.06,
     "kalshi_quote_ts": "2026-09-18T01:13:02.111625Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 5639.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 5673.7,
     "stale": true
    },
    {
@@ -548,8 +548,8 @@
     "kalshi_mid": 0.44,
     "difference_vs_kalshi_mid": 0.005,
     "kalshi_quote_ts": "2026-09-19T01:05:00.106653Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -570,8 +570,8 @@
     "kalshi_mid": 0.56,
     "difference_vs_kalshi_mid": -0.005,
     "kalshi_quote_ts": "2026-09-19T01:05:00.106653Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -592,8 +592,8 @@
     "kalshi_mid": 0.51,
     "difference_vs_kalshi_mid": 0.245,
     "kalshi_quote_ts": "2026-09-19T01:11:24.224854Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -614,8 +614,8 @@
     "kalshi_mid": 0.49,
     "difference_vs_kalshi_mid": -0.245,
     "kalshi_quote_ts": "2026-09-19T01:11:24.224854Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -636,8 +636,8 @@
     "kalshi_mid": 0.51,
     "difference_vs_kalshi_mid": 0.125,
     "kalshi_quote_ts": "2026-09-19T01:11:24.224854Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -658,8 +658,8 @@
     "kalshi_mid": 0.49,
     "difference_vs_kalshi_mid": -0.125,
     "kalshi_quote_ts": "2026-09-19T01:11:24.224854Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -680,8 +680,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": 0.025,
     "kalshi_quote_ts": "2026-09-19T01:11:24.224854Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -702,8 +702,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": -0.025,
     "kalshi_quote_ts": "2026-09-19T01:11:24.224854Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -720,12 +720,12 @@
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 7.5 goals scored",
     "kalshi_bid": 0.01,
-    "kalshi_ask": 0.97,
-    "kalshi_mid": 0.49,
-    "difference_vs_kalshi_mid": -0.175,
+    "kalshi_ask": 0.98,
+    "kalshi_mid": 0.495,
+    "difference_vs_kalshi_mid": -0.18,
     "kalshi_quote_ts": "2026-09-19T01:11:24.224854Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -741,13 +741,13 @@
     "kalshi_contract": "KXNHLTOTAL-26SEP22DETPIT-8",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 7.5 goals scored",
-    "kalshi_bid": 0.03,
+    "kalshi_bid": 0.02,
     "kalshi_ask": 0.99,
-    "kalshi_mid": 0.51,
-    "difference_vs_kalshi_mid": 0.175,
+    "kalshi_mid": 0.505,
+    "difference_vs_kalshi_mid": 0.18,
     "kalshi_quote_ts": "2026-09-19T01:11:24.224854Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -758,18 +758,18 @@
     "line": null,
     "polymarket_outcome": "Islanders",
     "polymarket_price": 0.42,
-    "polymarket_best_bid": 0.43,
-    "polymarket_best_ask": 0.45,
+    "polymarket_best_bid": 0.42,
+    "polymarket_best_ask": 0.46,
     "kalshi_contract": "KXNHLGAME-26SEP22NYINYR-NYI",
     "kalshi_side": "YES",
     "kalshi_selection": "New York I wins",
     "kalshi_bid": 0.43,
-    "kalshi_ask": 0.47,
-    "kalshi_mid": 0.45,
-    "difference_vs_kalshi_mid": -0.03,
+    "kalshi_ask": 0.46,
+    "kalshi_mid": 0.445,
+    "difference_vs_kalshi_mid": -0.025,
     "kalshi_quote_ts": "2026-09-19T01:05:00.182878Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -780,18 +780,18 @@
     "line": null,
     "polymarket_outcome": "Rangers",
     "polymarket_price": 0.58,
-    "polymarket_best_bid": 0.43,
-    "polymarket_best_ask": 0.45,
+    "polymarket_best_bid": 0.42,
+    "polymarket_best_ask": 0.46,
     "kalshi_contract": "KXNHLGAME-26SEP22NYINYR-NYR",
     "kalshi_side": "YES",
     "kalshi_selection": "New York R wins",
-    "kalshi_bid": 0.53,
+    "kalshi_bid": 0.52,
     "kalshi_ask": 0.57,
-    "kalshi_mid": 0.55,
-    "difference_vs_kalshi_mid": 0.03,
+    "kalshi_mid": 0.545,
+    "difference_vs_kalshi_mid": 0.035,
     "kalshi_quote_ts": "2026-09-19T01:05:00.182878Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -812,8 +812,8 @@
     "kalshi_mid": 0.51,
     "difference_vs_kalshi_mid": 0.195,
     "kalshi_quote_ts": "2026-09-19T01:11:25.697935Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -834,8 +834,8 @@
     "kalshi_mid": 0.49,
     "difference_vs_kalshi_mid": -0.195,
     "kalshi_quote_ts": "2026-09-19T01:11:25.697935Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -856,8 +856,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": 0.005,
     "kalshi_quote_ts": "2026-09-19T01:11:25.697935Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -878,8 +878,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": -0.005,
     "kalshi_quote_ts": "2026-09-19T01:11:25.697935Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -900,8 +900,8 @@
     "kalshi_mid": 0.485,
     "difference_vs_kalshi_mid": -0.09,
     "kalshi_quote_ts": "2026-09-19T01:11:25.697935Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -922,8 +922,8 @@
     "kalshi_mid": 0.515,
     "difference_vs_kalshi_mid": 0.09,
     "kalshi_quote_ts": "2026-09-19T01:11:25.697935Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -944,8 +944,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.23,
     "kalshi_quote_ts": "2026-09-19T01:11:25.697935Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -966,8 +966,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.23,
     "kalshi_quote_ts": "2026-09-19T01:11:25.697935Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -983,13 +983,13 @@
     "kalshi_contract": "KXNHLGAME-26SEP22FLACAR-FLA",
     "kalshi_side": "YES",
     "kalshi_selection": "Florida wins",
-    "kalshi_bid": 0.5,
+    "kalshi_bid": 0.51,
     "kalshi_ask": 0.54,
-    "kalshi_mid": 0.52,
-    "difference_vs_kalshi_mid": 0.005,
+    "kalshi_mid": 0.525,
+    "difference_vs_kalshi_mid": 0.0,
     "kalshi_quote_ts": "2026-09-19T01:05:00.182878Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -1005,13 +1005,13 @@
     "kalshi_contract": "KXNHLGAME-26SEP22FLACAR-CAR",
     "kalshi_side": "YES",
     "kalshi_selection": "Carolina wins",
-    "kalshi_bid": 0.46,
-    "kalshi_ask": 0.49,
-    "kalshi_mid": 0.475,
-    "difference_vs_kalshi_mid": 0.0,
+    "kalshi_bid": 0.47,
+    "kalshi_ask": 0.5,
+    "kalshi_mid": 0.485,
+    "difference_vs_kalshi_mid": -0.01,
     "kalshi_quote_ts": "2026-09-19T01:05:00.182878Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -1032,8 +1032,8 @@
     "kalshi_mid": 0.51,
     "difference_vs_kalshi_mid": 0.23,
     "kalshi_quote_ts": "2026-09-19T01:11:24.716724Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1054,8 +1054,8 @@
     "kalshi_mid": 0.49,
     "difference_vs_kalshi_mid": -0.23,
     "kalshi_quote_ts": "2026-09-19T01:11:24.716724Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1076,8 +1076,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": 0.1,
     "kalshi_quote_ts": "2026-09-19T01:11:24.716724Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1098,8 +1098,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": -0.1,
     "kalshi_quote_ts": "2026-09-19T01:11:24.716724Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1120,8 +1120,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": -0.015,
     "kalshi_quote_ts": "2026-09-19T01:11:24.716724Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1142,8 +1142,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": 0.015,
     "kalshi_quote_ts": "2026-09-19T01:11:24.716724Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1160,12 +1160,12 @@
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 7.5 goals scored",
     "kalshi_bid": 0.01,
-    "kalshi_ask": 0.97,
-    "kalshi_mid": 0.49,
-    "difference_vs_kalshi_mid": -0.195,
+    "kalshi_ask": 0.98,
+    "kalshi_mid": 0.495,
+    "difference_vs_kalshi_mid": -0.2,
     "kalshi_quote_ts": "2026-09-19T01:11:24.716724Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1181,13 +1181,13 @@
     "kalshi_contract": "KXNHLTOTAL-26SEP22FLACAR-8",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 7.5 goals scored",
-    "kalshi_bid": 0.03,
+    "kalshi_bid": 0.02,
     "kalshi_ask": 0.99,
-    "kalshi_mid": 0.51,
-    "difference_vs_kalshi_mid": 0.195,
+    "kalshi_mid": 0.505,
+    "difference_vs_kalshi_mid": 0.2,
     "kalshi_quote_ts": "2026-09-19T01:11:24.716724Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1208,8 +1208,8 @@
     "kalshi_mid": 0.41,
     "difference_vs_kalshi_mid": 0.005,
     "kalshi_quote_ts": "2026-09-19T01:05:00.106653Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -1230,8 +1230,8 @@
     "kalshi_mid": 0.585,
     "difference_vs_kalshi_mid": 0.0,
     "kalshi_quote_ts": "2026-09-19T01:05:00.106653Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -1252,8 +1252,8 @@
     "kalshi_mid": 0.51,
     "difference_vs_kalshi_mid": 0.2,
     "kalshi_quote_ts": "2026-09-19T01:11:23.64675Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.4,
     "stale": true
    },
    {
@@ -1274,8 +1274,8 @@
     "kalshi_mid": 0.49,
     "difference_vs_kalshi_mid": -0.2,
     "kalshi_quote_ts": "2026-09-19T01:11:23.64675Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.4,
     "stale": true
    },
    {
@@ -1296,8 +1296,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": 0.025,
     "kalshi_quote_ts": "2026-09-19T01:11:23.64675Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.4,
     "stale": true
    },
    {
@@ -1318,8 +1318,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": -0.025,
     "kalshi_quote_ts": "2026-09-19T01:11:23.64675Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.4,
     "stale": true
    },
    {
@@ -1340,8 +1340,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.08,
     "kalshi_quote_ts": "2026-09-19T01:11:23.64675Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.4,
     "stale": true
    },
    {
@@ -1362,8 +1362,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.08,
     "kalshi_quote_ts": "2026-09-19T01:11:23.64675Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.4,
     "stale": true
    },
    {
@@ -1384,8 +1384,8 @@
     "kalshi_mid": 0.49,
     "difference_vs_kalshi_mid": -0.22,
     "kalshi_quote_ts": "2026-09-19T01:11:23.64675Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.4,
     "stale": true
    },
    {
@@ -1406,8 +1406,8 @@
     "kalshi_mid": 0.51,
     "difference_vs_kalshi_mid": 0.22,
     "kalshi_quote_ts": "2026-09-19T01:11:23.64675Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.4,
     "stale": true
    },
    {
@@ -1428,8 +1428,8 @@
     "kalshi_mid": 0.435,
     "difference_vs_kalshi_mid": 0.015,
     "kalshi_quote_ts": "2026-09-19T01:05:00.182878Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -1446,12 +1446,12 @@
     "kalshi_side": "YES",
     "kalshi_selection": "Boston wins",
     "kalshi_bid": 0.56,
-    "kalshi_ask": 0.6,
-    "kalshi_mid": 0.58,
-    "difference_vs_kalshi_mid": -0.03,
+    "kalshi_ask": 0.59,
+    "kalshi_mid": 0.575,
+    "difference_vs_kalshi_mid": -0.025,
     "kalshi_quote_ts": "2026-09-19T01:05:00.182878Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4207.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4241.7,
     "stale": true
    },
    {
@@ -1472,8 +1472,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.205,
     "kalshi_quote_ts": "2026-09-19T01:11:26.252502Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1494,8 +1494,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.205,
     "kalshi_quote_ts": "2026-09-19T01:11:26.252502Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1511,13 +1511,13 @@
     "kalshi_contract": "KXNHLTOTAL-26SEP22PHIBOS-6",
     "kalshi_side": "YES",
     "kalshi_selection": "Full Game: Over 5.5 goals scored",
-    "kalshi_bid": 0.01,
-    "kalshi_ask": 0.99,
+    "kalshi_bid": 0.02,
+    "kalshi_ask": 0.98,
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": 0.015,
     "kalshi_quote_ts": "2026-09-19T01:11:26.252502Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1533,13 +1533,13 @@
     "kalshi_contract": "KXNHLTOTAL-26SEP22PHIBOS-6",
     "kalshi_side": "NO",
     "kalshi_selection": "Full Game: Over 5.5 goals scored",
-    "kalshi_bid": 0.01,
-    "kalshi_ask": 0.99,
+    "kalshi_bid": 0.02,
+    "kalshi_ask": 0.98,
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": -0.015,
     "kalshi_quote_ts": "2026-09-19T01:11:26.252502Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1560,8 +1560,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.09,
     "kalshi_quote_ts": "2026-09-19T01:11:26.252502Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1582,8 +1582,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.09,
     "kalshi_quote_ts": "2026-09-19T01:11:26.252502Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1604,8 +1604,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.225,
     "kalshi_quote_ts": "2026-09-19T01:11:26.252502Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1626,8 +1626,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.225,
     "kalshi_quote_ts": "2026-09-19T01:11:26.252502Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 4201.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 4235.3,
     "stale": true
    },
    {
@@ -1643,13 +1643,13 @@
     "kalshi_contract": "KXNHLGAME-26SEP24PITCBJ-PIT",
     "kalshi_side": "YES",
     "kalshi_selection": "Pittsburgh wins",
-    "kalshi_bid": 0.44,
+    "kalshi_bid": 0.45,
     "kalshi_ask": 0.48,
-    "kalshi_mid": 0.46,
-    "difference_vs_kalshi_mid": 0.005,
+    "kalshi_mid": 0.465,
+    "difference_vs_kalshi_mid": 0.0,
     "kalshi_quote_ts": "2026-09-21T01:05:01.45608Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1327.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1361.7,
     "stale": true
    },
    {
@@ -1665,13 +1665,13 @@
     "kalshi_contract": "KXNHLGAME-26SEP24PITCBJ-CBJ",
     "kalshi_side": "YES",
     "kalshi_selection": "Columbus wins",
-    "kalshi_bid": 0.5,
-    "kalshi_ask": 0.54,
+    "kalshi_bid": 0.51,
+    "kalshi_ask": 0.53,
     "kalshi_mid": 0.52,
     "difference_vs_kalshi_mid": 0.015,
     "kalshi_quote_ts": "2026-09-21T01:05:01.45608Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1327.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1361.7,
     "stale": true
    },
    {
@@ -1692,8 +1692,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.235,
     "kalshi_quote_ts": "2026-09-21T01:11:25.014613Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.3,
     "stale": true
    },
    {
@@ -1714,8 +1714,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.235,
     "kalshi_quote_ts": "2026-09-21T01:11:25.014613Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.3,
     "stale": true
    },
    {
@@ -1736,8 +1736,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.09,
     "kalshi_quote_ts": "2026-09-21T01:11:25.014613Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.3,
     "stale": true
    },
    {
@@ -1758,8 +1758,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.09,
     "kalshi_quote_ts": "2026-09-21T01:11:25.014613Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.3,
     "stale": true
    },
    {
@@ -1780,8 +1780,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": -0.025,
     "kalshi_quote_ts": "2026-09-21T01:11:25.014613Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.3,
     "stale": true
    },
    {
@@ -1802,8 +1802,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": 0.025,
     "kalshi_quote_ts": "2026-09-21T01:11:25.014613Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.3,
     "stale": true
    },
    {
@@ -1824,8 +1824,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.2,
     "kalshi_quote_ts": "2026-09-21T01:11:25.014613Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.3,
     "stale": true
    },
    {
@@ -1846,8 +1846,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.2,
     "kalshi_quote_ts": "2026-09-21T01:11:25.014613Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.1,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.3,
     "stale": true
    },
    {
@@ -1863,13 +1863,13 @@
     "kalshi_contract": "KXNHLGAME-26SEP24BOSPHI-BOS",
     "kalshi_side": "YES",
     "kalshi_selection": "Boston wins",
-    "kalshi_bid": 0.45,
+    "kalshi_bid": 0.44,
     "kalshi_ask": 0.48,
-    "kalshi_mid": 0.465,
-    "difference_vs_kalshi_mid": 0.0,
+    "kalshi_mid": 0.46,
+    "difference_vs_kalshi_mid": 0.005,
     "kalshi_quote_ts": "2026-09-21T01:05:01.45608Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1327.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1361.7,
     "stale": true
    },
    {
@@ -1886,12 +1886,12 @@
     "kalshi_side": "YES",
     "kalshi_selection": "Philadelphia wins",
     "kalshi_bid": 0.52,
-    "kalshi_ask": 0.56,
-    "kalshi_mid": 0.54,
-    "difference_vs_kalshi_mid": -0.005,
+    "kalshi_ask": 0.57,
+    "kalshi_mid": 0.545,
+    "difference_vs_kalshi_mid": -0.01,
     "kalshi_quote_ts": "2026-09-21T01:05:01.45608Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1327.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1361.7,
     "stale": true
    },
    {
@@ -1912,8 +1912,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.21,
     "kalshi_quote_ts": "2026-09-21T01:11:20.935431Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -1934,8 +1934,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.21,
     "kalshi_quote_ts": "2026-09-21T01:11:20.935431Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -1956,8 +1956,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": 0.015,
     "kalshi_quote_ts": "2026-09-21T01:11:20.935431Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -1978,8 +1978,8 @@
     "kalshi_mid": 0.5,
     "difference_vs_kalshi_mid": -0.015,
     "kalshi_quote_ts": "2026-09-21T01:11:20.935431Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2000,8 +2000,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.09,
     "kalshi_quote_ts": "2026-09-21T01:11:20.935431Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2022,8 +2022,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.09,
     "kalshi_quote_ts": "2026-09-21T01:11:20.935431Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2044,8 +2044,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.225,
     "kalshi_quote_ts": "2026-09-21T01:11:20.935431Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2066,8 +2066,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.225,
     "kalshi_quote_ts": "2026-09-21T01:11:20.935431Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2088,8 +2088,8 @@
     "kalshi_mid": 0.465,
     "difference_vs_kalshi_mid": 0.0,
     "kalshi_quote_ts": "2026-09-21T01:05:01.45608Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1327.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1361.7,
     "stale": true
    },
    {
@@ -2106,12 +2106,12 @@
     "kalshi_side": "YES",
     "kalshi_selection": "Detroit wins",
     "kalshi_bid": 0.52,
-    "kalshi_ask": 0.56,
-    "kalshi_mid": 0.54,
-    "difference_vs_kalshi_mid": -0.005,
+    "kalshi_ask": 0.55,
+    "kalshi_mid": 0.535,
+    "difference_vs_kalshi_mid": 0.0,
     "kalshi_quote_ts": "2026-09-21T01:05:01.45608Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1327.5,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1361.7,
     "stale": true
    },
    {
@@ -2132,8 +2132,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.225,
     "kalshi_quote_ts": "2026-09-21T01:11:21.670833Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2154,8 +2154,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.225,
     "kalshi_quote_ts": "2026-09-21T01:11:21.670833Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2176,8 +2176,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.06,
     "kalshi_quote_ts": "2026-09-21T01:11:21.670833Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2198,8 +2198,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.06,
     "kalshi_quote_ts": "2026-09-21T01:11:21.670833Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2220,8 +2220,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.05,
     "kalshi_quote_ts": "2026-09-21T01:11:21.670833Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2242,8 +2242,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.05,
     "kalshi_quote_ts": "2026-09-21T01:11:21.670833Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2264,8 +2264,8 @@
     "kalshi_mid": 0.495,
     "difference_vs_kalshi_mid": -0.21,
     "kalshi_quote_ts": "2026-09-21T01:11:21.670833Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    },
    {
@@ -2286,8 +2286,8 @@
     "kalshi_mid": 0.505,
     "difference_vs_kalshi_mid": 0.21,
     "kalshi_quote_ts": "2026-09-21T01:11:21.670833Z",
-    "polymarket_snapshot_ts": "2026-09-21T23:12:33Z",
-    "age_minutes": 1321.2,
+    "polymarket_snapshot_ts": "2026-09-21T23:46:45Z",
+    "age_minutes": 1355.4,
     "stale": true
    }
   ],
@@ -2307,5 +2307,5 @@
   "max_age_minutes": 30.0,
   "finding": "100 like-for-like price comparison(s) ({'moneyline': 20, 'total': 80}), 0 of them within 30 minutes and 100 recorded as stale; 0 disagreement(s) over 0.05 dollars. Unmatched: {'no_kalshi_quote_for_moneyline': 49, 'no_kalshi_quote_for_total': 168, 'team_nickname_not_mapped:Utah': 3}."
  },
- "open_irregularities": 5
+ "open_irregularities": 74
 }
