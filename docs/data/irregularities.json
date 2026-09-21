@@ -1,5 +1,19 @@
 [
  {
+  "id": 34,
+  "ts_utc": "2026-09-21T03:00:13Z",
+  "kind": "totals_price_coverage",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLTOTAL",
+  "detail": "Totals price history and feature history do not overlap yet, so no totals entry can be priced honestly. {\n \"settled_totals_contracts\": 7896,\n \"contracts_with_a_pregame_offer\": 577,\n \"games_with_a_pregame_offer\": 73,\n \"of_those_games_decided_in_the_ledger\": 73,\n \"of_those_games_with_point_in_time_features\": 0,\n \"backtestable_games\": 0,\n \"reason\": \"The Kalshi totals candle walk and the NHL season-stats walk have not reached the same games yet: every contract with a pre-puck-drop offer belongs to a game with no point-in-time feature row, so no totals entry can be priced honestly. Totals are therefore accuracy-only (BACKTEST) and forward-test at live offers until the two walks overlap. Nothing was inferred to fill the gap.\"\n}",
+  "sources": "kalshi.candles,nhl.stats_rest",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
   "id": 2,
   "ts_utc": "2026-09-20T20:38:12Z",
   "kind": "unmapped_injury",
