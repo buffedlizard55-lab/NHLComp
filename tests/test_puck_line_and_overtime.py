@@ -428,7 +428,7 @@ class ExecutionBase(unittest.TestCase):
 
     def settled_contract(self, *, contract, event_ticker, gid, day, series, market_type, result,
                          strike=None, rung=None, title="contract", selection="title",
-                         volume=100.0):
+                         volume=100.0, team_abbrev=None):
         """One row shaped like Kalshi's own settled-contract payload."""
         row = {
             "provider": "kalshi", "event_ticker": event_ticker, "contract": contract,
@@ -440,7 +440,7 @@ class ExecutionBase(unittest.TestCase):
             "settlement_ts": _iso(day + timedelta(hours=3)), "retrieved_at": utcnow(),
             "source_url": "https://kalshi.example", "series_ticker": series,
             "tier": "historical", "floor_strike": strike, "title": title,
-            "occurrence_datetime": _iso(day), "team_abbrev": None,
+            "occurrence_datetime": _iso(day), "team_abbrev": team_abbrev,
             "market_type": market_type,
             "strike_type": ("greater" if strike is not None else None), "rung": rung,
             "provenance": "SOURCE",
@@ -1080,6 +1080,309 @@ class TestSettlementStudies(ExecutionBase):
         self.assertEqual(out["families"], {"futures": 1})
         self.assertEqual(out["comparisons"], [])
         self.assertIn("no common market", out["finding"])
+
+
+class TestTheMoneylineCheckDoesNotJudgeStrikeMarkets(ExecutionBase):
+    """"Did the named team win?" is the moneyline question and no other market's.
+
+    Applying it to a puck line reports a correct settlement as a critical conflict: the
+    2026-09-21 live run put 5,186 settled KXNHLSPREAD contracts in the ledger and the old
+    check raised 1,353 false CRITICAL rows, because a team that wins by one goal loses its
+    "wins by over 1.5" contract.  Each strike market is checked against the condition it
+    actually states, by its own study.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.v = Verifier(self.store)
+
+    def test_a_puck_line_contract_that_settles_correctly_is_not_a_conflict(self):
+        # fixture game: CAR (home) 4 - VGK (away) 3, decided in OT -> Carolina won, but by one
+        # goal, so "Carolina wins by over 1.5 goals" settles NO and that is correct
+        self.settled_contract(contract="KXNHLSPREAD-26JUN04VGKCAR-CAR2",
+                              event_ticker="KXNHLSPREAD-26JUN04VGKCAR", gid=self.gid_past,
+                              day=self.past, series="KXNHLSPREAD", market_type="puck_line",
+                              result="no", strike=1.5, rung="CAR2", team_abbrev="CAR",
+                              title="Carolina wins by over 1.5 goals",
+                              selection="Carolina wins by over 1.5 goals")
+        out = self.v.cross_validate_stats_vs_schedule()
+        self.assertEqual(out["settlement_conflicts"], 0)
+        self.assertEqual(out["settlement_skipped_strike_markets"], 1)
+        self.assertEqual(out["settlement_moneyline_compared"], 0)
+        self.assertEqual(self.flags("conflicting_source"), [])
+        # and the study that does understand a margin agrees with the exchange
+        pl = self.v.cross_validate_puck_line_settlements()
+        self.assertEqual(pl["puck_line_contracts_compared"], 1)
+        self.assertEqual(pl["puck_line_conflicts"], 0)
+
+    def test_a_moneyline_contract_contradicting_the_result_is_still_critical(self):
+        self.settled_contract(contract="KXNHLGAME-26JUN04VGKCAR-VGK",
+                              event_ticker="KXNHLGAME-26JUN04VGKCAR", gid=self.gid_past,
+                              day=self.past, series="KXNHLGAME", market_type="moneyline",
+                              result="yes", rung="VGK", team_abbrev="VGK",
+                              title="Vegas wins", selection="Vegas wins")
+        out = self.v.cross_validate_stats_vs_schedule()
+        self.assertEqual(out["settlement_moneyline_compared"], 1)
+        self.assertEqual(out["settlement_conflicts"], 1, "Vegas lost 3-4; 'yes' is wrong")
+        flags = self.flags("conflicting_source")
+        self.assertEqual(len(flags), 1)
+        self.assertEqual(flags[0]["severity"], "critical")
+
+    def test_a_moneyline_contract_agreeing_with_the_result_is_clean(self):
+        self.settled_contract(contract="KXNHLGAME-26JUN04VGKCAR-CAR",
+                              event_ticker="KXNHLGAME-26JUN04VGKCAR", gid=self.gid_past,
+                              day=self.past, series="KXNHLGAME", market_type="moneyline",
+                              result="yes", rung="CAR", team_abbrev="CAR",
+                              title="Carolina wins", selection="Carolina wins")
+        out = self.v.cross_validate_stats_vs_schedule()
+        self.assertEqual(out["settlement_moneyline_compared"], 1)
+        self.assertEqual(out["settlement_conflicts"], 0)
+
+
+class TestSecondMarketIsLikeForLike(ExecutionBase):
+    """A second venue corroborates a price only when it is quoting the same question.
+
+    Joining on the game alone -- what this study did until 2026-09-21 -- compared a Polymarket
+    "O/U 7.5" total with a Kalshi puck-line contract and reported 1,115 disagreements that
+    were not disagreements about anything.  These tests use the real shapes captured from
+    ``gamma-api.polymarket.com/events?tag_slug=nhl``: a moneyline market whose outcomes are
+    team nicknames, and totals markets whose questions append "O/U <line>".
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.v = Verifier(self.store)
+        self.snapshot = "2026-09-21T19:42:12Z"
+
+    def poly(self, pid, question, outcomes, prices, *, family="game", gid=None, ts=None):
+        self.store.execute(
+            """INSERT INTO polymarket_markets(id, question, outcomes, outcome_prices, best_bid,
+                                              best_ask, market_family, game_id, retrieved_at,
+                                              source_url, provenance)
+               VALUES(?,?,?,?,?,?,?,?,?, 'https://gamma-api.polymarket.com/events', 'SOURCE')""",
+            (pid, question, json.dumps(outcomes), json.dumps([str(p) for p in prices]),
+             prices[0], prices[0], family, gid if gid is not None else self.gid_future,
+             ts or self.snapshot))
+        self.store.commit()
+
+    def kalshi(self, contract, *, market_type, side, ask, bid=None, strike=None,
+               team_abbrev=None, ts=None, gid=None):
+        self.quote_row(contract=contract, market_key=contract, gid=gid or self.gid_future,
+                       day=self.future.date().isoformat(), market_type=market_type,
+                       title=contract, side=side, ask=ask, bid=bid, strike=strike,
+                       strike_type=("greater" if strike is not None else None),
+                       team_abbrev=team_abbrev, ts=ts or "2026-09-21T19:29:10Z")
+
+    def test_a_total_is_compared_with_the_same_line_and_never_with_a_puck_line(self):
+        self.poly("pm1", "Golden Knights vs. Mammoth: O/U 5.5", ["Over", "Under"], [0.53, 0.47])
+        self.kalshi("KXNHLTOTAL-26SEP24UTAVGK-5", market_type="total", side="YES", ask=0.55,
+                    bid=0.53, strike=5.5)
+        self.kalshi("KXNHLTOTAL-26SEP24UTAVGK-5", market_type="total", side="NO", ask=0.48,
+                    bid=0.46, strike=5.5)
+        # a puck line for the same game is a different question and must not be compared
+        self.kalshi("KXNHLSPREAD-26SEP24UTAVGK-VGK2", market_type="puck_line", side="YES",
+                    ask=0.97, bid=0.95, strike=1.5, team_abbrev="VGK")
+        out = self.v.cross_check_polymarket()
+        self.assertEqual(out["market_kinds_compared"], {"total": 2})
+        self.assertEqual(len(out["comparisons"]), 2)
+        self.assertEqual({c["kalshi_contract"] for c in out["comparisons"]},
+                         {"KXNHLTOTAL-26SEP24UTAVGK-5"})
+        self.assertEqual({c["kalshi_side"] for c in out["comparisons"]}, {"YES", "NO"})
+        by_side = {c["kalshi_side"]: c for c in out["comparisons"]}
+        self.assertEqual(by_side["YES"]["polymarket_outcome"], "Over")
+        self.assertAlmostEqual(by_side["YES"]["kalshi_mid"], 0.54)
+        self.assertAlmostEqual(by_side["YES"]["difference_vs_kalshi_mid"], -0.01)
+        self.assertEqual(by_side["NO"]["polymarket_outcome"], "Under")
+        self.assertEqual(out["disagreements"], 0)
+        self.assertEqual(self.flags("source_disagreement"), [])
+
+    def test_a_different_line_is_not_a_comparison(self):
+        self.poly("pm1", "Golden Knights vs. Mammoth: O/U 6.5", ["Over", "Under"], [0.4, 0.6])
+        self.kalshi("KXNHLTOTAL-26SEP24UTAVGK-5", market_type="total", side="YES", ask=0.55,
+                    bid=0.53, strike=5.5)
+        out = self.v.cross_check_polymarket()
+        self.assertEqual(out["comparisons"], [])
+        self.assertEqual(out["unmatched_reasons"], {"no_kalshi_quote_for_total": 2})
+        self.assertIn("no common market", out["finding"])
+
+    def test_a_moneyline_outcome_is_matched_to_its_own_team(self):
+        self.poly("pm1", "Sabres vs. Penguins", ["Sabres", "Penguins"], [0.415, 0.585])
+        self.kalshi("KXNHLGAME-26SEP24UTAVGK-UTA", market_type="moneyline", side="YES",
+                    ask=0.42, bid=0.40, team_abbrev="UTA")
+        self.kalshi("KXNHLGAME-26SEP24UTAVGK-VGK", market_type="moneyline", side="YES",
+                    ask=0.60, bid=0.58, team_abbrev="VGK")
+        out = self.v.cross_check_polymarket()
+        # Buffalo and Pittsburgh are not playing in this fixture game, so nothing matches
+        self.assertEqual(out["comparisons"], [])
+        self.assertEqual(out["unmatched_reasons"],
+                         {"team_nickname_not_mapped:Sabres": 1,
+                          "team_nickname_not_mapped:Penguins": 1})
+
+    def test_a_nickname_shared_by_two_franchises_is_not_guessed(self):
+        # two ACTIVE franchises whose names end with the same nickname, so "Knights" could be
+        # either: the comparison is refused rather than attached to whichever row SQLite
+        # happens to return first, while the unambiguous nickname in the same market still
+        # compares normally
+        self.store.execute("INSERT INTO teams(team_id, abbrev, full_name, active) "
+                           "VALUES(90, 'VSK', 'Vegas Silver Knights', 1)")
+        self.store.commit()
+        self.poly("pm1", "Knights vs. Golden Knights", ["Knights", "Golden Knights"], [0.4, 0.6])
+        self.kalshi("KXNHLGAME-26SEP24VSKVGK-VSK", market_type="moneyline", side="YES",
+                    ask=0.42, bid=0.40, team_abbrev="VSK")
+        self.kalshi("KXNHLGAME-26SEP24VSKVGK-VGK", market_type="moneyline", side="YES",
+                    ask=0.62, bid=0.60, team_abbrev="VGK")
+        out = self.v.cross_check_polymarket()
+        self.assertEqual(out["unmatched_reasons"].get("team_nickname_not_mapped:Knights"), 1)
+        self.assertEqual([c["polymarket_outcome"] for c in out["comparisons"]], ["Golden Knights"])
+        self.assertEqual(out["comparisons"][0]["kalshi_contract"], "KXNHLGAME-26SEP24VSKVGK-VGK")
+
+    def test_a_fresh_gap_over_the_threshold_is_a_recorded_disagreement(self):
+        self.poly("pm1", "Sabres vs. Penguins", ["Sabres"], [0.415])
+        self.store.execute("INSERT INTO teams(team_id, abbrev, full_name, active) "
+                           "VALUES(7, 'BUF', 'Buffalo Sabres', 1)")
+        self.store.commit()
+        self.kalshi("KXNHLGAME-X-BUF", market_type="moneyline", side="YES", ask=0.60, bid=0.58,
+                    team_abbrev="BUF")
+        out = self.v.cross_check_polymarket()
+        self.assertEqual(len(out["comparisons"]), 1)
+        self.assertFalse(out["comparisons"][0]["stale"])
+        self.assertEqual(out["comparisons"][0]["age_minutes"], 13.0)
+        self.assertEqual(out["disagreements"], 1)
+        flags = self.flags("source_disagreement")
+        self.assertEqual(len(flags), 1)
+        self.assertEqual(flags[0]["severity"], "info")
+        self.assertIn("the same question is priced differently", flags[0]["detail"])
+        self.assertIn("KXNHLGAME-X-BUF", flags[0]["detail"])
+
+    def test_a_stale_pair_is_recorded_but_not_called_a_disagreement(self):
+        """Kalshi's historical tier serves settled contracts, so its stored price can be days
+        older than the Polymarket snapshot.  Both numbers are kept; no conflict is invented."""
+        self.poly("pm1", "Sabres vs. Penguins", ["Sabres"], [0.90])
+        self.store.execute("INSERT INTO teams(team_id, abbrev, full_name, active) "
+                           "VALUES(7, 'BUF', 'Buffalo Sabres', 1)")
+        self.store.commit()
+        self.kalshi("KXNHLGAME-X-BUF", market_type="moneyline", side="YES", ask=0.42, bid=0.40,
+                    team_abbrev="BUF", ts="2026-09-17T10:00:00Z")
+        out = self.v.cross_check_polymarket()
+        self.assertEqual(len(out["comparisons"]), 1)
+        self.assertTrue(out["comparisons"][0]["stale"])
+        self.assertGreater(out["comparisons"][0]["age_minutes"], 30)
+        self.assertEqual(out["stale_comparisons"], 1)
+        self.assertEqual(out["disagreements"], 0)
+        self.assertEqual(self.flags("source_disagreement"), [])
+        self.assertIn("stale", out["finding"])
+
+    def test_one_price_per_contract_not_one_per_quote_row(self):
+        self.poly("pm1", "Sabres vs. Penguins", ["Sabres"], [0.415])
+        self.store.execute("INSERT INTO teams(team_id, abbrev, full_name, active) "
+                           "VALUES(7, 'BUF', 'Buffalo Sabres', 1)")
+        self.store.commit()
+        for i, (ts, ask) in enumerate((("2026-09-21T10:00:00Z", 0.90),
+                                       ("2026-09-21T15:00:00Z", 0.80),
+                                       ("2026-09-21T19:29:10Z", 0.42))):
+            self.store.execute(
+                "INSERT INTO market_quotes(provider, market_key, contract, game_id, game_date,"
+                " market_type, selection, side, bid, ask, ts_utc, retrieved_at, source_url,"
+                " team_abbrev) VALUES('kalshi',?, 'KXNHLGAME-X-BUF', ?, ?, 'moneyline',"
+                " 'Buffalo wins', 'YES', ?, ?, ?, ?, 'https://kalshi.example', 'BUF')",
+                (f"mk{i}", self.gid_future, self.future.date().isoformat(), ask - 0.02, ask,
+                 ts, ts))
+        self.store.commit()
+        out = self.v.cross_check_polymarket()
+        self.assertEqual(len(out["comparisons"]), 1, "the latest quote only")
+        self.assertAlmostEqual(out["comparisons"][0]["kalshi_mid"], 0.41)
+        self.assertEqual(out["comparisons"][0]["kalshi_quote_ts"], "2026-09-21T19:29:10Z")
+        # a quote published AFTER the snapshot is not the price Polymarket was competing with
+        self.kalshi("KXNHLGAME-X-BUF", market_type="moneyline", side="YES", ask=0.99, bid=0.98,
+                    team_abbrev="BUF", ts="2026-09-21T22:00:00Z")
+        out = self.v.cross_check_polymarket()
+        self.assertEqual(len(out["comparisons"]), 1)
+        self.assertEqual(out["comparisons"][0]["kalshi_quote_ts"], "2026-09-21T19:29:10Z")
+
+    def test_futures_are_not_compared_to_a_game_market(self):
+        self.poly("pm1", "Which team will win the 2026-27 Stanley Cup?", ["Avalanche"], [0.09],
+                  family="futures")
+        self.kalshi("KXNHLGAME-X-COL", market_type="moneyline", side="YES", ask=0.10, bid=0.08,
+                    team_abbrev="COL")
+        out = self.v.cross_check_polymarket()
+        self.assertEqual(out["comparisons"], [])
+        self.assertEqual(out["unmatched_reasons"], {"not_a_game_market": 1})
+
+
+class TestFalsePositiveFlagsAreResolvedNotDeleted(ExecutionBase):
+    """A correction to the irregularity queue is itself part of the audit trail."""
+
+    OLD_CONFLICT = ("contract KXNHLSPREAD-26SEP20WSHBOS-BOS3 settled no for BOS but the NHL "
+                    "score is 3-2 (game 2026010013)")
+    OLD_DISAGREE = ("game 2026010041: polymarket asks 0.55 on 'Sabres vs. Red Wings: O/U 7.5' "
+                    "while kalshi asks 0.99 on KXNHLSPREAD-26SEP24BUFDET-BUF2 (NO side); both "
+                    "prices are kept and neither is treated as the truth")
+    REAL_CONFLICT = ("contract KXNHLGAME-26SEP20WSHBOS-BOS settled yes for BOS but the NHL "
+                     "score is 3-2 (game 2026010013)")
+
+    def setUp(self):
+        super().setUp()
+        self.v = Verifier(self.store)
+
+    def seed(self, kind, detail, entity, sources):
+        self.store.flag(kind, detail, entity_type="quote", entity_id=entity,
+                        severity="critical" if kind == "conflicting_source" else "info",
+                        sources=sources)
+
+    def test_the_two_known_false_positives_are_resolved_with_a_reason(self):
+        self.seed("conflicting_source", self.OLD_CONFLICT, "KXNHLSPREAD-26SEP20WSHBOS-BOS3",
+                  "kalshi.historical|nhl.api_web")
+        self.seed("source_disagreement", self.OLD_DISAGREE, "2026010041",
+                  "polymarket.gamma,kalshi.trade_api")
+        self.seed("conflicting_source", self.REAL_CONFLICT, "KXNHLGAME-26SEP20WSHBOS-BOS",
+                  "kalshi.historical|nhl.api_web")
+        out = self.v.audit_false_positive_flags()
+        self.assertEqual(out, {"conflicting_source": 1, "source_disagreement": 1})
+        resolved = self.store.query(
+            "SELECT * FROM irregularities WHERE status='resolved' ORDER BY kind")
+        self.assertEqual(len(resolved), 2)
+        for r in resolved:
+            self.assertIn("False positive from a verifier bug", r["resolution"])
+            self.assertIn("resolved not deleted", r["resolution"])
+            self.assertIsNotNone(r["resolved_at"])
+        # the genuine moneyline conflict is untouched
+        still_open = self.store.query("SELECT * FROM irregularities WHERE status='open'")
+        self.assertEqual(len(still_open), 1)
+        self.assertEqual(still_open[0]["detail"], self.REAL_CONFLICT)
+        # and the repair itself is on the audit trail
+        audits = self.store.query(
+            "SELECT * FROM audit_log WHERE action='RESOLVE_FALSE_POSITIVE' ORDER BY id")
+        self.assertEqual(len(audits), 2)
+        self.assertEqual({a["entity"] for a in audits},
+                         {"conflicting_source", "source_disagreement"})
+        self.assertIn("resolved", json.loads(audits[0]["detail"]))
+
+    def test_the_repair_is_idempotent(self):
+        self.seed("conflicting_source", self.OLD_CONFLICT, "KXNHLSPREAD-X-BOS3",
+                  "kalshi.historical|nhl.api_web")
+        self.assertEqual(self.v.audit_false_positive_flags(), {"conflicting_source": 1})
+        self.assertEqual(self.v.audit_false_positive_flags(), {})
+        self.assertEqual(self.store.one(
+            "SELECT COUNT(*) c FROM irregularities WHERE status='resolved'")["c"], 1)
+        self.assertEqual(self.store.one(
+            "SELECT COUNT(*) c FROM audit_log WHERE action='RESOLVE_FALSE_POSITIVE'")["c"], 1)
+
+    def test_an_unrelated_flag_is_never_swept_up(self):
+        self.seed("conflicting_source", self.OLD_CONFLICT, "KXNHLSPREAD-X-BOS3",
+                  "some.other_source")          # different sources -> not this bug
+        self.store.flag("source_disagreement", "a genuine totals disagreement",
+                        entity_type="game", entity_id="1", severity="info",
+                        sources="nhl.api_web,espn.nhl_api")
+        self.assertEqual(self.v.audit_false_positive_flags(), {})
+        self.assertEqual(self.store.one(
+            "SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"], 2)
+
+    def test_run_all_reports_the_repair_first(self):
+        self.seed("conflicting_source", self.OLD_CONFLICT, "KXNHLSPREAD-X-BOS3",
+                  "kalshi.historical|nhl.api_web")
+        summary = self.v.run_all()
+        self.assertEqual(summary["false_positives_resolved"], {"conflicting_source": 1})
+        self.assertEqual(summary["cross_validation"]["settlement_conflicts"], 0)
 
 
 class TestQuoteSideIsPartOfARuleDefinition(ExecutionBase):
