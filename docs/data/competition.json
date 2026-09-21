@@ -8,21 +8,21 @@
   "wins": 0,
   "losses": 0,
   "pnl": 0.0,
-  "staked": 2172.32,
+  "staked": 2166.15,
   "roi": 0.0,
   "win_rate": null
  },
  "BACKTEST": {
   "mode": "BACKTEST",
   "strategies": 78,
-  "bets": 3091,
-  "settled": 3091,
+  "bets": 3150,
+  "settled": 3150,
   "open": 0,
-  "wins": 1507,
-  "losses": 1584,
-  "pnl": 1961.88,
-  "staked": 101875.18,
-  "roi": 0.0193,
-  "win_rate": 0.4875
+  "wins": 1531,
+  "losses": 1619,
+  "pnl": 1612.68,
+  "staked": 103306.83,
+  "roi": 0.0156,
+  "win_rate": 0.486
  }
 }
