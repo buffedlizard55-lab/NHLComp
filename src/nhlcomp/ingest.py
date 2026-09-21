@@ -15,11 +15,80 @@ from typing import Any, Iterable, Sequence
 
 from .http import HttpClient, NetworkUnavailable, parse_iso
 from .ingest_ext import IngestExtensions
-from .sources.kalshi import KalshiApi, KalshiApiError, normalize_market, parse_event_ticker
+from .sources.kalshi import (KalshiApi, KalshiApiError, normalize_market,
+                             parse_event_ticker, split_team_codes)
 from .sources.nhl import (NhlApi, NhlStatsRest, daterange, normalize_game,
                           parse_scoreboard_games, parse_standings)
+from .sources.polymarket import PolymarketGamma
 from .sources.registry import SOURCES, probe_urls_for, seed_registry
 from .store import Store, utcnow
+
+#: How Kalshi's rules text names the game a contract is on.  Every wording below comes from a
+#: payload captured on 2026-09-21, not from a guess:
+#:
+#: * moneyline  -- "If Vegas wins the Vegas vs Los Angeles NHL game originally scheduled for
+#:   Sep 19, 2026, then the market resolves to Yes."
+#: * puck line  -- "If Vegas wins by over 2.5 goals in the Carolina at Vegas professional
+#:   hockey game originally scheduled for Jun 14, 2026, ..."
+#: * overtime   -- "If Carolina and Vegas go to overtime in the Carolina vs Vegas professional
+#:   hockey game originally scheduled for Jun 14, 2026, ..."
+#: * playoff moneyline -- "If VGK Golden Knights wins the Game 6: Carolina at Vegas
+#:   professional hockey game scheduled for Jun 14, 2026, ..."
+#:
+#: So both connectors (``vs``/``at``), both league descriptions ("NHL game", "professional
+#: hockey game"), an optional "originally" and a leading "Game N:" all occur in real payloads,
+#: and the first team named is the away team in every one of them.
+#:
+#: Parsing is two-step rather than one greedy pattern: locate the date clause first, then take
+#: the *last* team connector before it.  A single ``the (.+?) (vs|at) (.+?) game ... scheduled
+#: for`` pattern latches onto an earlier "the ... at ..." in the prose ("If the game goes to
+#: overtime at any point in the Carolina vs Vegas ...") and reads two chunks of a sentence as
+#: team names.  Names are then shape-checked, and a contract that yields no well-formed pair is
+#: left unmatched and flagged -- never attached to a plausible-looking game.
+GAME_CLAUSE_RE = re.compile(
+    r"(?:NHL game|professional hockey game|hockey game|game) "
+    r"(?:originally )?scheduled for ([A-Z][a-z]{2}) (\d{1,2}), (\d{4})")
+
+#: A team name is 1-3 capitalised words ("Vegas", "Los Angeles", "New York").  Anchored at the
+#: end of the text before the connector / at the start of the text after it, so a "Game 6:"
+#: prefix or a lowercase word ends the run instead of being swept into a team name.
+TEAM_NAME_TAIL_RE = re.compile(r"((?:[A-Z][A-Za-z.]* ){0,2}[A-Z][A-Za-z.]*)$")
+TEAM_NAME_HEAD_RE = re.compile(r"^([A-Z][A-Za-z.]*(?: [A-Z][A-Za-z.]*){0,2})")
+
+#: connectors Kalshi uses between the two team names, longest-first so "vs." is not split
+TEAM_CONNECTORS = (" vs.", " vs ", " at ")
+
+
+def parse_rules_game(rules: str, months: dict[str, int]) -> tuple[str | None, str | None, str | None]:
+    """``(away_name, home_name, game_date)`` from Kalshi's rules text, or ``(None, None, None)``.
+
+    Returns None for any part it cannot read; it never guesses.  ``months`` is passed in
+    rather than read from the module global so the function is testable on its own.
+    """
+    clause = GAME_CLAUSE_RE.search(rules or "")
+    if clause is None:
+        return None, None, None
+    mon, day, year = clause.groups()
+    if mon.upper() not in months:
+        return None, None, None
+    prefix = rules[:clause.start()]
+    # the connector nearest the date clause is the one separating the two team names
+    best = -1
+    for conn in TEAM_CONNECTORS:
+        idx = prefix.rfind(conn)
+        if idx > best:
+            best, chosen = idx, conn
+    if best < 0:
+        return None, None, None
+    left = prefix[:best].strip()
+    right = prefix[best + len(chosen):].strip()
+    a = TEAM_NAME_TAIL_RE.search(left)
+    h = TEAM_NAME_HEAD_RE.match(right)
+    if a is None or h is None:
+        return None, None, None
+    return a.group(1).strip(), h.group(1).strip(), \
+        f"{year}-{months[mon.upper()]:02d}-{int(day):02d}"
+
 
 MONTHS = {"JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6,
           "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12}
@@ -42,6 +111,7 @@ class Ingestor(IngestExtensions):
         self.nhl = NhlApi(http)
         self.rest = NhlStatsRest(http)
         self.kalshi = KalshiApi(http)
+        self.pm = PolymarketGamma(http)
         self.verbose = verbose
         self.stats: dict[str, Any] = {}
 
@@ -257,7 +327,10 @@ class Ingestor(IngestExtensions):
                           bid=excluded.bid, ask=excluded.ask, spread=excluded.spread,
                           bid_size=excluded.bid_size, ask_size=excluded.ask_size,
                           volume=excluded.volume, liquidity=excluded.liquidity,
-                          last_price=excluded.last_price, game_id=excluded.game_id""",
+                          last_price=excluded.last_price, game_id=excluded.game_id,
+                          team_abbrev=COALESCE(excluded.team_abbrev, market_quotes.team_abbrev),
+                          strike=COALESCE(excluded.strike, market_quotes.strike),
+                          strike_type=COALESCE(excluded.strike_type, market_quotes.strike_type)""",
                     tuple(row[c] for c in cols))
                 n += 1
         self.store.commit()
@@ -280,28 +353,36 @@ class Ingestor(IngestExtensions):
                                         parsed["home_abbrev"])
             if gid is not None:
                 return gid, (parsed["away_abbrev"], parsed["home_abbrev"])
-        mm = re.search(r"the (.+?) vs (.+?) NHL game originally scheduled for "
-                       r"([A-Z][a-z]{2}) (\d{1,2}), (\d{4})", rules)
-        if mm:
-            away_name, home_name, mon, d, y = mm.groups()
-            game_date = f"{y}-{MONTHS.get(mon.upper(), 0):02d}-{int(d):02d}"
+        away_name, home_name, game_date = parse_rules_game(rules, MONTHS)
         if not away_name:
-            for key in ("yes_sub_title", "no_sub_title"):
-                pass
-            ticker = (m.get("event_ticker") or "").replace("KXNHLGAME-", "")
-            dm = re.match(r"^(\d{2})([A-Z]{3})(\d{2})(.+)$", ticker)
+            # last resort: read the date and the code pair straight off the event ticker.
+            # Any KXNHL series is handled (the moneyline prefix used to be hard-coded, so a
+            # spread or overtime contract fell through here unmatched), and the code pair is
+            # split by the same validated routine the ticker parser uses -- never by guessing
+            # a 3/2 or 2/3 character boundary.
+            tail = (m.get("event_ticker") or "").split("-", 1)[-1]
+            dm = re.match(r"^(\d{2})([A-Z]{3})(\d{2})([A-Z]+)$", tail)
             if dm:
                 yy, mon, dd, rest = dm.groups()
-                y = 2000 + int(yy)
-                game_date = f"{y}-{MONTHS.get(mon, 0):02d}-{int(dd):02d}"
-                for la, lb in ((3, 3), (2, 3), (3, 2), (2, 2)):
-                    if len(rest) == la + lb:
-                        away_name, home_name = rest[:la], rest[lb:]
-                        break
+                codes = split_team_codes(rest)
+                if codes and mon in MONTHS:
+                    game_date = f"{2000 + int(yy):04d}-{MONTHS[mon]:02d}-{int(dd):02d}"
+                    away_name, home_name = codes
         away_id = self._team_id_for(away_name)
         home_id = self._team_id_for(home_name)
         abbrevs = (self._abbrev_for(away_name), self._abbrev_for(home_name))
         if not (game_date and away_id and home_id):
+            # same rule as the "no such game" case below: a contract this project cannot place
+            # is recorded as an irregularity, with the reason, rather than dropped silently
+            missing = [what for what, ok in (("date", bool(game_date)),
+                                             (f"away team {away_name!r}", away_id is not None),
+                                             (f"home team {home_name!r}", home_id is not None))
+                       if not ok]
+            self.store.flag("unmatched_market",
+                            f"kalshi {m.get('ticker') or m.get('event_ticker')} could not be "
+                            f"matched to an NHL game: unresolved {', '.join(missing)}",
+                            severity="warn", entity_type="quote",
+                            entity_id=m.get("event_ticker") or m.get("ticker"))
             return None, abbrevs
         g = self.store.one(
             "SELECT game_id FROM games WHERE game_date=? AND "
@@ -425,7 +506,16 @@ class Ingestor(IngestExtensions):
                          result=excluded.result, settle_price=excluded.settle_price,
                          price_before=excluded.price_before, bid_before=excluded.bid_before,
                          ask_before=excluded.ask_before, volume=excluded.volume,
-                         open_interest=excluded.open_interest, game_id=excluded.game_id""",
+                         open_interest=excluded.open_interest,
+                         retrieved_at=excluded.retrieved_at, source_url=excluded.source_url,
+                         game_date=COALESCE(excluded.game_date, market_settlements.game_date),
+                         selection=CASE WHEN excluded.selection IS NOT NULL
+                                         AND excluded.selection <> excluded.contract
+                                        THEN excluded.selection
+                                        ELSE market_settlements.selection END,
+                         -- COALESCE, not a blind overwrite: a later page that fails to match
+                         -- the contract to a game must not erase a match already on record
+                         game_id=COALESCE(excluded.game_id, market_settlements.game_id)""",
                     (m.get("event_ticker"), ticker, game_id,
                      (m.get("occurrence_datetime") or "")[:10] or None,
                      m.get("yes_sub_title") or ticker, side, result,

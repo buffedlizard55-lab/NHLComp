@@ -21,7 +21,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Iterable, Iterator
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 # Columns added after their table already shipped.  Applied by Store._migrate so a
 # committed ledger.db from an earlier version gains them without a destructive rebuild.
@@ -52,6 +52,14 @@ ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("backtests", "base_rate", "REAL"),
     ("backtests", "n_games", "INTEGER"),
     ("backtests", "price_basis", "TEXT"),
+    # schema v6: puck-line / overtime markets and the second prediction-market source
+    ("market_quotes", "team_abbrev", "TEXT"),      # team named by the contract (kalshi suffix)
+    ("bets", "exchange_side", "TEXT"),             # YES | NO -- which side of the book was bought
+    ("bets", "depth_basis", "TEXT"),               # published_offer_size | traded_volume | declared_cap
+    ("market_settlements", "rung", "TEXT"),        # the ticker suffix, kept verbatim, never parsed as a line
+    ("kalshi_series", "open_contracts", "INTEGER"),   # from the last listing poll
+    ("kalshi_series", "last_listed_check", "TEXT"),
+    ("kalshi_series", "listing_note", "TEXT"),        # incl. verified-negative observations
 )
 
 SCHEMA = """
@@ -285,6 +293,94 @@ CREATE TABLE IF NOT EXISTS market_quotes (
 );
 CREATE INDEX IF NOT EXISTS idx_mq_game ON market_quotes(game_id);
 CREATE INDEX IF NOT EXISTS idx_mq_ts ON market_quotes(ts_utc);
+
+-- Official per-goal rows from api-web.nhle.com/v1/score/{date} (SOURCE).  One row per goal
+-- with the period it was scored in, which is what a period market settles on and what lets
+-- the final score and lastPeriodType be cross-checked against a second NHL feed.
+CREATE TABLE IF NOT EXISTS game_period_goals (
+    game_id      INTEGER NOT NULL,
+    period       INTEGER NOT NULL,
+    period_type  TEXT,                    -- REG | OT | SO, as published per goal
+    team_abbrev  TEXT NOT NULL,
+    player_id    INTEGER NOT NULL DEFAULT 0,   -- 0 when the feed published no player
+    player_name  TEXT,
+    time_in_period TEXT,
+    strength     TEXT,                    -- ev | pp | sh | en | ps
+    goal_modifier TEXT,
+    away_score   INTEGER,                 -- running score exactly as published
+    home_score   INTEGER,
+    source_id    TEXT NOT NULL,
+    source_url   TEXT,
+    retrieved_at TEXT NOT NULL,
+    provenance   TEXT NOT NULL DEFAULT 'SOURCE',
+    UNIQUE (game_id, period, time_in_period, team_abbrev, player_id)
+);
+CREATE INDEX IF NOT EXISTS idx_gpg_game ON game_period_goals(game_id);
+
+-- Period scores DERIVED from game_period_goals, with the reconciliation against the official
+-- final score recorded rather than assumed: a game decided in a shootout publishes no goal
+-- row for the deciding shot, so the derived sum can legitimately differ from the final score
+-- by the shootout goal.  When it does, that is stated here and never silently patched.
+CREATE TABLE IF NOT EXISTS game_period_scores (
+    game_id       INTEGER NOT NULL,
+    period        INTEGER NOT NULL,
+    period_type   TEXT,
+    home_goals    INTEGER NOT NULL DEFAULT 0,
+    away_goals    INTEGER NOT NULL DEFAULT 0,
+    derived_from  TEXT NOT NULL DEFAULT 'nhl.score.goals',
+    reconciled    INTEGER NOT NULL DEFAULT 0,   -- 1 when the period rows sum to the official final
+    reconciliation_note TEXT,
+    source_id     TEXT NOT NULL,
+    retrieved_at  TEXT NOT NULL,
+    provenance    TEXT NOT NULL DEFAULT 'DERIVED',
+    PRIMARY KEY (game_id, period)
+);
+
+-- Polymarket (gamma-api.polymarket.com) NHL markets: a second, independent prediction-market
+-- price.  Keyless and free (verified 2026-09-21).  Reference only: this project executes on
+-- Kalshi, so nothing here funds a wager and Polymarket's own fee schedule is stored as
+-- published rather than modelled into a fill.
+CREATE TABLE IF NOT EXISTS polymarket_markets (
+    id             TEXT PRIMARY KEY,
+    event_id       TEXT,
+    event_slug     TEXT,
+    event_title    TEXT,
+    slug           TEXT,
+    question       TEXT,
+    condition_id   TEXT,
+    group_item_title TEXT,
+    outcomes       TEXT,                  -- JSON array as published (a string, not a list)
+    outcome_prices TEXT,                  -- JSON array as published
+    best_bid       REAL,
+    best_ask       REAL,
+    spread         REAL,
+    last_trade_price REAL,
+    liquidity      REAL,
+    volume         REAL,
+    volume_24hr    REAL,
+    tick_size      REAL,
+    min_size       REAL,
+    fee_type       TEXT,
+    fee_rate       REAL,
+    fee_exponent   REAL,
+    fee_taker_only INTEGER,
+    fee_rebate_rate REAL,
+    start_date     TEXT,
+    end_date       TEXT,
+    game_start_time TEXT,
+    active         INTEGER,
+    closed         INTEGER,
+    accepting_orders INTEGER,
+    enable_order_book INTEGER,
+    game_id        INTEGER,               -- matched NHL game, NULL when it is not a game market
+    market_family  TEXT,                  -- DERIVED: futures | game | other
+    match_basis    TEXT,                  -- how game_id was matched, or why it was not
+    retrieved_at   TEXT NOT NULL,
+    source_url     TEXT,
+    provenance     TEXT NOT NULL DEFAULT 'SOURCE'
+);
+CREATE INDEX IF NOT EXISTS idx_pm_game ON polymarket_markets(game_id);
+CREATE INDEX IF NOT EXISTS idx_pm_family ON polymarket_markets(market_family);
 
 -- Settled exchange contracts: real historical price + real outcome, used for BACKTESTS.
 CREATE TABLE IF NOT EXISTS market_settlements (

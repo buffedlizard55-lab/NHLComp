@@ -15,7 +15,7 @@ from nhlcomp.ingest import Ingestor
 from nhlcomp.pipeline import build_team_names, _side_for_selection
 from nhlcomp.features import GameRef
 from nhlcomp.sources.kalshi import (KalshiApi, KalshiApiError, binary_price_to_decimal,
-                                    normalize_market)
+                                    contract_suffix, normalize_market)
 from nhlcomp.sources.nhl import derive_team_games, normalize_game, parse_scoreboard_games
 from nhlcomp.sources.registry import SOURCES, seed_registry
 from nhlcomp.store import Store
@@ -420,6 +420,147 @@ class TestRegistry(unittest.TestCase):
         self.assertTrue(rows)
         self.assertNotIn("verified", [r["status"] for r in rows])
         s.close()
+
+
+class TestSettlementUpsertKeepsKnownFields(unittest.TestCase):
+    """A settled contract can arrive more than once, and the later payload is not always the
+    more complete one.  The upsert must let a newer value win without ever blanking a fact
+    that is already on the record -- ``rung`` above all, because the ticker suffix is what
+    tells the puck-line settlement code which line the contract was struck at."""
+
+    #: fields that are genuinely absent on some Kalshi payloads -- the verified overtime
+    #: capture carries no ``strike_type``/``floor_strike`` at all, and neither spread capture
+    #: carries ``series_ticker``.  A page that leaves one out must not blank the stored value.
+    DROPPED = ("strike_type", "floor_strike", "yes_sub_title", "title")
+
+    def setUp(self):
+        fd, self.dbpath = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        self.store = Store(self.dbpath)
+        self.http = HttpClient(tempfile.mkdtemp())
+        self.ing = Ingestor(self.store, self.http, verbose=False)
+        self.m = load("kalshi_historical_markets_kxnhlspread_limit2.json")["markets"][0]
+
+    def tearDown(self):
+        self.store.close()
+
+    def _row(self):
+        return self.store.one("SELECT * FROM market_settlements WHERE contract=? AND side='YES'",
+                              (self.m["ticker"],))
+
+    def test_real_payload_records_the_rung_and_line(self):
+        self.ing._upsert_settlement(self.m, tier="historical", source_url="u1",
+                                    ts="2026-09-21T00:00:00Z")
+        row = self._row()
+        self.assertIsNotNone(row)
+        self.assertEqual(row["rung"], "VGK2")
+        self.assertEqual(row["strike_type"], "greater")
+        self.assertEqual(row["market_type"], "puck_line")
+        self.assertEqual(row["selection"], "Vegas wins by over 2.5 goals")
+        self.assertAlmostEqual(float(row["floor_strike"]), 2.5)
+
+    def test_a_partial_payload_never_blanks_the_record(self):
+        self.ing._upsert_settlement(self.m, tier="historical", source_url="u1",
+                                    ts="2026-09-21T00:00:00Z")
+        # a game match recorded by an earlier pass (when the game was inside the ingested
+        # window) must survive a later pass that cannot re-derive it: this store has no game
+        # rows at all, so the matcher returns None every time
+        self.store.execute("UPDATE market_settlements SET game_id=2026030141 WHERE contract=?",
+                           (self.m["ticker"],))
+        self.store.commit()
+        partial = {k: v for k, v in self.m.items() if k not in self.DROPPED}
+        for k in self.DROPPED:
+            self.assertIn(k, self.m, f"fixture must really carry {k}")
+        self.ing._upsert_settlement(partial, tier="historical", source_url="u2",
+                                    ts="2026-09-21T01:00:00Z")
+        row = self._row()
+        self.assertEqual(row["rung"], "VGK2")
+        self.assertEqual(row["strike_type"], "greater")
+        self.assertEqual(row["market_type"], "puck_line")
+        self.assertEqual(row["selection"], "Vegas wins by over 2.5 goals")
+        self.assertAlmostEqual(float(row["floor_strike"]), 2.5)
+        self.assertEqual(int(row["game_id"]), 2026030141)
+        # retrieval provenance does move forward: the row reports its most recent fetch
+        self.assertEqual(row["source_url"], "u2")
+        self.assertEqual(row["retrieved_at"], "2026-09-21T01:00:00Z")
+        self.assertEqual(row["result"], "no")
+        self.assertEqual(self.store.one(
+            "SELECT COUNT(*) c FROM market_settlements")["c"], 1, "still one row, not a duplicate")
+
+    def test_a_newer_result_overrides_the_old_one(self):
+        """COALESCE protects missing values; it must not freeze values that really changed."""
+        self.ing._upsert_settlement(self.m, tier="historical", source_url="u1",
+                                    ts="2026-09-21T00:00:00Z")
+        self.assertEqual(self._row()["result"], "no")
+        corrected = dict(self.m, result="yes", settlement_value_dollars="1.0000")
+        self.ing._upsert_settlement(corrected, tier="historical", source_url="u2",
+                                    ts="2026-09-21T02:00:00Z")
+        row = self._row()
+        self.assertEqual(row["result"], "yes")
+        self.assertAlmostEqual(float(row["settle_price"]), 1.0)
+
+    def test_overtime_contract_keeps_its_own_suffix(self):
+        """The OT series' suffix is ``OT``, which is not a team code and must be stored
+        verbatim rather than parsed into a line."""
+        m = load("kalshi_historical_markets_kxnhlovertime_limit2.json")["markets"][0]
+        self.ing._upsert_settlement(m, tier="historical", source_url="u1",
+                                    ts="2026-09-21T00:00:00Z")
+        row = self.store.one("SELECT * FROM market_settlements WHERE contract=?", (m["ticker"],))
+        self.assertEqual(row["rung"], "OT")
+        self.assertEqual(row["market_type"], "overtime")
+        self.assertIsNone(row["floor_strike"])
+        self.assertIsNone(row["strike_type"])
+
+
+class TestMoneylineUpsertKeepsGameMatch(unittest.TestCase):
+    """Same rule on the live-tier moneyline path in :mod:`nhlcomp.ingest`."""
+
+    def setUp(self):
+        fd, self.dbpath = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        self.store = Store(self.dbpath)
+        self.http = HttpClient(tempfile.mkdtemp())
+        self.ing = Ingestor(self.store, self.http, verbose=False)
+        prime_cache(self.http, "https://api.nhle.com/stats/rest/en/team",
+                    load("nhl_stats_rest_team.json"))
+        prime_cache(self.http, "https://api-web.nhle.com/v1/scoreboard/2026-09-19",
+                    load("nhl_scoreboard_20260919.json"))
+        self.ing.teams()
+        self.ing.scoreboard_window("2026-09-19")
+
+    def tearDown(self):
+        self.store.close()
+
+    URL = ("https://api.elections.kalshi.com/trade-api/v2/markets"
+           "?series_ticker=KXNHLGAME&limit=200&status=settled")
+
+    def test_reingest_that_cannot_rematch_keeps_the_match(self):
+        payload = load("kalshi_settled_kxnhlgame.json")
+        prime_cache(self.http, self.URL, payload)
+        self.assertEqual(self.ing.kalshi_settled(max_pages=1), 3)
+        matched = self.store.one("SELECT * FROM market_settlements WHERE contract=?",
+                                 ("KXNHLGAME-26SEP19VGKLA-VGK",))
+        self.assertEqual(int(matched["game_id"]), 2026010002)
+        # VAN@SEA is the contract this window genuinely cannot match (no game row), so it
+        # stands in for "a match recorded earlier, un-derivable now"
+        un = "KXNHLGAME-26SEP19VANSEA-VAN"
+        self.assertIsNone(self.store.one(
+            "SELECT game_id FROM market_settlements WHERE contract=?", (un,))["game_id"])
+        self.store.execute("UPDATE market_settlements SET game_id=2026010003 WHERE contract=?",
+                           (un,))
+        self.store.commit()
+        self.ing.kalshi_settled(max_pages=1)
+        row = self.store.one("SELECT * FROM market_settlements WHERE contract=?", (un,))
+        self.assertEqual(int(row["game_id"]), 2026010003,
+                         "a failed re-match must not erase an existing game match")
+        self.assertEqual(row["result"], "no")
+        # the matched contract is untouched and its result still overrides on re-ingest
+        self.assertEqual(int(self.store.one(
+            "SELECT game_id FROM market_settlements WHERE contract=?",
+            ("KXNHLGAME-26SEP19VGKLA-VGK",))["game_id"]), 2026010002)
+        self.assertEqual(self.store.one(
+            "SELECT COUNT(*) c FROM market_settlements WHERE contract=?", (un,))["c"], 1)
+
 
 
 if __name__ == "__main__":

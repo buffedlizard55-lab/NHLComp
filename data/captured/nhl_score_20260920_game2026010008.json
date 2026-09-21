@@ -1,0 +1,123 @@
+{
+  "_capture": {
+    "source_url": "https://api-web.nhle.com/v1/score/2026-09-20",
+    "retrieved_at": "2026-09-21T04:20:00Z",
+    "method": "fetched with the Arena fetch tool (the development sandbox has no outbound network; CI does)",
+    "completeness": "FIELD-PRESERVING EXCERPT, NOT A COMPLETE RESPONSE. The endpoint returned 7 game records in a 6-chunk response; only the first (game 2026010008, NYI at NJD, 2026-09-20) is retained, and only the fields this project parses are retained. Decorative fields published alongside them (tvBroadcasts, logo/mugshot and highlight URLs, recap links, assist name objects, oddsPartners, gameWeek) were dropped at capture time. No retained value was edited, inferred or reconstructed. Because the capture is partial, the parser test asserts the shape it needs (per-period goal rows, gameOutcome.lastPeriodType, sog) and nothing about the rest of the day's slate.",
+    "why_it_matters": "Proves that api-web.nhle.com/v1/score/{date} publishes, for a finished game, one row per goal with the period number, the time in the period, the scoring team, the running score and the strength -- i.e. official period-by-period scoring, which is what a first-period market needs to settle, plus a second independent reading of lastPeriodType and shots on goal (sog) to cross-check the scoreboard feed already used."
+  },
+  "prevDate": "2026-09-19",
+  "currentDate": "2026-09-20",
+  "nextDate": "2026-09-21",
+  "games": [
+    {
+      "id": 2026010008,
+      "season": 20262027,
+      "gameType": 1,
+      "gameDate": "2026-09-20",
+      "venue": {
+        "default": "Prudential Center"
+      },
+      "startTimeUTC": "2026-09-20T17:00:00Z",
+      "easternUTCOffset": "-04:00",
+      "venueUTCOffset": "-04:00",
+      "gameState": "FINAL",
+      "gameScheduleState": "OK",
+      "awayTeam": {
+        "id": 2,
+        "name": {
+          "default": "Islanders"
+        },
+        "abbrev": "NYI",
+        "score": 1,
+        "sog": 24
+      },
+      "homeTeam": {
+        "id": 1,
+        "name": {
+          "default": "Devils"
+        },
+        "abbrev": "NJD",
+        "score": 2,
+        "sog": 22
+      },
+      "gameCenterLink": "/gamecenter/nyi-vs-njd/2026-09-20/2026010008",
+      "clock": {
+        "timeRemaining": "00:00",
+        "secondsRemaining": 0,
+        "running": false,
+        "inIntermission": false
+      },
+      "neutralSite": false,
+      "venueTimezone": "US/Eastern",
+      "period": 3,
+      "periodDescriptor": {
+        "number": 3,
+        "periodType": "REG",
+        "maxRegulationPeriods": 3
+      },
+      "gameOutcome": {
+        "lastPeriodType": "REG"
+      },
+      "goals": [
+        {
+          "period": 2,
+          "periodDescriptor": {
+            "number": 2,
+            "periodType": "REG",
+            "maxRegulationPeriods": 3
+          },
+          "timeInPeriod": "00:55",
+          "playerId": 8484807,
+          "name": {
+            "default": "C. Eiserman"
+          },
+          "goalModifier": "none",
+          "teamAbbrev": "NYI",
+          "goalsToDate": 1,
+          "awayScore": 1,
+          "homeScore": 0,
+          "strength": "pp"
+        },
+        {
+          "period": 2,
+          "periodDescriptor": {
+            "number": 2,
+            "periodType": "REG",
+            "maxRegulationPeriods": 3
+          },
+          "timeInPeriod": "03:59",
+          "playerId": 8481115,
+          "name": {
+            "default": "R. Schmelzer"
+          },
+          "goalModifier": "none",
+          "teamAbbrev": "NJD",
+          "goalsToDate": 1,
+          "awayScore": 1,
+          "homeScore": 1,
+          "strength": "ev"
+        },
+        {
+          "period": 3,
+          "periodDescriptor": {
+            "number": 3,
+            "periodType": "REG",
+            "maxRegulationPeriods": 3
+          },
+          "timeInPeriod": "07:53",
+          "playerId": 8477015,
+          "name": {
+            "default": "C. Brown"
+          },
+          "goalModifier": "none",
+          "teamAbbrev": "NJD",
+          "goalsToDate": 1,
+          "awayScore": 1,
+          "homeScore": 2,
+          "strength": "ev"
+        }
+      ]
+    }
+  ]
+}

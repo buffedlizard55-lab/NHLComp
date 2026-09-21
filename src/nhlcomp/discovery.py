@@ -114,6 +114,16 @@ for _f in MARKET_FEATURES:
     FEATURE_FAMILY[_f] = "market"
 
 
+#: Family-wise error rate for the whole discovery search.  A scan evaluates thousands of
+#: triggers, so a per-test 5% threshold guarantees false survivors: at 3,000 tests on games
+#: the market prices fairly, ~150 triggers clear 5% by chance alone.  Every p-value this
+#: module reports is therefore judged against a threshold corrected for the number of tests
+#: actually run (Holm's step-down procedure over the same family-wise rate), and a candidate
+#: that does not clear it is still allowed to *forward test* -- collecting evidence is the
+#: point of the forward test -- but no edge is claimed for it anywhere in this project.
+FAMILY_ALPHA = 0.05
+
+
 @dataclass
 class Candidate:
     feature: str
@@ -135,6 +145,21 @@ class Candidate:
     valid_roi: float | None = None
     valid_avg_price: float | None = None
     price_verdict: str = "unpriced"      # market_edge | market_no_edge | unpriced | thin
+    # --- multiple-testing bookkeeping (filled in by annotate_significance) -------------
+    #: z and one-sided p for the validation hit rate against that split's own base rate
+    valid_z: float | None = None
+    valid_p: float | None = None
+    #: z and one-sided p for the validation win rate against the average closing offer paid
+    priced_z: float | None = None
+    priced_p: float | None = None
+    #: how many triggers the scan evaluated, and the threshold that number implies
+    n_tests: int = 0
+    alpha_family: float = FAMILY_ALPHA
+    alpha_holm: float | None = None
+    significant_accuracy: bool = False
+    significant_priced: bool = False
+    #: the sentence that goes on the record with the candidate, either way
+    significance_note: str = "not yet assessed for multiple testing"
 
     @property
     def family(self) -> str:
@@ -146,8 +171,72 @@ class Candidate:
         return f"{self.feature}|{self.operator}|{self.threshold}|{self.bet_side}"
 
 
+def binomial_z(hits: float | None, n: int | None, p0: float | None) -> float | None:
+    """One-sample z for a hit rate against a reference probability (normal approximation).
+
+    Used two ways, both against a number that is *not* fitted from the same sample:
+
+    * accuracy -- hits vs the base rate of the same split (did the trigger move the outcome?);
+    * price -- wins vs the average closing offer that was paid (did it beat the market?).
+
+    Returns None when the test is undefined (no trials, or a reference probability of 0/1).
+    """
+    if not n or n <= 0 or p0 is None or hits is None:
+        return None
+    p = float(p0)
+    if p <= 0.0 or p >= 1.0:
+        return None
+    return (float(hits) - n * p) / math.sqrt(n * p * (1.0 - p))
+
+
+def p_value_upper(z: float | None) -> float | None:
+    """One-sided upper-tail p-value: P(Z >= z) for a standard normal."""
+    if z is None:
+        return None
+    return 0.5 * math.erfc(float(z) / math.sqrt(2.0))
+
+
+def holm_significant(pairs: Sequence[tuple[str, float | None]], *,
+                     alpha: float = FAMILY_ALPHA) -> dict[str, dict[str, Any]]:
+    """Holm's step-down correction over one family of tests.
+
+    ``pairs`` is ``(key, p_value)`` for every test in the family -- including the ones that
+    failed earlier gates is not possible here, so the family size is taken from
+    ``DiscoveryEngine.tested`` by the caller passing every evaluated p-value plus the count of
+    tests that produced none (see :meth:`DiscoveryEngine.annotate_significance`).  Sorted
+    ascending, the i-th p-value must clear ``alpha / (m - i)`` to survive, and the procedure
+    stops at the first failure, so nothing after it is declared significant either.
+
+    Uniformly at least as powerful as Bonferroni while controlling the same family-wise error
+    rate, and it needs nothing but the p-values -- no resampling, no extra assumptions.
+    """
+    scored = [(k, float(pv)) for k, pv in pairs if pv is not None]
+    scored.sort(key=lambda kp: kp[1])
+    m = len(pairs)
+    out: dict[str, dict[str, Any]] = {}
+    for k, _ in pairs:
+        out[k] = {"significant": False, "holm_threshold": None, "rank": None}
+    stopped = False
+    for i, (k, pv) in enumerate(scored):
+        threshold = alpha / (m - i)
+        out[k]["rank"] = i + 1
+        out[k]["holm_threshold"] = threshold
+        out[k]["p_value"] = pv
+        if stopped:
+            continue
+        if pv <= threshold:
+            out[k]["significant"] = True
+        else:
+            stopped = True        # step-down: nothing weaker is significant either
+    return out
+
+
 def _fmt_roi(v: float | None) -> str:
     return "n/a" if v is None else f"{v:+.3f}"
+
+
+def _fmt_p(v: float | None) -> str:
+    return "n/a (test undefined)" if v is None else f"{v:.3g}"
 
 
 def _split_rows(rows: Sequence[dict[str, Any]], train_frac: float = 0.6,
@@ -172,6 +261,11 @@ class DiscoveryEngine:
         self.verbose = verbose
         self.tested = 0
         self.priced_games = 0
+        self.significance: dict[str, Any] = {}
+
+    def log(self, msg: str) -> None:
+        if self.verbose:
+            print(f"[discovery] {msg}", flush=True)
 
     # ------------------------------------------------------------------ scan
     def _hit_rate(self, rows: Sequence[dict[str, Any]], feature: str, operator: str,
@@ -258,11 +352,18 @@ class DiscoveryEngine:
             else:
                 c.verdict = "no_edge"
             # priced evaluation at the closing offer
+            if not is_market and vn > 0 and vbase > 0:
+                c.valid_z = binomial_z(round(vhit * vn), vn, vbase)
+                c.valid_p = p_value_upper(c.valid_z)
             if priced_train or priced_valid:
                 tr = trigger_roi(priced_train, feature=feat, operator=op, threshold=thr, bet_side=bet_side)
                 va = trigger_roi(priced_valid, feature=feat, operator=op, threshold=thr, bet_side=bet_side)
                 c.train_priced_n, c.train_roi = tr["n"], tr["roi"]
                 c.valid_priced_n, c.valid_roi, c.valid_avg_price = va["n"], va["roi"], va["avg_price"]
+                if va.get("n") and va.get("hit") is not None and va.get("avg_price"):
+                    # beating the closing offer: wins against the price that was paid
+                    c.priced_z = binomial_z(round(va["hit"] * va["n"]), va["n"], va["avg_price"])
+                    c.priced_p = p_value_upper(c.priced_z)
                 if tr["n"] >= self.min_priced_n and va["n"] >= self.min_priced_n:
                     if tr["roi"] >= self.min_roi and va["roi"] >= self.min_roi:
                         c.price_verdict = "market_edge"
@@ -276,9 +377,95 @@ class DiscoveryEngine:
                 continue
             candidates.append(c)
 
+        self.annotate_significance(candidates)
         candidates.sort(key=lambda c: (c.price_verdict != "market_edge",
                                        -(c.valid_roi or -9), -c.valid_lift, -c.valid_n))
         return candidates
+
+    def annotate_significance(self, candidates: Sequence[Candidate]) -> dict[str, Any]:
+        """Judge every surviving candidate against a threshold corrected for the whole search.
+
+        The correction is applied *after* the scan, because the family size is the number of
+        triggers evaluated -- not the number that survived the earlier gates.  Judging each
+        candidate against a per-test 5% threshold while having tried thousands of triggers is
+        how a project ends up with a leaderboard of noise, so the p-values here are Holm-
+        adjusted over ``self.tested`` tests and the result is written onto the candidate
+        whether or not it clears.
+
+        Two independent tests are recorded per candidate, because they answer different
+        questions and either can be the one that matters:
+
+        * **accuracy** -- the validation hit rate against that split's own base rate;
+        * **price** -- the validation win rate against the average closing offer actually
+          paid, which is the test of whether the trigger beat the market rather than merely
+          being right often.
+
+        A candidate that clears neither is still promotable to FORWARD TEST -- that is what
+        forward testing is for -- but ``significance_note`` says plainly that no edge is
+        claimed, and every place that reports it carries the same sentence.
+        """
+        if not candidates:
+            m = max(self.tested, 0)
+            empty = {"n_tests": m, "alpha_family": FAMILY_ALPHA, "candidates": 0,
+                     "significant_accuracy": 0, "significant_priced": 0,
+                     "holm_threshold_strongest": (FAMILY_ALPHA / m) if m else None,
+                     "holm_threshold_first": None}
+            self.significance = empty
+            return empty
+        m = max(self.tested, len(candidates))
+        acc = holm_significant([(f"acc:{c.key}", c.valid_p) for c in candidates]
+                               + [(f"pad:{i}", None) for i in range(m - len(candidates))],
+                               alpha=FAMILY_ALPHA)
+        pri = holm_significant([(f"pri:{c.key}", c.priced_p) for c in candidates]
+                               + [(f"ppd:{i}", None) for i in range(m - len(candidates))],
+                               alpha=FAMILY_ALPHA)
+        # the strongest threshold any test in this family could have faced; used whenever a
+        # candidate's own rank is undefined (no p-value) so the note still quotes a number
+        strongest = FAMILY_ALPHA / m
+        n_acc = n_pri = 0
+        for c in candidates:
+            a = acc.get(f"acc:{c.key}", {})
+            pr = pri.get(f"pri:{c.key}", {})
+            c.n_tests = m
+            c.alpha_family = FAMILY_ALPHA
+            c.alpha_holm = a.get("holm_threshold") or pr.get("holm_threshold") or strongest
+            c.significant_accuracy = bool(a.get("significant"))
+            c.significant_priced = bool(pr.get("significant"))
+            if c.valid_p is None and c.priced_p is None:
+                # too few validation games, or no closing price was ever recovered for them:
+                # there is no test to correct, and no verdict to correct either
+                c.significance_note = (
+                    f"No significance test could be computed for this candidate "
+                    f"(p_accuracy={_fmt_p(c.valid_p)}, p_price={_fmt_p(c.priced_p)} over {m} "
+                    f"triggers evaluated), so NO EDGE IS CLAIMED: it is forward-tested to "
+                    "collect the evidence the validation split could not supply.")
+            elif c.significant_accuracy or c.significant_priced:
+                n_acc += int(c.significant_accuracy)
+                n_pri += int(c.significant_priced)
+                which = " and ".join(
+                    [w for w, ok in (("the accuracy test", c.significant_accuracy),
+                                     ("the price test", c.significant_priced)) if ok])
+                c.significance_note = (
+                    f"Clears {which} after Holm correction for {m} triggers "
+                    f"(p_accuracy={_fmt_p(c.valid_p)}, p_price={_fmt_p(c.priced_p)}, "
+                    f"threshold {c.alpha_holm:.2e}). Still CANDIDATE status: only forward-test "
+                    "results can confirm it.")
+            else:
+                c.significance_note = (
+                    f"Does NOT survive multiple-testing correction: {m} triggers were "
+                    f"evaluated, so the Holm threshold is {c.alpha_holm:.2e} and this "
+                    f"candidate's p-values are p_accuracy={_fmt_p(c.valid_p)}, "
+                    f"p_price={_fmt_p(c.priced_p)}. It is forward-tested to collect evidence; "
+                    "NO EDGE IS CLAIMED.")
+        summary = {"n_tests": m, "alpha_family": FAMILY_ALPHA, "candidates": len(candidates),
+                   "significant_accuracy": n_acc, "significant_priced": n_pri,
+                   "holm_threshold_strongest": strongest,
+                   "holm_threshold_first": next(
+                       (c.alpha_holm for c in candidates if c.alpha_holm), None)}
+        self.significance = summary
+        self.log(f"discovery significance: {len(candidates)} candidate(s) judged against a Holm "
+                 f"threshold for {m} tests; {n_acc} significant on accuracy, {n_pri} on price")
+        return summary
 
     # ------------------------------------------------------------------ persist
     def record_hypotheses(self, rows: Sequence[dict[str, Any]]) -> int:
@@ -367,9 +554,13 @@ class DiscoveryEngine:
                            f"(n={c.train_priced_n}), validation ROI {_fmt_roi(c.valid_roi)} "
                            f"(n={c.valid_priced_n}, avg price {c.valid_avg_price}). "
                            f"Verdict: {c.price_verdict}.")
+            # the multiple-testing verdict travels with the candidate, in its own words, so
+            # a reader of the strategy page sees the corrected p-values next to the lift
+            # rather than having to take the promotion on trust
             d["hypothesis"] = (c.rationale + f" Train hit {c.train_hit:.3f} "
                                f"(+{c.train_lift:.3f}, n={c.train_n}); validation hit "
-                               f"{c.valid_hit:.3f} (+{c.valid_lift:.3f}, n={c.valid_n})." + roi_txt)
+                               f"{c.valid_hit:.3f} (+{c.valid_lift:.3f}, n={c.valid_n})." + roi_txt
+                               + f" MULTIPLE TESTING: {c.significance_note}")
             d["status"] = "candidate"
             d["created_at"] = utcnow()
             d["test_mode"] = "FORWARD TEST"
@@ -387,10 +578,21 @@ class DiscoveryEngine:
                                         "valid_n": c.valid_priced_n, "valid_roi": c.valid_roi,
                                         "verdict": c.price_verdict},
                              "family": c.family,
-                             "hypotheses_tested": self.tested, "priced_games": self.priced_games}),
-                 ("Survived chronological train->validation split at the real closing price"
-                  if c.price_verdict == "market_edge" else
-                  "Survived chronological train->validation split (accuracy only; unpriced)"),
+                             "hypotheses_tested": self.tested, "priced_games": self.priced_games,
+                             "multiple_testing": {
+                                 "n_tests": c.n_tests, "alpha_family": c.alpha_family,
+                                 "holm_threshold": c.alpha_holm,
+                                 "z_accuracy": c.valid_z, "p_accuracy": c.valid_p,
+                                 "z_price": c.priced_z, "p_price": c.priced_p,
+                                 "significant_accuracy": c.significant_accuracy,
+                                 "significant_priced": c.significant_priced,
+                                 "note": c.significance_note}}),
+                 (("Survived chronological train->validation split at the real closing price"
+                   if c.price_verdict == "market_edge" else
+                   "Survived chronological train->validation split (accuracy only; unpriced)")
+                  + ("" if (c.significant_accuracy or c.significant_priced) else
+                     "; does NOT survive Holm correction for the size of the search, so it is "
+                     "forward-tested for evidence and no edge is claimed")),
                  c.price_verdict if c.price_verdict == "market_edge" else "edge"),
             )
             created.append(d)
@@ -431,7 +633,16 @@ class DiscoveryEngine:
         return n
 
     def search_size_caveat(self) -> str:
-        return (f"{self.tested} candidate triggers were evaluated ({self.priced_games} games had a "
-                f"recovered Kalshi closing price). With that many tests, a few will clear the "
-                f"threshold by chance alone; survivors are labelled CANDIDATE and only "
-                f"forward-test results can promote them.")
+        sig = self.significance or {}
+        thr = sig.get("holm_threshold_first") or sig.get("holm_threshold_strongest")
+        return (f"{self.tested} candidate triggers were evaluated ({self.priced_games} games had "
+                f"a recovered Kalshi closing price). With that many tests a per-test 5% "
+                f"threshold guarantees that some triggers clear it by chance alone, so every "
+                f"p-value is judged against "
+                f"Holm's step-down correction for a {FAMILY_ALPHA:.0%} family-wise error rate"
+                + (f" (the strongest survivor had to clear p <= {thr:.2e})" if thr else "")
+                + f". {sig.get('significant_accuracy', 0)} candidate(s) clear it on accuracy and "
+                f"{sig.get('significant_priced', 0)} on price. Everything promoted is labelled "
+                f"CANDIDATE, carries its own corrected p-values, and only forward-test results "
+                f"can promote it; a candidate that does not clear the corrected threshold is "
+                f"forward-tested to collect evidence and NO EDGE IS CLAIMED for it.")

@@ -49,6 +49,14 @@ def _ingest_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--totals-budget", type=int, default=400,
                         help="max Kalshi calls per run for the KXNHLTOTAL (totals) history walk; "
                              "kept separate so a long totals walk cannot starve the moneyline one")
+    parser.add_argument("--spread-budget", type=int, default=400,
+                        help="max Kalshi calls per run for the KXNHLSPREAD (puck line) history "
+                             "walk; separate so it cannot starve the moneyline or totals walks")
+    parser.add_argument("--overtime-budget", type=int, default=250,
+                        help="max Kalshi calls per run for the KXNHLOVERTIME history walk")
+    parser.add_argument("--polymarket-limit", type=int, default=100,
+                        help="max Polymarket NHL events to read per run (reference cross-check "
+                             "only; Kalshi is the execution venue)")
     parser.add_argument("--stats-seasons", default="",
                         help="comma list of seasons for the per-game stats REST reports "
                              "(defaults to --seasons)")
@@ -105,6 +113,8 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         cross_check_abbrevs=[c for c in args.cross_check_clubs.split(",") if c.strip()],
         kalshi_budget=args.kalshi_budget, live_points_budget=args.live_points_budget,
         totals_budget=args.totals_budget,
+        spread_budget=args.spread_budget, overtime_budget=args.overtime_budget,
+        polymarket_limit=args.polymarket_limit,
         stats_seasons=[int(x) for x in args.stats_seasons.split(",") if x.strip()] or None)
     print(json.dumps({k: v for k, v in out.items() if k != "probes"}, indent=1, default=str))
     return 0
@@ -125,6 +135,9 @@ def cmd_run(args: argparse.Namespace) -> int:
                             kalshi_budget=args.kalshi_budget,
                             live_points_budget=args.live_points_budget,
                             totals_budget=args.totals_budget,
+                            spread_budget=args.spread_budget,
+                            overtime_budget=args.overtime_budget,
+                            polymarket_limit=args.polymarket_limit,
                             stats_seasons=[int(x) for x in args.stats_seasons.split(",")
                                            if x.strip()] or None)
     kw["features"] = {"game_types": tuple(int(x) for x in (args.game_types or "2").split(","))}
