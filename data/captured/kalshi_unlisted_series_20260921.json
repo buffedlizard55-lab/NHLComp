@@ -1,0 +1,51 @@
+{
+  "_capture": {
+    "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=<S>&status=open&limit=2 (and /historical/markets?series_ticker=KXNHL1P&limit=2)",
+    "retrieved_at": "2026-09-21T04:17:00Z",
+    "method": "fetched with the Arena fetch tool (the development sandbox has no outbound network; CI does)",
+    "completeness": "Complete response bodies, one per series checked, exactly as returned. Each is an empty market list with an empty cursor.",
+    "why_it_matters": "A VERIFIED NEGATIVE, kept so the absence is documented instead of being re-discovered or, worse, filled in with an invented contract. On 2026-09-21 (preseason) Kalshi listed the series KXNHL1P, KXNHLOVERTIME and KXNHLSAVES in /series?category=Sports&tags=Hockey but had NO open contracts in them, and KXNHL1P had no historical-tier contracts either. Consequence recorded in the source registry and on the site: period and goalie-prop markets are registered and polled every run, but nothing may be bet on them until the exchange actually lists a contract, and no price for them is ever inferred."
+  },
+  "responses": [
+    {
+      "series_ticker": "KXNHL1P",
+      "tier": "live",
+      "status_filter": "open",
+      "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHL1P&status=open&limit=2",
+      "body": {
+        "cursor": "",
+        "markets": []
+      }
+    },
+    {
+      "series_ticker": "KXNHL1P",
+      "tier": "historical",
+      "status_filter": null,
+      "url": "https://api.elections.kalshi.com/trade-api/v2/historical/markets?series_ticker=KXNHL1P&limit=2",
+      "body": {
+        "cursor": "",
+        "markets": []
+      }
+    },
+    {
+      "series_ticker": "KXNHLOVERTIME",
+      "tier": "live",
+      "status_filter": "open",
+      "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLOVERTIME&status=open&limit=2",
+      "body": {
+        "cursor": "",
+        "markets": []
+      }
+    },
+    {
+      "series_ticker": "KXNHLSAVES",
+      "tier": "live",
+      "status_filter": "open",
+      "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLSAVES&status=open&limit=2",
+      "body": {
+        "cursor": "",
+        "markets": []
+      }
+    }
+  ]
+}

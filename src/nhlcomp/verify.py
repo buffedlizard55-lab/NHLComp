@@ -331,6 +331,284 @@ class Verifier:
                                 entity_type="bet", entity_id=b["bet_id"], severity="error")
         return counts
 
+    def cross_validate_puck_line_settlements(self) -> dict[str, Any]:
+        """Check every settled KXNHLSPREAD contract against the official margin.
+
+        The exchange's ``result`` and this project's reading of the payoff ("the named team's
+        final margin, overtime and shootout goals included, strictly greater than
+        ``floor_strike``") are two independent statements about the same fact, so any
+        disagreement means one of them is wrong.  Both are recorded; neither is corrected
+        here.  The count of settled contracts whose game went past regulation is reported
+        separately, because those are the rows that prove the margin includes the OT goal.
+        """
+        from .market import covers_margin
+        from .sources.kalshi import KALSHI_TEAM_ALIASES, suffix_team_code
+        compared = conflicts = unreadable = past_reg = 0
+        for r in self.store.query(
+                """SELECT ms.contract, ms.game_id, ms.result, ms.floor_strike, ms.strike_type,
+                          ms.rung, ms.team_abbrev, ms.selection, g.home_score, g.away_score,
+                          g.home_id, g.away_id, g.last_period_type
+                     FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
+                    WHERE ms.provider='kalshi' AND ms.series_ticker='KXNHLSPREAD'
+                      AND ms.result IN ('yes','no')
+                      AND g.home_score IS NOT NULL AND g.away_score IS NOT NULL"""):
+            strike = _col(r, "floor_strike")
+            code = suffix_team_code(_col(r, "rung"))
+            team_id = self.store.team_id_for(KALSHI_TEAM_ALIASES.get(code, code)) if code else None
+            side = None
+            if team_id is not None:
+                side = ("home" if team_id == int(r["home_id"])
+                        else "away" if team_id == int(r["away_id"]) else None)
+            comparison = (_col(r, "strike_type") or "").lower()
+            if strike is None or side is None or comparison not in ("greater", "less"):
+                unreadable += 1
+                self.store.flag(
+                    "unreadable_puck_line",
+                    f"settled puck-line contract {r['contract']} cannot be re-derived from the "
+                    f"official score: floor_strike={strike!r}, strike_type={comparison!r}, "
+                    f"rung={_col(r, 'rung')!r} -> team {side!r}; it is excluded from the "
+                    "cross-check rather than assumed",
+                    entity_type="market", entity_id=r["contract"], severity="error")
+                continue
+            compared += 1
+            if str(_col(r, "last_period_type") or "").upper() in ("OT", "SO"):
+                past_reg += 1
+            hs, as_ = int(r["home_score"]), int(r["away_score"])
+            margin = hs - as_ if side == "home" else as_ - hs
+            covered = covers_margin(margin, float(strike), comparison)
+            implied = "yes" if covered else "no"
+            if implied != r["result"]:
+                conflicts += 1
+                self.store.flag(
+                    "settlement_conflict",
+                    f"puck-line contract {r['contract']} (game {r['game_id']}, {side} side, "
+                    f"strike {strike}, strike_type={comparison!r}, selection={r['selection']!r}):"
+                    f" kalshi settled '{r['result']}' but the official margin is {margin:+d} "
+                    f"({hs}-{as_}, lastPeriodType={_col(r, 'last_period_type')}), which implies "
+                    f"'{implied}'",
+                    entity_type="market", entity_id=r["contract"], severity="critical",
+                    sources="kalshi.trade_api,nhl.api_web")
+        return {"puck_line_contracts_compared": compared, "puck_line_conflicts": conflicts,
+                "puck_line_unreadable": unreadable,
+                "puck_line_compared_games_that_went_past_regulation": past_reg}
+
+    def cross_validate_overtime_settlements(self) -> dict[str, Any]:
+        """Cross-tabulate the exchange's overtime results against the NHL's own period type.
+
+        This is the study that decides what a KXNHLOVERTIME contract pays on.  It is not
+        assumed from the rules text ("if the teams go to overtime ... resolves to Yes"),
+        because the text does not say whether a game decided in a **shootout** counts -- and a
+        shootout is only reachable through overtime, so the two readings differ exactly on the
+        games that matter.  Every settled contract with an official ``lastPeriodType`` becomes
+        one cell of the table:
+
+        * cells the evidence supports (REG -> no, OT -> yes) are counted as verified, and a
+          contract landing in the *wrong* verified cell is a critical conflict;
+        * an SO row is evidence about the shootout question, whichever way it fell, so it is
+          recorded verbatim in ``shootout_evidence`` and the settlement rule is updated only
+          by that evidence -- never by inference.
+
+        The window the evidence covers is reported too, because a series whose settled history
+        is playoff-only says nothing about shootouts: the playoffs have none.
+        """
+        table: dict[str, int] = {}
+        conflicts = 0
+        shootout_evidence: list[str] = []
+        dates: list[str] = []
+        game_types: dict[str, int] = {}
+        for r in self.store.query(
+                """SELECT ms.contract, ms.game_id, ms.result, ms.settlement_ts, g.last_period_type,
+                          g.game_type, g.game_date, g.home_score, g.away_score
+                     FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
+                    WHERE ms.provider='kalshi' AND ms.series_ticker='KXNHLOVERTIME'
+                      AND ms.result IN ('yes','no')
+                    ORDER BY g.game_date"""):
+            lpt = str(_col(r, "last_period_type") or "UNKNOWN").upper()
+            cell = f"{lpt}->{r['result']}"
+            table[cell] = table.get(cell, 0) + 1
+            dates.append(str(r["game_date"]))
+            gt = {"1": "preseason", "2": "regular", "3": "playoff"}.get(str(r["game_type"]),
+                                                                       str(r["game_type"]))
+            game_types[gt] = game_types.get(gt, 0) + 1
+            if lpt == "SO":
+                shootout_evidence.append(
+                    f"{r['contract']} (game {r['game_id']}, {r['game_date']}, "
+                    f"{r['home_score']}-{r['away_score']}): NHL lastPeriodType=SO and kalshi "
+                    f"settled '{r['result']}'")
+            elif lpt in ("REG", "OT"):
+                expected = "yes" if lpt == "OT" else "no"
+                if r["result"] != expected:
+                    conflicts += 1
+                    self.store.flag(
+                        "settlement_conflict",
+                        f"overtime contract {r['contract']} (game {r['game_id']}, "
+                        f"{r['game_date']}): kalshi settled '{r['result']}' but the NHL's own "
+                        f"lastPeriodType is '{lpt}', which this project's verified mapping reads "
+                        f"as '{expected}'",
+                        entity_type="market", entity_id=r["contract"], severity="critical",
+                        sources="kalshi.trade_api,nhl.api_web")
+            else:
+                self.store.flag(
+                    "unsettleable_overtime",
+                    f"overtime contract {r['contract']} (game {r['game_id']}) settled "
+                    f"'{r['result']}' but the game has no readable lastPeriodType "
+                    f"({_col(r, 'last_period_type')!r}), so the mapping cannot be checked",
+                    entity_type="market", entity_id=r["contract"], severity="warn")
+        out = {"overtime_contracts_compared": sum(table.values()),
+               "overtime_conflicts": conflicts,
+               "cross_tab": table,
+               "window": {"first_game": min(dates) if dates else None,
+                          "last_game": max(dates) if dates else None,
+                          "game_types": game_types},
+               "shootout_evidence": shootout_evidence}
+        if not shootout_evidence:
+            out["shootout_treatment"] = (
+                "UNVERIFIED: no settled KXNHLOVERTIME contract in this ledger belongs to a game "
+                "the NHL recorded as decided in a shootout, and the series' verified window is "
+                f"{out['window']['first_game']}..{out['window']['last_game']} "
+                f"(game types {game_types}). A shootout is only reachable through overtime, so "
+                "the rules text does not settle the question by itself. Wagers on such a game "
+                "are left OPEN and settled from the exchange's own result; nothing is inferred.")
+            self.store.flag(
+                "settlement_rule_unverified",
+                "overtime market: " + out["shootout_treatment"],
+                entity_type="market", entity_id="KXNHLOVERTIME", severity="warn",
+                sources="kalshi.trade_api,nhl.api_web")
+        else:
+            out["shootout_treatment"] = (
+                f"evidence exists on {len(shootout_evidence)} shootout game(s): "
+                + "; ".join(shootout_evidence))
+        return out
+
+    def check_strike_market_bets(self) -> dict[str, Any]:
+        """Wagers on the strike-priced and strike-less markets, and what depth they claim.
+
+        Three things a reader of the ledger must be able to see without asking:
+
+        * a puck-line wager with no strike recorded cannot be re-settled, so it is an error;
+        * an overtime wager whose selection is not ``ot_yes``/``ot_no`` cannot be mapped to a
+          payoff, so it is an error;
+        * how many wagers were filled against a **declared** depth cap because the venue
+          published no offer size for the side bought.  That number is an assumption this
+          project makes, and it is reported rather than buried in the notes blob.
+        """
+        counts: dict[str, Any] = {"puck_line_bets": 0, "puck_line_missing_strike": 0,
+                                  "overtime_bets": 0, "overtime_unmapped_selection": 0,
+                                  "bets_on_declared_depth_cap": 0, "bets_by_depth_basis": {},
+                                  "no_side_bets": 0}
+        for b in self.store.query(
+                "SELECT * FROM bets WHERE market IN ('puck_line','overtime') "
+                "OR depth_basis IS NOT NULL OR exchange_side='NO'"):
+            market = b["market"]
+            basis = _col(b, "depth_basis")
+            if basis:
+                counts["bets_by_depth_basis"][basis] = counts["bets_by_depth_basis"].get(basis, 0) + 1
+                if basis == "declared_cap_no_published_size":
+                    counts["bets_on_declared_depth_cap"] += 1
+            if str(_col(b, "exchange_side") or "").upper() == "NO":
+                counts["no_side_bets"] += 1
+            if market == "puck_line":
+                counts["puck_line_bets"] += 1
+                if _col(b, "strike") is None:
+                    counts["puck_line_missing_strike"] += 1
+                    self.store.flag("missing_strike",
+                                    f"puck-line bet {b['bet_id']} has no strike recorded, so its "
+                                    "payoff cannot be re-derived",
+                                    entity_type="bet", entity_id=b["bet_id"], severity="error")
+            elif market == "overtime":
+                counts["overtime_bets"] += 1
+                if (b["selection"] or "") not in ("ot_yes", "ot_no"):
+                    counts["overtime_unmapped_selection"] += 1
+                    self.store.flag(
+                        "unmapped_selection",
+                        f"overtime bet {b['bet_id']} has selection {b['selection']!r}, which maps "
+                        "to no payoff",
+                        entity_type="bet", entity_id=b["bet_id"], severity="error")
+        return counts
+
+    def check_period_goal_reconciliation(self) -> dict[str, Any]:
+        """Derived period scores vs the official final score, per game.
+
+        A difference is not automatically an error: the deciding shootout attempt is not
+        published as a goal row.  What matters is that every difference is *explained* on the
+        row, so an unexplained one is flagged here.
+        """
+        out = {"games_with_period_scores": 0, "reconciled": 0, "unreconciled": 0,
+               "unreconciled_without_a_note": 0, "goal_rows": 0}
+        out["goal_rows"] = int(self.store.one(
+            "SELECT COUNT(*) c FROM game_period_goals")["c"] or 0)
+        for r in self.store.query(
+                """SELECT game_id, SUM(home_goals) h, SUM(away_goals) a,
+                          MIN(reconciled) reconciled,
+                          SUM(CASE WHEN reconciled=0 AND (reconciliation_note IS NULL
+                               OR reconciliation_note='') THEN 1 ELSE 0 END) silent
+                     FROM game_period_scores GROUP BY game_id"""):
+            out["games_with_period_scores"] += 1
+            if int(r["reconciled"] or 0) == 1:
+                out["reconciled"] += 1
+            else:
+                out["unreconciled"] += 1
+                out["unreconciled_without_a_note"] += int(r["silent"] or 0)
+                if int(r["silent"] or 0):
+                    self.store.flag(
+                        "unreconciled_period_goals",
+                        f"game {r['game_id']}: derived period goals {r['h']}-{r['a']} differ from "
+                        "the official final score and no explanation is recorded on the row",
+                        entity_type="game", entity_id=str(r["game_id"]), severity="error",
+                        sources="nhl.score,nhl.scoreboard")
+        return out
+
+    def cross_check_polymarket(self) -> dict[str, Any]:
+        """Where a second prediction market prices the same question Kalshi does.
+
+        Reference only: this project executes on Kalshi, so a Polymarket price never funds or
+        settles a wager.  What it can do is corroborate or contradict one, and both outcomes
+        are recorded.  When the two venues have no market in common -- which was the case on
+        2026-09-21, when Polymarket listed only season-long NHL markets -- that is reported as
+        the finding, not dressed up as agreement.
+        """
+        out: dict[str, Any] = {"polymarket_markets": 0, "families": {}, "matched_to_games": 0,
+                               "comparisons": [], "disagreements": 0}
+        for r in self.store.query(
+                """SELECT market_family, COUNT(*) c, SUM(CASE WHEN game_id IS NOT NULL THEN 1
+                          ELSE 0 END) matched FROM polymarket_markets GROUP BY market_family"""):
+            out["polymarket_markets"] += int(r["c"])
+            out["families"][r["market_family"]] = int(r["c"])
+            out["matched_to_games"] += int(r["matched"] or 0)
+        for r in self.store.query(
+                """SELECT pm.id, pm.game_id, pm.question, pm.group_item_title, pm.best_ask,
+                          pm.best_bid, pm.market_family, mq.contract, mq.ask AS kalshi_ask,
+                          mq.side, mq.market_type, mq.ts_utc
+                     FROM polymarket_markets pm
+                     JOIN market_quotes mq ON mq.game_id = pm.game_id
+                    WHERE pm.game_id IS NOT NULL AND pm.best_ask IS NOT NULL
+                      AND mq.ask IS NOT NULL"""):
+            diff = round(float(r["best_ask"]) - float(r["kalshi_ask"]), 4)
+            item = {"polymarket_id": r["id"], "game_id": r["game_id"],
+                    "question": r["question"], "group_item_title": r["group_item_title"],
+                    "polymarket_best_ask": r["best_ask"], "kalshi_contract": r["contract"],
+                    "kalshi_ask": r["kalshi_ask"], "kalshi_side": r["side"],
+                    "difference": diff}
+            out["comparisons"].append(item)
+            if abs(diff) > 0.05:
+                out["disagreements"] += 1
+                self.store.flag(
+                    "source_disagreement",
+                    f"game {r['game_id']}: polymarket asks {r['best_ask']} on "
+                    f"{r['group_item_title'] or r['question']!r} while kalshi asks "
+                    f"{r['kalshi_ask']} on {r['contract']} ({r['side']} side); both prices are "
+                    "kept and neither is treated as the truth",
+                    entity_type="game", entity_id=str(r["game_id"]), severity="info",
+                    sources="polymarket.gamma,kalshi.trade_api")
+        if not out["comparisons"]:
+            out["finding"] = (
+                f"no common market: {out['polymarket_markets']} Polymarket NHL market(s) are "
+                f"stored (families {out['families']}), {out['matched_to_games']} matched to an "
+                "NHL game, and none of them shares a game and question with a stored Kalshi "
+                "quote. There is therefore no second-price cross-check this run; the absence is "
+                "recorded rather than filled with a comparison that does not exist.")
+        return out
+
     def run_all(self) -> dict[str, Any]:
         summary = {}
         summary["games"] = self.check_games()
@@ -339,6 +617,11 @@ class Verifier:
         summary["quotes"] = self.check_quotes()
         summary["cross_validation"] = self.cross_validate_stats_vs_schedule()
         summary["totals_settlements"] = self.cross_validate_totals_settlements()
+        summary["puck_line_settlements"] = self.cross_validate_puck_line_settlements()
+        summary["overtime_settlements"] = self.cross_validate_overtime_settlements()
+        summary["strike_market_bets"] = self.check_strike_market_bets()
+        summary["period_goals"] = self.check_period_goal_reconciliation()
+        summary["second_market"] = self.cross_check_polymarket()
         summary["open_irregularities"] = self.store.one(
             "SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"]
         self.store.audit("verifier", "RUN_ALL", "", json.dumps(summary))

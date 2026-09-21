@@ -388,6 +388,131 @@ SOURCES: tuple[SourceSpec, ...] = (
                     "?series_ticker=KXNHLGAME&limit=3&status=settled",),
     ),
     SourceSpec(
+        source_id="kalshi.spread",
+        name="Kalshi NHL puck line (KXNHLSPREAD)",
+        url="https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLSPREAD&status=open",
+        data_type="binary '<team> wins by over k.5 goals' contracts: floor_strike, strike_type, "
+                  "yes/no offers and sizes, volume, and on the historical tier the settled "
+                  "result with settlement_ts and expiration_value",
+        nhl_relevance="A margin market rather than a winner market: the third tradable Kalshi "
+                      "NHL instrument this project verifies, and like the totals it has real "
+                      "timestamped historical offers on the YES side, so a puck-line rule can "
+                      "be priced in a BACKTEST instead of only forward-tested",
+        historical_depth="Historical tier reaches the 2026 Stanley Cup Final (verified "
+                         "2026-09-21: settled contracts with volume_fp up to 182,606.94 on one "
+                         "rung); live tier was quoting the 2026-09-24 preseason slate",
+        live_available=True,
+        update_frequency="Continuous while listed",
+        api_available=True,
+        auth_required="none for market data reads",
+        cost="free",
+        genuinely_free="yes",
+        usage_limits="Paginated with a cursor; candlesticks are a separate bounded read",
+        licensing="Kalshi API terms apply",
+        provenance="Kalshi (first party exchange)",
+        reliability="high",
+        accuracy="exchange-grade quote data",
+        granularity="per contract, per rung",
+        automated_access="yes",
+        known_limits="The ticker suffix digit is a RUNG INDEX, not the line: on 2026-09-21 the "
+                     "live contract -VGK3 carried floor_strike 2.5 while the historical tier's "
+                     "-VGK2 carried 2.5 in the same series. The line is therefore read only from "
+                     "floor_strike/strike_type and the digit is discarded. The candlestick feed "
+                     "publishes the YES bid/ask only, so the NO side (the opponent's +1.5) has "
+                     "no historical offer: a NO-side puck-line rule is forward-test only.",
+        notes="Observed HTTP 200 on 2026-09-21: event KXNHLSPREAD-26SEP24UTAVGK with contracts "
+              "-VGK3 (floor_strike 2.5, strike_type greater, title 'Vegas wins by over 2.5 "
+              "goals') and -VGK2 (floor_strike 1.5); rules_primary states the margin condition. "
+              "Captures: data/captured/kalshi_live_markets_kxnhlspread_limit2.json and "
+              "kalshi_historical_markets_kxnhlspread_limit2.json.",
+        probe_urls=("https://api.elections.kalshi.com/trade-api/v2/markets"
+                    "?series_ticker=KXNHLSPREAD&limit=3",),
+    ),
+    SourceSpec(
+        source_id="kalshi.overtime",
+        name="Kalshi NHL overtime (KXNHLOVERTIME)",
+        url="https://api.elections.kalshi.com/trade-api/v2/historical/markets?series_ticker=KXNHLOVERTIME",
+        data_type="one strike-less binary contract per game ('will there be overtime'), with "
+                  "yes/no offers, volume and the settled result",
+        nhl_relevance="The only verified exchange market on whether a game goes past "
+                      "regulation, which the Poisson tie mass prices directly; it makes the "
+                      "tie-mass calibration testable against real prices",
+        historical_depth="Settled history verified 2026-09-21 spans 2026-04-28 to 2026-06-14 "
+                         "(about 100 events, all 2026 playoff games) with real volume: 57,488.25 "
+                         "contracts on the Jun 4 game, 19,512.97 and 39,558.66 on two others",
+        live_available=False,
+        update_frequency="Listed per game when the exchange lists one; zero open contracts on "
+                         "2026-09-21",
+        api_available=True,
+        auth_required="none for market data reads",
+        cost="free",
+        genuinely_free="yes",
+        usage_limits="Paginated with a cursor",
+        licensing="Kalshi API terms apply",
+        provenance="Kalshi (first party exchange); its own settlement_sources are ESPN and NHL",
+        reliability="high",
+        accuracy="exchange-grade",
+        granularity="per game (one contract, no strike)",
+        automated_access="yes",
+        known_limits="SETTLEMENT SCOPE IS PARTLY UNVERIFIED. Rules text says only 'If <teams> go "
+                     "to overtime ... the market resolves to Yes', and every settled contract in "
+                     "the series is a playoff game, where no shootout exists -- so whether a "
+                     "shootout counts as going to overtime is not covered by any evidence this "
+                     "project has. Wagers on such a game are left OPEN and settled from the "
+                     "exchange's own result rather than from a guess. Verified cases: "
+                     "KXNHLOVERTIME-26JUN04VGKCAR-OT resolved yes for NHL game 2025030412 "
+                     "(2026-06-04, CAR 4-3 VGK, lastPeriodType OT); -26JUN11VGKCAR-OT and "
+                     "-26JUN14CARVGK-OT resolved no for games 2025030415 and 2025030416 (both "
+                     "lastPeriodType REG).",
+        notes="No open contracts were listed on 2026-09-21 (recorded as a verified negative in "
+              "data/captured/kalshi_unlisted_series_20260921.json); the settled contracts are "
+              "captured in data/captured/kalshi_historical_markets_kxnhlovertime_limit2.json.",
+        probe_urls=("https://api.elections.kalshi.com/trade-api/v2/historical/markets"
+                    "?series_ticker=KXNHLOVERTIME&limit=3",),
+    ),
+    SourceSpec(
+        source_id="polymarket.gamma",
+        name="Polymarket Gamma API",
+        url="https://gamma-api.polymarket.com",
+        data_type="event and market objects: bestBid/bestAsk, spread, lastTradePrice, outcomes "
+                  "and outcomePrices, clobTokenIds, liquidity, volume (24h/1w/1mo), tick size, "
+                  "minimum order size and a published fee schedule",
+        nhl_relevance="A second, independent prediction market. Used as a cross-check on "
+                      "Kalshi's prices and as a published sports fee schedule; this project "
+                      "executes on Kalshi, so no Polymarket price funds a wager or settles one",
+        historical_depth="No price-history endpoint verified: /events and /markets return current "
+                         "state only. Anything historical would have to come from the CLOB "
+                         "timeseries API, which this project has not verified",
+        live_available=True,
+        update_frequency="Continuous",
+        api_available=True,
+        auth_required="none for reads (credentials required to trade)",
+        cost="free",
+        genuinely_free="yes",
+        usage_limits="Public reads without a key; tag_slug (or tag_id) is required to scope a "
+                     "query to a sport -- unscoped it returns other sports' events",
+        licensing="Polymarket API terms apply",
+        provenance="Polymarket (first party exchange)",
+        reliability="medium (a single verified read on 2026-09-21; no NHL game market observed)",
+        accuracy="exchange-grade quotes for the markets it lists",
+        granularity="per market / per outcome token",
+        automated_access="yes (plain HTTPS GET, JSON array, no key)",
+        known_limits="On 2026-09-21 the only open NHL events were season-level ('2026-27 NHL "
+                     "Stanley Cup Champion'), so there was no per-game market to cross-check "
+                     "against a Kalshi game contract. Recorded as a verified negative; ingest "
+                     "keeps polling so the day a game market appears is captured, not assumed. "
+                     "Numeric fields are published twice (liquidity/'56107.48' and "
+                     "liquidityNum/56107.48); disagreements are reported, not smoothed.",
+        notes="Observed HTTP 200 on 2026-09-21 for /events?tag_slug=nhl&closed=false&limit=3: "
+              "3 open NHL events, event liquidity ~$2.06M and volume ~$729K; one market with "
+              "bestBid 0.021 / bestAsk 0.022 / spread 0.001, lastTradePrice 0.021, liquidity "
+              "56,107.48, volume 24,237.81, volume24hr 14.38, tick size 0.001, min size 5, "
+              "feeType 'sports_fees_v2' with feeSchedule {exponent 1, rate 0.03, takerOnly true, "
+              "rebateRate 0.25}. Capture: "
+              "data/captured/polymarket_gamma_nhl_event_excerpt.json.",
+        probe_urls=("https://gamma-api.polymarket.com/events?tag_slug=nhl&closed=false&limit=1",),
+    ),
+    SourceSpec(
         source_id="odds.the_odds_api",
         name="The Odds API",
         url="https://the-odds-api.com/",

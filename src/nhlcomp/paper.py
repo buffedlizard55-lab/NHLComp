@@ -24,9 +24,30 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Sequence
 
-from .market import kalshi_taker_fee
+from .market import covers_margin, kalshi_taker_fee
 from .store import Store, utcnow
 from .strategies import DecisionContext, Quote, Signal, Strategy
+
+
+#: Contracts this engine is willing to assume it could take when the venue publishes **no**
+#: depth for the side being bought and no traded volume either.  Kalshi publishes no NO-side
+#: offer size at all -- every one of the 302 NO-side rows in the 2026-09-21 ledger has
+#: ``ask_size`` NULL -- so a NO-side rule (an Under, a +1.5 puck line, a "no overtime") would
+#: otherwise fill any size it asked for, which is exactly the unlimited-liquidity assumption
+#: the brief forbids.  This is a declared, bounded ASSUMPTION, not source data: every fill
+#: that falls back to it is stamped ``depth_basis='declared_cap_no_published_size'`` and its
+#: unfilled remainder is recorded, so a reader can see which wagers rest on it and how much
+#: of the intended stake the assumption is carrying.
+UNKNOWN_DEPTH_CAP_CONTRACTS = 100.0
+
+#: Where a price comes from a candlestick rather than a live book there is no offer size, but
+#: the candle does publish how many contracts actually traded in that hour.  A taker cannot
+#: have been filled more than the hour traded, so that volume is used as the depth evidence
+#: (SOURCE DATA) and a candle in which nothing traded yields no fill at all rather than an
+#: imagined one.
+DEPTH_BASIS_OFFER = "published_offer_size"
+DEPTH_BASIS_VOLUME = "traded_volume_at_entry_candle"
+DEPTH_BASIS_CAP = "declared_cap_no_published_size"
 
 
 @dataclass
@@ -38,24 +59,44 @@ class Fill:
     unfilled_stake: float
     slippage: float
     liquidity: float | None
+    #: which depth evidence capped this fill (see DEPTH_BASIS_*)
+    depth_basis: str = DEPTH_BASIS_OFFER
 
 
-def simulate_fill(stake: float, ask: float, ask_size: float | None) -> Fill:
-    """Single-level fill.  ``ask_size`` is in contracts."""
+def simulate_fill(stake: float, ask: float, ask_size: float | None, *,
+                  traded_volume: float | None = None,
+                  unknown_cap: float = UNKNOWN_DEPTH_CAP_CONTRACTS) -> Fill:
+    """Single-level fill, capped by the best depth evidence available.
+
+    Order of evidence, strongest first:
+
+    1. ``ask_size`` -- the offer size the venue published for the side being bought.
+    2. ``traded_volume`` -- contracts that actually traded in the entry candle (a candle has
+       no book size, but it does have volume).  Zero means no fill: nothing traded at that
+       price in that hour, so claiming a fill would be inventing liquidity.
+    3. ``unknown_cap`` -- a declared assumption of last resort, labelled as such on the row.
+    """
     if stake <= 0 or ask is None or ask <= 0:
-        return Fill(0.0, 0.0, ask or 0.0, 0.0, max(stake, 0.0), 0.0, ask_size)
+        return Fill(0.0, 0.0, ask or 0.0, 0.0, max(stake, 0.0), 0.0, ask_size,
+                    DEPTH_BASIS_OFFER if ask_size is not None else DEPTH_BASIS_CAP)
     requested = stake / ask
-    if ask_size is None:
-        filled = requested          # unknown size: cannot claim depth, so do not cap
-        liquidity = None
-    else:
+    if ask_size is not None:
         filled = min(requested, float(ask_size))
-        liquidity = float(ask_size)
+        liquidity: float | None = float(ask_size)
+        basis = DEPTH_BASIS_OFFER
+    elif traded_volume is not None:
+        liquidity = float(traded_volume)
+        basis = DEPTH_BASIS_VOLUME
+        filled = 0.0 if float(traded_volume) <= 0 else min(requested, float(traded_volume))
+    else:
+        filled = min(requested, float(unknown_cap))
+        liquidity = None
+        basis = DEPTH_BASIS_CAP
     filled_stake = filled * ask
     return Fill(contracts_requested=round(requested, 4), contracts_filled=round(filled, 4),
                 price=ask, stake=round(filled_stake, 4),
                 unfilled_stake=round(max(stake - filled_stake, 0.0), 4),
-                slippage=0.0, liquidity=liquidity)
+                slippage=0.0, liquidity=liquidity, depth_basis=basis)
 
 
 def binary_settlement(entry_price: float, contracts: float, won: bool, *, fee: float = 0.0) -> float:
@@ -110,11 +151,21 @@ class PaperEngine:
         self.store.commit()
 
     def place(self, sig: Signal, *, decision_ts: str, test_mode: str, provider: str = "kalshi",
-              source_url: str = "", verification: str = "single_source") -> str | None:
-        """Convert a READY TO BET signal into a ledger entry.  Returns the bet_id or None."""
+              source_url: str = "", verification: str = "single_source",
+              depth_volume: float | None = None) -> str | None:
+        """Convert a READY TO BET signal into a ledger entry.  Returns the bet_id or None.
+
+        ``depth_volume`` is the number of contracts that traded in the entry candle, and is
+        passed only for candle-priced BACKTEST rows: a candlestick publishes no offer size,
+        but it does publish volume, which is real evidence of how much could have been taken
+        at that price.  For a live quote it must stay None -- a contract's cumulative volume
+        is not depth available now, and using it as a cap would claim liquidity the book
+        never showed.
+        """
         if sig.status != "READY TO BET" or sig.quote is None:
             return None
-        fill = simulate_fill(sig.stake, sig.quote.ask, sig.quote.ask_size)
+        fill = simulate_fill(sig.stake, sig.quote.ask, sig.quote.ask_size,
+                             traded_volume=depth_volume)
         if fill.contracts_filled <= 0:
             return None
         fee = kalshi_taker_fee(fill.price, fill.contracts_filled) if provider == "kalshi" else 0.0
@@ -155,6 +206,11 @@ class PaperEngine:
             "fee": fee,
             "strike": (float(strike) if strike is not None else None),
             "price_basis": (getattr(sig.quote, "price_basis", "exchange") or "exchange"),
+            # which side of the book was bought.  A NO-side entry (an Under, a +1.5 puck
+            # line, a "no overtime") is NOT comparable to a YES closing price, so this is
+            # stored on the row rather than left inside the notes blob.
+            "exchange_side": sig.quote.side,
+            "depth_basis": fill.depth_basis,
             "result": "OPEN",
             "pnl": None,
             "source_url": source_url or (sig.quote.source_url if hasattr(sig.quote, "source_url") else ""),
@@ -171,8 +227,17 @@ class PaperEngine:
                 # shows exactly which instrument was bought
                 "contract_label": getattr(sig.quote, "label", None),
                 "strike": strike,
+                # kept with the wager because settlement needs it: 'greater' is the only
+                # strike_type this engine will enter (anything else is refused at ingest),
+                # but the row must still say which payoff it holds.
+                "strike_type": getattr(sig.quote, "strike_type", None),
                 "price_basis": getattr(sig.quote, "price_basis", "exchange"),
                 "exchange_side": sig.quote.side,
+                "depth_basis": fill.depth_basis,
+                "depth_cap_note": (
+                    "the venue published no offer size for this side; the fill is capped at the "
+                    f"declared {UNKNOWN_DEPTH_CAP_CONTRACTS:g}-contract assumption"
+                    if fill.depth_basis == DEPTH_BASIS_CAP else None),
             }, default=str),
             "features_json": json.dumps(sig.supporting, default=str),
             "created_at": utcnow(),
@@ -195,10 +260,33 @@ class PaperEngine:
         return None
 
     # ------------------------------------------------------------------ settle
+    #: How a KXNHLOVERTIME contract settles, keyed on the NHL's own ``lastPeriodType``.
+    #:
+    #: VERIFIED against the exchange's own settled results (fetched 2026-09-21 from Kalshi's
+    #: historical tier): ``KXNHLOVERTIME-26JUN04VGKCAR-OT`` resolved **yes** for NHL game
+    #: 2025030412 (2026-06-04, CAR 4-3 VGK, lastPeriodType OT), and
+    #: ``KXNHLOVERTIME-26JUN11VGKCAR-OT`` / ``KXNHLOVERTIME-26JUN14CARVGK-OT`` resolved
+    #: **no** for games 2025030415 / 2025030416 (both lastPeriodType REG).  The series'
+    #: settled history is ~100 events, every one a 2026 playoff game between 2026-04-28 and
+    #: 2026-06-14, and the playoffs have no shootout -- so **a shootout's treatment is
+    #: UNVERIFIED**: the rules text says only "If <teams> go to overtime ... the market
+    #: resolves to Yes" and does not say whether a game that reaches a shootout counts.  An
+    #: SO game is therefore left OPEN with an irregularity recorded, and is settled from the
+    #: exchange's own result (:meth:`settle_from_exchange`) if that contract is ingested.
+    OT_VERIFIED_YES = ("OT",)
+    OT_VERIFIED_NO = ("REG",)
+    OT_UNVERIFIED = ("SO",)
+
     def settle_game(self, game_id: int, *, home_id: int, away_id: int, home_score: int | None,
                     away_score: int | None, state: str, last_period_type: str | None,
                     closing_quotes: Sequence[Quote] = ()) -> int:
-        """Settle every open moneyline bet on this game.  Never invents a result."""
+        """Settle every open bet on this game from the official NHL result.
+
+        Covers the moneyline, the total, the puck line and the overtime contract.  Never
+        invents a result, and where the payoff of an instrument has not been verified
+        against the exchange's own settlement the wager is left OPEN with the reason
+        recorded rather than guessed.
+        """
         if state not in ("FINAL", "OFF"):
             return 0
         if home_score is None or away_score is None:
@@ -217,7 +305,7 @@ class PaperEngine:
         n = 0
         for bet in self.store.query(
                 "SELECT * FROM bets WHERE game_id=? AND result='OPEN' "
-                "AND market IN ('moneyline','total')",
+                "AND market IN ('moneyline','total','puck_line','overtime')",
                 (game_id,)):
             market = bet["market"] or "moneyline"
             total_goals = home_score + away_score
@@ -230,6 +318,34 @@ class PaperEngine:
                         f"{bet['strike'] if 'strike' in bet.keys() else None} "
                         f"selection='{bet['selection']}'; left OPEN rather than guessed",
                         severity="error", entity_type="bet", entity_id=bet["bet_id"])
+                    continue
+            elif market == "puck_line":
+                won, why = self._settle_puck_line(bet, home_score, away_score)
+                if won is None:
+                    self.store.flag(
+                        "unsettleable_puck_line",
+                        f"bet {bet['bet_id']} cannot be settled from the official margin: "
+                        f"strike={bet['strike']} selection='{bet['selection']}'; left OPEN "
+                        "rather than guessed",
+                        severity="error", entity_type="bet", entity_id=bet["bet_id"])
+                    continue
+            elif market == "overtime":
+                won, why = self._settle_overtime(bet, last_period_type)
+                if won is None:
+                    lpt = (last_period_type or "").upper()
+                    kind = ("settlement_rule_unverified" if lpt in self.OT_UNVERIFIED
+                            else "unsettleable_overtime")
+                    detail = (
+                        f"bet {bet['bet_id']} on a KXNHLOVERTIME contract cannot be settled "
+                        f"from NHL data: lastPeriodType={lpt or 'missing'}. "
+                        + ("The exchange's verified settled history is playoff-only, where no "
+                           "shootout exists, so whether a shootout counts as 'going to "
+                           "overtime' is UNVERIFIED; left OPEN, and it will be settled from "
+                           "the exchange's own result if that contract is ingested."
+                           if lpt in self.OT_UNVERIFIED else
+                           "Left OPEN rather than guessed."))
+                    self.store.flag(kind, detail, severity="error",
+                                    entity_type="bet", entity_id=bet["bet_id"])
                     continue
             else:
                 sel = (bet["selection"] or "").lower()
@@ -284,6 +400,112 @@ class PaperEngine:
         won = over if sel == "over" else (not over)
         return won, (f"official total {total_goals} vs strike {strike:g} "
                      f"-> {'over' if over else 'under'}")
+
+    @staticmethod
+    def _settle_puck_line(bet: Any, home_score: int, away_score: int
+                          ) -> tuple[bool | None, str]:
+        """Settle a KXNHLSPREAD contract ("<team> wins by over k.5 goals") from the score.
+
+        The margin is the official final differential, overtime and shootout goals included
+        -- which is what Kalshi's own rules text describes ("wins by over X goals" on the
+        final result).  ``selection`` carries both halves of the wager: ``home_cover`` is the
+        YES side of the home team's contract and ``away_no_cover`` is the NO side of the away
+        team's (i.e. the away team's +k.5 line).  Returns ``(None, "")`` when the row does
+        not carry a readable strike and side, so it stays OPEN instead of being guessed.
+        """
+        try:
+            strike = bet["strike"]
+        except (KeyError, IndexError):
+            strike = None
+        if strike is None:
+            return None, ""
+        sel = (bet["selection"] or "").lower()
+        if sel.endswith("_no_cover"):
+            team, bought = sel[: -len("_no_cover")], "NO"
+        elif sel.endswith("_cover"):
+            team, bought = sel[: -len("_cover")], "YES"
+        else:
+            return None, ""
+        if team not in ("home", "away"):
+            return None, ""
+        comparison = "greater"
+        try:
+            notes = json.loads(bet["notes"] or "{}")
+            comparison = str(notes.get("strike_type") or "greater")
+        except (KeyError, IndexError, TypeError, ValueError):
+            pass
+        margin = home_score - away_score if team == "home" else away_score - home_score
+        covered = covers_margin(margin, float(strike), comparison)
+        if covered is None:
+            return None, ""
+        won = covered if bought == "YES" else (not covered)
+        return won, (f"official {team} margin {margin:+d} vs strike {strike:g} "
+                     f"({comparison}) -> {'covers' if covered else 'does not cover'}; "
+                     f"wager held the {bought} side")
+
+    @staticmethod
+    def _settle_overtime(bet: Any, last_period_type: str | None) -> tuple[bool | None, str]:
+        """Settle a KXNHLOVERTIME contract from the NHL's ``lastPeriodType``.
+
+        See :attr:`OT_VERIFIED_YES` for what has been verified against the exchange's own
+        results and what has not.  ``selection`` is ``ot_yes`` (game goes past regulation) or
+        ``ot_no`` (decided in regulation).  Anything outside the verified mapping returns
+        ``(None, reason)`` and the wager stays OPEN.
+        """
+        sel = (bet["selection"] or "").lower()
+        if sel not in ("ot_yes", "ot_no"):
+            return None, f"unmapped selection '{sel}'"
+        lpt = (last_period_type or "").upper()
+        if lpt in PaperEngine.OT_VERIFIED_YES:
+            went = True
+        elif lpt in PaperEngine.OT_VERIFIED_NO:
+            went = False
+        else:
+            return None, f"lastPeriodType={lpt or 'missing'} is outside the verified mapping"
+        won = went if sel == "ot_yes" else (not went)
+        return won, (f"official lastPeriodType={lpt} -> the game "
+                     f"{'did' if went else 'did not'} go past regulation; wager held the "
+                     f"{sel[3:].upper()} side")
+
+    def settle_from_exchange(self) -> int:
+        """Settle OPEN wagers from the exchange's own settled contract result.
+
+        For a contract the exchange has finalized, its ``result`` is the authoritative
+        statement of what that instrument paid -- it is what a real account would have been
+        settled on -- so it takes precedence over this project's reading of the official
+        score, and it is the only honest way to settle an instrument whose payoff has not
+        been independently verified (an overtime contract on a shootout game).  Only OPEN
+        rows are touched; a wager already settled from the official result is left alone,
+        and any disagreement between the two is surfaced by ``verify`` rather than by
+        overwriting a settled row here.
+        """
+        n = 0
+        for row in self.store.query(
+                """SELECT b.bet_id, b.strategy_id, b.strategy_version, b.entry_price, b.price,
+                          b.filled_size, b.stake, b.fee, b.exchange_side, b.close_price, b.clv,
+                          ms.result, ms.settlement_ts, ms.contract
+                     FROM bets b
+                     JOIN market_settlements ms
+                       ON ms.contract = json_extract(b.notes, '$.contract')
+                    WHERE b.result='OPEN' AND lower(ms.result) IN ('yes','no')"""):
+            side = (row["exchange_side"] or "YES").upper()
+            result = str(row["result"]).lower()
+            won = (result == "yes") if side == "YES" else (result == "no")
+            price = float(row["entry_price"] or row["price"] or 0)
+            if price <= 0:
+                continue
+            contracts = float(row["filled_size"] or (float(row["stake"] or 0) / price))
+            pnl = binary_settlement(price, contracts, won, fee=_fee_of(row))
+            self.store.settle_bet(
+                row["bet_id"], result="WIN" if won else "LOSS", pnl=pnl,
+                close_price=row["close_price"], clv=row["clv"],
+                settle_ts=row["settlement_ts"],
+                reason=f"kalshi settled {row['contract']} as {result.upper()}; the wager held "
+                       f"the {side} side (exchange result is authoritative for the contract)")
+            self.store.sync_bankroll(row["strategy_id"], int(row["strategy_version"]))
+            n += 1
+        self.store.commit()
+        return n
 
     PENDING_STATUSES = ('WATCHING', 'QUALIFIED', 'READY TO BET', 'PRICE TOO HIGH', 'PRICE TOO LOW',
                         'WAITING FOR GOALIE', 'WAITING FOR LINEUP', 'WAITING FOR INJURY',

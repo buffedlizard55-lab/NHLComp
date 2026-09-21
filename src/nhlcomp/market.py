@@ -82,6 +82,43 @@ def _point(c: dict) -> dict[str, Any]:
     }
 
 
+def margin_side_and_strike(strike_type: str | None, floor_strike: float | None
+                           ) -> tuple[str, float] | None:
+    """(comparison, strike) for a Kalshi puck-line contract, from the exchange's own fields.
+
+    ``strike_type='greater'`` with ``floor_strike=1.5`` is the contract "Vegas wins by over
+    1.5 goals" (verified 2026-09-21 on both the live and the historical tier): buying YES
+    pays when that team's **final** margin -- regulation, overtime or the shootout goal the
+    official score already contains -- is strictly greater than 1.5.  Buying NO on the same
+    contract is the standard ``+1.5`` puck line on the opponent: it pays when the named team
+    wins by exactly one, ties, or loses.
+
+    ``'less'`` has not been observed in this series; it is returned as ``('less', k)`` so a
+    caller can record it and refuse to trade an instrument whose payoff it has not verified.
+    Returns None when either field is missing, so a contract with an unknown line is never
+    traded and never guessed.
+    """
+    if floor_strike is None or not strike_type:
+        return None
+    st = str(strike_type).strip().lower()
+    if st in ("greater", "less"):
+        return (st, float(floor_strike))
+    return None
+
+
+def covers_margin(margin: float, strike: float, comparison: str = "greater") -> bool | None:
+    """Did the named team cover?  ``margin`` is that team's final goal differential.
+
+    Only ``greater`` (the observed shape) is settled; anything else returns None so the
+    caller leaves the wager OPEN and records why, instead of guessing a payoff.
+    """
+    if margin is None or strike is None:
+        return None
+    if comparison == "greater":
+        return float(margin) > float(strike)
+    return None
+
+
 def total_side_and_strike(strike_type: str | None, floor_strike: float | None
                           ) -> tuple[str, float] | None:
     """(direction, strike) for a Kalshi totals contract, from the exchange's own fields.

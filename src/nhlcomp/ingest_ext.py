@@ -21,10 +21,12 @@ from typing import Any, Sequence
 
 from .http import NetworkUnavailable, parse_iso
 from .market import derive_price_points
-from .sources.kalshi import (BASE as KALSHI_BASE, HIST_BASE, KalshiApiError, market_team_code,
-                             market_type_for, parse_event_ticker)
+from .sources.kalshi import (BASE as KALSHI_BASE, HIST_BASE, SERIES_MARKET_TYPE, WATCH_SERIES,
+                             KalshiApiError, contract_suffix, market_team_code, market_type_for,
+                             parse_event_ticker)
 from .sources.nhl import (API_WEB, STATS_REST, parse_goalie_game_row, parse_partner_odds,
                           parse_team_game_row)
+from .sources.polymarket import GAMMA as POLYMARKET_BASE, numeric_disagreements, normalize_event
 from .store import utcnow
 
 
@@ -77,7 +79,18 @@ class IngestExtensions:
 
     # ------------------------------------------------------------------ kalshi history
     def _upsert_settlement(self, m: dict, *, tier: str, source_url: str, ts: str) -> int | None:
-        """Insert/refresh one settled contract; returns the matched game_id (or None)."""
+        """Insert/refresh one settled contract; returns the matched game_id (or None).
+
+        The same contract can arrive twice -- from the live tier and later from the
+        historical tier, or from a page where Kalshi omitted a field it had sent before -- and
+        the two payloads are not equally complete.  Every descriptive column is therefore
+        updated with ``COALESCE(excluded.x, existing.x)``: a newer value wins, but a missing
+        one never erases a fact already on the record.  ``rung`` matters most here, because
+        the ticker suffix is what tells the puck-line settlement code which line a contract
+        was struck at; losing it would leave a settled bet unresolvable.  ``retrieved_at`` and
+        ``source_url`` are deliberately overwritten, since they describe this row's most recent
+        retrieval (each individual fetch is recorded separately in ``raw_response``).
+        """
         game_id, _ = self._match_kalshi_game(m)
         ticker = m.get("ticker") or ""
         result = (m.get("result") or "").lower()
@@ -95,19 +108,33 @@ class IngestExtensions:
                                               settlement_ts, retrieved_at, source_url,
                                               series_ticker, tier, floor_strike, close_time,
                                               title, occurrence_datetime, team_abbrev,
-                                              market_type, strike_type)
-               VALUES('kalshi',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                                              market_type, strike_type, rung)
+               VALUES('kalshi',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(provider, contract, side) DO UPDATE SET
                  result=excluded.result, settle_price=excluded.settle_price,
                  price_before=excluded.price_before, bid_before=excluded.bid_before,
                  ask_before=excluded.ask_before, volume=excluded.volume,
                  open_interest=excluded.open_interest,
+                 retrieved_at=excluded.retrieved_at, source_url=excluded.source_url,
                  game_id=COALESCE(excluded.game_id, market_settlements.game_id),
-                 series_ticker=excluded.series_ticker, tier=excluded.tier,
-                 floor_strike=excluded.floor_strike, close_time=excluded.close_time,
-                 title=excluded.title, occurrence_datetime=excluded.occurrence_datetime,
+                 game_date=COALESCE(excluded.game_date, market_settlements.game_date),
+                 -- selection falls back to the ticker when a payload carries no label, and
+                 -- that fallback must not overwrite a real label recorded earlier
+                 selection=CASE WHEN excluded.selection IS NOT NULL
+                                 AND excluded.selection <> excluded.contract
+                                THEN excluded.selection
+                                ELSE market_settlements.selection END,
+                 series_ticker=COALESCE(excluded.series_ticker, market_settlements.series_ticker),
+                 tier=COALESCE(excluded.tier, market_settlements.tier),
+                 floor_strike=COALESCE(excluded.floor_strike, market_settlements.floor_strike),
+                 close_time=COALESCE(excluded.close_time, market_settlements.close_time),
+                 title=COALESCE(excluded.title, market_settlements.title),
+                 occurrence_datetime=COALESCE(excluded.occurrence_datetime,
+                                              market_settlements.occurrence_datetime),
                  team_abbrev=COALESCE(excluded.team_abbrev, market_settlements.team_abbrev),
-                 market_type=excluded.market_type, strike_type=excluded.strike_type,
+                 market_type=COALESCE(excluded.market_type, market_settlements.market_type),
+                 strike_type=COALESCE(excluded.strike_type, market_settlements.strike_type),
+                 rung=COALESCE(excluded.rung, market_settlements.rung),
                  settlement_ts=COALESCE(excluded.settlement_ts, market_settlements.settlement_ts)""",
             (m.get("event_ticker"), ticker, game_id,
              (m.get("occurrence_datetime") or "")[:10] or (parsed or {}).get("game_date"),
@@ -119,7 +146,7 @@ class IngestExtensions:
              (m.get("event_ticker") or "").split("-", 1)[0] or None, tier,
              _f(m.get("floor_strike")), m.get("close_time"), m.get("title"),
              m.get("occurrence_datetime"), team_abbrev, market_type_for(m),
-             m.get("strike_type") or None))
+             m.get("strike_type") or None, contract_suffix(m)))
         return game_id
 
     def kalshi_history(self, *, series: str = "KXNHLGAME", max_calls: int = 1500,
@@ -536,6 +563,340 @@ class IngestExtensions:
         self.log(f"NHL EDGE team snapshots {season}/{game_type}: {n}")
         return n
 
+
+    # ------------------------------------------------------- kalshi series watch
+    def kalshi_series_watch(self, series: Sequence[str] = WATCH_SERIES, *,
+                            limit: int = 200) -> dict[str, Any]:
+        """Poll the hockey series this project is ready to trade but that list nothing yet.
+
+        An empty answer is a **verified negative**, not a missing value: the query ran, the
+        exchange answered, and the answer was "no open contracts".  That is recorded per
+        series with its timestamp (``kalshi_series.open_contracts`` /
+        ``last_listed_check`` / ``listing_note``) so a later run can show the day a market
+        appeared -- and so no code path ever treats an empty answer as licence to invent a
+        price.  On 2026-09-21 all fourteen of these series were empty (preseason); the
+        observation is captured in ``data/captured/kalshi_unlisted_series_20260921.json``.
+
+        When a series *does* list contracts the event is flagged, because from that moment
+        the market is tradable and its prices must start being captured.
+        """
+        out: dict[str, Any] = {}
+        ts = utcnow()
+        for ticker in series:
+            url = f"{KALSHI_BASE}/markets?series_ticker={ticker}&limit={limit}&status=open"
+            try:
+                markets = self.kalshi.markets(ticker, limit=limit, status="open", max_pages=1)
+            except (KalshiApiError, NetworkUnavailable) as exc:
+                out[ticker] = {"error": f"{type(exc).__name__}: {exc}"}
+                self.store.flag("broken_api", f"kalshi open markets {ticker}: {exc}",
+                                severity="error", entity_type="source",
+                                entity_id=f"kalshi.{ticker}")
+                continue
+            self.store.record_raw(url, json.dumps(markets), source_id="kalshi.trade_api")
+            note = ("listed and open" if markets else
+                    "queried and empty: the exchange lists no open contract for this series "
+                    f"as of {ts}. Verified negative; nothing is inferred to fill it.")
+            out[ticker] = {"open_contracts": len(markets), "checked_at": ts,
+                           "market_type": SERIES_MARKET_TYPE.get(ticker), "note": note}
+            self.store.execute(
+                """INSERT INTO kalshi_series(ticker, first_seen, last_seen, open_contracts,
+                                             last_listed_check, listing_note)
+                   VALUES(?,?,?,?,?,?)
+                   ON CONFLICT(ticker) DO UPDATE SET
+                     open_contracts=excluded.open_contracts,
+                     last_listed_check=excluded.last_listed_check,
+                     listing_note=excluded.listing_note, last_seen=excluded.last_seen""",
+                (ticker, ts, ts, len(markets), ts, note))
+            if markets:
+                self.store.flag(
+                    "new_market_listed",
+                    f"kalshi series {ticker} now lists {len(markets)} open contract(s) "
+                    f"(market_type {SERIES_MARKET_TYPE.get(ticker)}); it was empty when last "
+                    "polled, so its prices start being captured from this run",
+                    severity="info", entity_type="market", entity_id=ticker)
+        self.store.commit()
+        listed = [t for t, v in out.items() if v.get("open_contracts")]
+        self.log(f"kalshi series watch: {len(out)} series polled, "
+                 f"{len(listed)} listing contracts{': ' + ', '.join(sorted(listed)) if listed else ''}")
+        return out
+
+    # ------------------------------------------------------------- nhl period goals
+    def nhl_period_goals(self, days: Sequence[str]) -> dict[str, Any]:
+        """Official per-goal rows from ``/v1/score/{date}`` -> period goals and period scores.
+
+        Why a second NHL feed for the same games: the scoreboard endpoint this project
+        already ingests gives the final score and ``lastPeriodType``, while ``/v1/score``
+        gives one row per goal with the period it was scored in, the running score and the
+        strength.  That is what a period market settles on, and it is an independent reading
+        of the final result to cross-check the first feed against.
+
+        Two things are recorded rather than assumed:
+
+        * **reconciliation** -- the derived period goals are summed per team and compared to
+          the official final score.  A game decided in a shootout publishes no goal row for
+          the deciding shot, so the sums can legitimately differ; when they do, the row says
+          so (``reconciled=0`` + note) instead of being quietly patched to match.
+        * **disagreement** -- when ``gameOutcome.lastPeriodType`` here differs from the
+          ``games.last_period_type`` already stored from the scoreboard feed, both values are
+          kept and the conflict is flagged.  Conflicting sources are preserved, never
+          silently resolved.
+        """
+        stats: dict[str, Any] = {"days": list(days), "games": 0, "goals": 0,
+                                 "period_score_rows": 0, "unreconciled": 0, "conflicts": 0}
+        for day in days:
+            url = f"{API_WEB}/score/{day}"
+            payload = self.nhl.score(day)
+            self.store.record_raw(url, json.dumps(payload), source_id="nhl.api_web")
+            games = payload.get("games") if isinstance(payload, dict) else None
+            if not isinstance(games, list):
+                self.store.flag("unexpected_shape",
+                                f"nhl /v1/score/{day} published no 'games' list; nothing was "
+                                "written and nothing was inferred",
+                                severity="warn", entity_type="dataset", entity_id="nhl.score")
+                continue
+            for g in games:
+                if not isinstance(g, dict) or g.get("id") is None:
+                    continue
+                gid = int(g["id"])
+                stats["games"] += 1
+                ts = utcnow()
+                home = g.get("homeTeam") or {}
+                away = g.get("awayTeam") or {}
+                official_home, official_away = home.get("score"), away.get("score")
+                lpt_score = ((g.get("gameOutcome") or {}).get("lastPeriodType")
+                             if isinstance(g.get("gameOutcome"), dict) else None)
+                per_period: dict[int, dict[str, Any]] = {}
+                for gl in (g.get("goals") or []):
+                    if not isinstance(gl, dict):
+                        continue
+                    pd = gl.get("periodDescriptor") or {}
+                    period = gl.get("period") if gl.get("period") is not None else pd.get("number")
+                    if period is None or not gl.get("teamAbbrev"):
+                        self.store.flag(
+                            "unexpected_shape",
+                            f"nhl /v1/score/{day} game {gid} published a goal row without a "
+                            f"period or a team ({json.dumps(gl)[:200]}); skipped, not guessed",
+                            severity="warn", entity_type="game", entity_id=str(gid))
+                        continue
+                    self.store.execute(
+                        """INSERT INTO game_period_goals(game_id, period, period_type,
+                                                        team_abbrev, player_id, player_name,
+                                                        time_in_period, strength, goal_modifier,
+                                                        away_score, home_score, source_id,
+                                                        source_url, retrieved_at, provenance)
+                           VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'SOURCE')
+                           ON CONFLICT(game_id, period, time_in_period, team_abbrev, player_id)
+                             DO UPDATE SET period_type=excluded.period_type,
+                               player_name=excluded.player_name, strength=excluded.strength,
+                               goal_modifier=excluded.goal_modifier,
+                               away_score=excluded.away_score, home_score=excluded.home_score,
+                               retrieved_at=excluded.retrieved_at,
+                               source_url=excluded.source_url""",
+                        (gid, int(period), pd.get("periodType"), gl.get("teamAbbrev"),
+                         int(gl.get("playerId") or 0),
+                         ((gl.get("name") or {}).get("default")
+                          if isinstance(gl.get("name"), dict) else gl.get("name")),
+                         gl.get("timeInPeriod"), gl.get("strength"), gl.get("goalModifier"),
+                         gl.get("awayScore"), gl.get("homeScore"), "nhl.api_web", url, ts))
+                    stats["goals"] += 1
+                    slot = per_period.setdefault(int(period), {"period_type": pd.get("periodType"),
+                                                               "home": 0, "away": 0})
+                    if pd.get("periodType") and not slot.get("period_type"):
+                        slot["period_type"] = pd.get("periodType")
+                    # which side scored is the feed's own teamAbbrev, matched against the
+                    # game's own team ids; an abbreviation that matches neither is a conflict
+                    # to report, not a side to pick
+                    home_abbr, away_abbr = home.get("abbrev"), away.get("abbrev")
+                    if gl.get("teamAbbrev") == home_abbr:
+                        slot["home"] += 1
+                    elif gl.get("teamAbbrev") == away_abbr:
+                        slot["away"] += 1
+                    else:
+                        self.store.flag(
+                            "unmapped_team",
+                            f"nhl /v1/score/{day} game {gid} credits a goal to "
+                            f"'{gl.get('teamAbbrev')}', which is neither the home team "
+                            f"({home_abbr}) nor the away team ({away_abbr}) of that game",
+                            severity="error", entity_type="game", entity_id=str(gid))
+                # derived period scores + reconciliation against the official final score
+                for period, slot in sorted(per_period.items()):
+                    self.store.execute(
+                        """INSERT INTO game_period_scores(game_id, period, period_type,
+                                                          home_goals, away_goals, derived_from,
+                                                          reconciled, reconciliation_note,
+                                                          source_id, retrieved_at, provenance)
+                           VALUES(?,?,?,?,?, 'nhl.score.goals', 1, NULL, 'nhl.api_web', ?,
+                                  'DERIVED')
+                           ON CONFLICT(game_id, period) DO UPDATE SET
+                             period_type=excluded.period_type, home_goals=excluded.home_goals,
+                             away_goals=excluded.away_goals,
+                             reconciliation_note=excluded.reconciliation_note,
+                             retrieved_at=excluded.retrieved_at""",
+                        (gid, period, slot["period_type"], slot["home"], slot["away"], ts))
+                    stats["period_score_rows"] += 1
+                if official_home is not None and official_away is not None:
+                    dh = sum(v["home"] for v in per_period.values())
+                    da = sum(v["away"] for v in per_period.values())
+                    if (dh, da) != (int(official_home), int(official_away)):
+                        note = (f"derived period goals sum to {dh}-{da} (home-away) against an "
+                                f"official final score of {official_home}-{official_away}; "
+                                f"lastPeriodType={lpt_score}. ")
+                        if str(lpt_score).upper() == "SO":
+                            note += ("The deciding shootout attempt is not published as a goal "
+                                     "row, so a one-goal difference for the winner is expected. "
+                                     "Both readings are kept; neither is edited.")
+                        else:
+                            note += ("No shootout explains the difference, so the two readings "
+                                     "of the same feed disagree and the discrepancy is kept "
+                                     "open rather than resolved by preferring one.")
+                        self.store.execute(
+                            """UPDATE game_period_scores SET reconciled=0, reconciliation_note=?
+                                WHERE game_id=?""", (note, gid))
+                        self.store.flag("unreconciled_period_goals",
+                                        f"game {gid} ({day}): {note}", severity="warn",
+                                        entity_type="game", entity_id=str(gid),
+                                        sources="nhl.score,nhl.scoreboard")
+                        stats["unreconciled"] += 1
+                # cross-check the second feed's lastPeriodType against the stored one
+                stored = self.store.one(
+                    "SELECT last_period_type, home_score, away_score FROM games WHERE game_id=?",
+                    (gid,))
+                if stored is not None and lpt_score:
+                    if (stored["last_period_type"] or "").upper() != str(lpt_score).upper():
+                        self.store.flag(
+                            "source_disagreement",
+                            f"game {gid} ({day}): scoreboard feed says lastPeriodType="
+                            f"{stored['last_period_type']!r} while /v1/score says "
+                            f"{lpt_score!r}; both kept, neither overwritten",
+                            severity="warn", entity_type="game", entity_id=str(gid),
+                            sources="nhl.scoreboard,nhl.score")
+                        stats["conflicts"] += 1
+                    for side, official, stored_score in (
+                            ("home", official_home, stored["home_score"]),
+                            ("away", official_away, stored["away_score"])):
+                        if official is not None and stored_score is not None and \
+                                int(official) != int(stored_score):
+                            self.store.flag(
+                                "source_disagreement",
+                                f"game {gid} ({day}): {side} score is {stored_score} in the "
+                                f"scoreboard feed and {official} in /v1/score; both kept",
+                                severity="warn", entity_type="game", entity_id=str(gid),
+                                sources="nhl.scoreboard,nhl.score")
+                            stats["conflicts"] += 1
+        self.store.commit()
+        self.log(f"nhl period goals: {stats['games']} games, {stats['goals']} goal rows, "
+                 f"{stats['period_score_rows']} derived period scores, "
+                 f"{stats['unreconciled']} unreconciled, {stats['conflicts']} source conflicts")
+        return stats
+
+    # ------------------------------------------------------------------ polymarket
+    def polymarket_nhl(self, *, limit: int = 100, closed: bool = False) -> dict[str, Any]:
+        """Ingest Polymarket's NHL markets as a second, independent prediction-market price.
+
+        Reference data only: this project executes on Kalshi, so nothing here funds a wager,
+        and a Polymarket price is never used to settle one.  What it is good for is a
+        cross-check -- two prediction markets pricing the same question is evidence about the
+        price, and their published fee schedule is data rather than a guess.
+
+        On 2026-09-21 the only open NHL events were season-level (the 2026-27 Stanley Cup
+        Champion), so there was no per-game market to compare against a Kalshi game contract.
+        That absence is recorded as a verified negative, and the poll keeps running so the
+        day a game market is listed the prices are captured from that day forward.
+        """
+        url = (f"{POLYMARKET_BASE}/events?tag_slug=nhl"
+               f"&closed={'true' if closed else 'false'}&limit={int(limit)}&offset=0")
+        stats: dict[str, Any] = {"events": 0, "markets": 0, "families": {}, "matched_games": 0,
+                                 "disagreements": [], "source_url": url}
+        events = self.pm.events(tag_slug="nhl", closed=closed, limit=limit)
+        self.store.record_raw(url, json.dumps(events), source_id="polymarket.gamma")
+        stats["events"] = len(events)
+        raw_markets: list[dict] = []
+        ts = utcnow()
+        for ev in events:
+            for m in (ev.get("markets") or []):
+                if isinstance(m, dict):
+                    raw_markets.append(m)
+            for row in normalize_event(ev, retrieved_at=ts, source_url=url):
+                if not row["id"]:
+                    continue
+                # a game market is only attached to a game when the match is unambiguous
+                gid, basis = self._match_polymarket_game(row)
+                row["game_id"] = gid
+                if basis:
+                    row["match_basis"] = f"{row['match_basis']}; {basis}"
+                if gid is not None:
+                    stats["matched_games"] += 1
+                cols = list(row.keys())
+                self.store.execute(
+                    f"""INSERT INTO polymarket_markets({','.join(cols)})
+                        VALUES({','.join('?' * len(cols))})
+                        ON CONFLICT(id) DO UPDATE SET
+                          best_bid=excluded.best_bid, best_ask=excluded.best_ask,
+                          spread=excluded.spread, last_trade_price=excluded.last_trade_price,
+                          liquidity=excluded.liquidity, volume=excluded.volume,
+                          volume_24hr=excluded.volume_24hr, active=excluded.active,
+                          closed=excluded.closed, accepting_orders=excluded.accepting_orders,
+                          enable_order_book=excluded.enable_order_book,
+                          game_id=COALESCE(excluded.game_id, polymarket_markets.game_id),
+                          match_basis=excluded.match_basis, market_family=excluded.market_family,
+                          retrieved_at=excluded.retrieved_at""",
+                    tuple(row[c] for c in cols))
+                stats["markets"] += 1
+                stats["families"][row["market_family"]] = \
+                    stats["families"].get(row["market_family"], 0) + 1
+        stats["disagreements"] = numeric_disagreements(
+            [dict(r) for r in self.store.query(
+                "SELECT id, liquidity, volume FROM polymarket_markets")], raw_markets)
+        for d in stats["disagreements"]:
+            self.store.flag("source_disagreement",
+                            f"polymarket publishes two forms of the same figure that differ: {d}",
+                            severity="warn", entity_type="market", entity_id="polymarket.gamma")
+        if not stats.get("families", {}).get("game"):
+            self.store.flag(
+                "no_game_markets",
+                f"polymarket listed {stats['markets']} NHL market(s) across {stats['events']} "
+                f"event(s) but none is a per-game market (families: {stats['families']}); there "
+                "is therefore nothing to cross-check against a Kalshi game contract this run. "
+                "Verified negative, not missing data.",
+                severity="info", entity_type="market", entity_id="polymarket.gamma")
+        self.store.commit()
+        self.log(f"polymarket: {stats['events']} events, {stats['markets']} markets, "
+                 f"families {stats['families']}, matched to {stats['matched_games']} game(s)")
+        return stats
+
+    def _match_polymarket_game(self, row: dict[str, Any]) -> tuple[int | None, str]:
+        """Match a Polymarket market to one NHL game, or say why it was not matched.
+
+        Only a market that carries a game start time is even a candidate, and only an
+        unambiguous team+date match attaches a game_id.  Everything else returns None with
+        the reason recorded, because a plausible-looking match is how a futures price ends up
+        attached to a game it has nothing to do with.
+        """
+        if row.get("market_family") != "game":
+            return None, (f"not matched to a game: market_family={row.get('market_family')} "
+                          "(no game start time published)")
+        start = row.get("game_start_time") or row.get("start_date") or ""
+        day = str(start)[:10]
+        text = " ".join(str(row.get(k) or "") for k in
+                        ("question", "group_item_title", "event_title", "slug"))
+        home_id = away_id = None
+        for t in self.store.query("SELECT team_id, abbrev, full_name FROM teams WHERE active=1"):
+            for name in {t["abbrev"], t["full_name"]}:
+                if name and len(str(name)) > 2 and str(name).lower() in text.lower():
+                    if home_id is None:
+                        home_id = int(t["team_id"])
+                    elif away_id is None and int(t["team_id"]) != home_id:
+                        away_id = int(t["team_id"])
+        if not day or home_id is None or away_id is None:
+            return None, (f"game market but no unambiguous match: date={day or 'unknown'}, "
+                          f"teams resolved={home_id is not None and away_id is not None}")
+        g = self.store.one(
+            """SELECT game_id FROM games WHERE game_date=? AND
+                ((home_id=? AND away_id=?) OR (home_id=? AND away_id=?))""",
+            (day, home_id, away_id, away_id, home_id))
+        if g is None:
+            return None, f"no NHL game on {day} between team_ids {away_id} and {home_id}"
+        return int(g["game_id"]), f"matched on published game start date {day} and both team names"
 
 def _f(v: Any) -> float | None:
     if v in (None, "", "-"):

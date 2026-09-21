@@ -19,10 +19,13 @@ from .features import FeatureBuilder, GameRef
 from .features_ext import load_extended
 from .http import HttpClient, NetworkUnavailable
 from .ingest import Ingestor
-from .market import american_to_prob, devig_pair, total_side_and_strike, total_side_from_text
-from .models import (EloModel, HomeIceOnly, LogisticRest, PoissonModel, brier, log_loss)
+from .market import (american_to_prob, devig_pair, margin_side_and_strike,
+                     total_side_and_strike, total_side_from_text)
+from .models import (EloModel, HomeIceOnly, LogisticRest, OtCalibration, PoissonModel,
+                     brier, log_loss)
 from .paper import PaperEngine
 from .store import Store, utcnow
+from .sources.kalshi import KALSHI_TEAM_ALIASES, suffix_team_code
 from .strategies import DecisionContext, Quote, build_seed_strategies
 from .verify import Verifier
 
@@ -38,6 +41,10 @@ class Pipeline:
         self.report: dict[str, Any] = {}
         self.ext = None
         self._feature_kw: dict[str, Any] = {}
+        # fitted in stage_models; an empty calibration is scale=1.0 / sufficient=False, which
+        # makes an overtime rule refuse to trade rather than price off an unfitted ratio
+        self.ot_calibration = OtCalibration()
+        self._ot_cal_rows: list[dict[str, Any]] = []
 
     def log(self, msg: str) -> None:
         if self.verbose:
@@ -64,7 +71,8 @@ class Pipeline:
                      club_abbrevs: Sequence[str], ingest_settled_pages: int = 5,
                      cross_check_abbrevs: Sequence[str] = (),
                      kalshi_budget: int = 1500, live_points_budget: int = 120,
-                     totals_budget: int = 400,
+                     totals_budget: int = 400, spread_budget: int = 400,
+                     overtime_budget: int = 250, polymarket_limit: int = 100,
                      stats_seasons: Sequence[int] | None = None) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["probes"] = self.ing.verify_sources()
@@ -100,10 +108,33 @@ class Pipeline:
                    max_calls=kalshi_budget)
         self._safe(out, "kalshi_totals_history", self.ing.kalshi_history, series="KXNHLTOTAL",
                    max_calls=totals_budget)
+        # puck line ("<team> wins by over k.5 goals") and overtime ("will there be
+        # overtime"): each its own series, its own live read and its own history budget, so
+        # a long walk in one market can never starve another.  Both were verified on
+        # 2026-09-21 -- the spread series on the live tier (quoting the 2026-09-24 slate)
+        # and on the historical tier back to the 2026 Stanley Cup Final, the overtime series
+        # on the historical tier only (about 100 settled playoff events, zero open contracts).
+        self._safe(out, "kalshi_spread_live", self.ing.kalshi_nhl, series="KXNHLSPREAD")
+        self._safe(out, "kalshi_overtime_live", self.ing.kalshi_nhl, series="KXNHLOVERTIME")
+        self._safe(out, "kalshi_spread_history", self.ing.kalshi_history, series="KXNHLSPREAD",
+                   max_calls=spread_budget)
+        self._safe(out, "kalshi_overtime_history", self.ing.kalshi_history,
+                   series="KXNHLOVERTIME", max_calls=overtime_budget)
+        # series the exchange lists but has no contracts for yet: polled every run so the
+        # day one is listed its prices are captured from that day, and so "nothing listed"
+        # stays a recorded verified negative instead of a silent gap
+        self._safe(out, "kalshi_series_watch", self.ing.kalshi_series_watch)
         # legacy settled sweep kept for the counters the old reports expose
         out["kalshi_settled"] = self.ing.kalshi_settled(max_pages=ingest_settled_pages)
         self._safe(out, "kalshi_live_points", self.ing.kalshi_live_price_points,
                    max_calls=live_points_budget)
+        # official period-by-period scoring from a second NHL endpoint: what a period market
+        # would settle on, and an independent reading of the final score and lastPeriodType
+        # to cross-check the scoreboard feed against
+        self._safe(out, "period_goals", self.ing.nhl_period_goals, scoreboard_days)
+        # a second prediction market, as reference only -- Kalshi remains the execution
+        # venue and no Polymarket price funds or settles a wager here
+        self._safe(out, "polymarket_nhl", self.ing.polymarket_nhl, limit=polymarket_limit)
         # sportsbook reference odds (DraftKings via NHL partner feed) and EDGE tracking
         self._safe(out, "partner_odds", self.ing.nhl_partner_odds)
         if current:
@@ -264,6 +295,35 @@ class Pipeline:
             "brier": round(brier([home_only.predict(r)["p_home_ml"] for r in test],
                                  labels_t), 5) if test else None}
         self.report["model_comparison_out_of_sample"] = comp
+
+        # ---- overtime calibration -------------------------------------------------
+        # The Poisson tie mass is a model output that has never been checked against what
+        # actually happened, so it is not used raw to price a KXNHLOVERTIME contract.  The
+        # ratio observed_past_regulation / mean_modelled_tie is fitted on the earlier
+        # chronological window (the same 60% split the model comparison uses) and applied to
+        # later games only.  Preseason games are excluded: their lineups and effort differ
+        # materially and their observed past-regulation rate in this ledger is 17/104 and
+        # 22/104 against 271/1312 and 326/1312 in the regular season.
+        cal_rows = self._ot_calibration_rows(rows, refs)
+        self.ot_calibration = self.ot_calibration_asof(
+            cal_rows, train_split=bt.split(cal_rows)["train"] if cal_rows else None)
+        for r in rows:
+            if r.get("p_overtime") is not None:
+                r["p_ot_cal"] = self.ot_calibration.apply(float(r["p_overtime"]))
+        self._ot_cal_rows = cal_rows
+        ev = self.ot_calibration.as_evidence()
+        ev["scope"] = ("regular season + playoff games decided before the fitted window's end; "
+                       "preseason excluded")
+        ev["label"] = ("NHL lastPeriodType in (OT, SO) -- SOURCE DATA, not a model output")
+        ev["settlement_note"] = (
+            "Kalshi's own settled KXNHLOVERTIME history verified 2026-09-21 is playoff-only "
+            "(~100 events, 2026-04-28..2026-06-14), where no shootout exists, so whether a "
+            "shootout counts as 'going to overtime' is UNVERIFIED. Wagers on such a game are "
+            "left OPEN and settled from the exchange's own result rather than from a guess.")
+        self.report["ot_calibration"] = ev
+        self.log(f"ot calibration: scale={ev['scale']} on n={ev['n']} games "
+                 f"(observed {ev['observed_rate']} vs model mean {ev['model_mean_tie_prob']}) "
+                 f"sufficient={ev['sufficient']}")
         self.report["league_avg_home_goals"] = round(league_home, 4)
         self.report["league_avg_away_goals"] = round(league_away, 4)
         self.store.execute(
@@ -444,13 +504,7 @@ class Pipeline:
                  FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
                 WHERE ms.provider='kalshi' AND ms.result IN ('yes','no')
                   AND (ms.series_ticker='KXNHLGAME' OR ms.series_ticker IS NULL)""")
-        pts: dict[str, dict[str, dict[str, Any]]] = {}
-        for pr in self.store.query(
-                """SELECT contract, point, end_period_ts, bid, ask, mean, volume
-                     FROM market_price_points WHERE point IN ('open','t24h','t6h','t1h','close')"""):
-            pts.setdefault(pr["contract"], {})[pr["point"]] = {
-                "bid": pr["bid"], "ask": pr["ask"], "mean": pr["mean"],
-                "ts": pr["end_period_ts"], "volume": pr["volume"]}
+        pts = self._candle_points()
         out = []
         for ms in rows:
             d = dict(ms)
@@ -598,7 +652,9 @@ class Pipeline:
                 sig.supporting["price_point"] = entry_point
                 bid = self.paper.place(sig, decision_ts=ctx.decision_ts, test_mode="BACKTEST",
                                        provider="kalshi", source_url=self.KALSHI_HIST_URL,
-                                       verification=f"kalshi_candle_{entry_point}")
+                                       verification=f"kalshi_candle_{entry_point}",
+                                       depth_volume=(float(pt["volume"])
+                                                     if pt.get("volume") is not None else None))
                 if not bid:
                     continue
                 placed += 1
@@ -613,6 +669,331 @@ class Pipeline:
                     close_price=close_mid, clv=clv, settle_ts=ms["settlement_ts"],
                     reason=f"kalshi totals contract settled {ms['result']} "
                            f"(strike {float(ms['strike']):g})")
+                self.store.execute(
+                    "UPDATE bets SET price_point=?, close_price_ts=? WHERE bet_id=?",
+                    (entry_point, close_pt["ts"] if close_pt else None, bid))
+        return placed
+
+    #: Which NHL ``lastPeriodType`` values mean the game went past regulation.  SOURCE DATA:
+    #: the league's own field, not an inference.  A shootout can only be reached through
+    #: overtime, so it is included in the *label* used to fit the calibration; whether Kalshi
+    #: settles a shootout game as YES is a separate question and is handled at settlement
+    #: (see :attr:`PaperEngine.OT_VERIFIED_YES`).
+    PAST_REGULATION_PERIODS = ("OT", "SO")
+
+    def _ot_calibration_rows(self, rows: Sequence[dict[str, Any]],
+                             refs: Sequence[GameRef] | dict[int, GameRef]
+                             ) -> list[dict[str, Any]]:
+        """Chronologically sorted ``(model tie probability, official outcome)`` pairs.
+
+        Each returned dict is the point-in-time feature row itself, plus ``_start`` (the
+        scheduled UTC start, so a caller can cut the window without another lookup) and
+        ``_went_past_regulation`` (0/1 from the NHL's ``lastPeriodType``).  Rows missing
+        either the model output or the official outcome are dropped and counted, never
+        coerced into a label.
+        """
+        by_ref = ({int(g.game_id): g for g in refs.values()}
+                  if isinstance(refs, dict) else {int(g.game_id): g for g in refs})
+        out: list[dict[str, Any]] = []
+        dropped = 0
+        for r in rows:
+            g = by_ref.get(int(r.get("game_id") or 0))
+            if g is None or not g.decided or g.game_type not in (2, 3):
+                continue
+            if r.get("p_overtime") is None or r.get("p_tie_reg") is None:
+                dropped += 1
+                continue
+            lpt = (g.last_period_type or "").upper()
+            if lpt not in ("OT", "SO", "REG"):
+                dropped += 1
+                continue        # an outcome this project cannot read is not a label
+            r["_went_past_regulation"] = int(lpt in self.PAST_REGULATION_PERIODS)
+            r["_start"] = g.start.isoformat()
+            out.append(r)
+        out.sort(key=lambda r: str(r.get("_start")))
+        if dropped:
+            self.log(f"ot calibration: {dropped} decided game(s) dropped for a missing model "
+                     f"tie probability or an unreadable lastPeriodType")
+        return out
+
+    def ot_calibration_asof(self, cal_rows: Sequence[dict[str, Any]], *,
+                            cutoff: str | None = None,
+                            train_split: Sequence[dict[str, Any]] | None = None
+                            ) -> OtCalibration:
+        """The calibration fitted on games that started before ``cutoff``.
+
+        ``train_split`` may be given instead, to reuse the same chronological split the model
+        comparison uses.  Either way the fitted window is strictly earlier than the games the
+        resulting ratio is applied to, so a wager is never priced with a number that has seen
+        its own outcome.
+        """
+        if train_split is not None:
+            use = list(train_split)
+            window = (f"the earliest {len(use)} of {len(cal_rows)} decided regular/playoff games "
+                      f"in chronological order" if use else "no games")
+        elif cutoff:
+            use = [r for r in cal_rows if str(r.get("_start")) < cutoff]
+            window = f"decided games starting before {cutoff}"
+        else:
+            use = list(cal_rows)
+            window = f"all {len(use)} decided regular/playoff games in the ledger"
+        return OtCalibration().fit(use, window=window)
+
+    def _candle_points(self) -> dict[str, dict[str, dict[str, Any]]]:
+        """Named price points per contract from Kalshi's candlestick history.
+
+        One read shared by every strike-priced market so the totals, puck-line and overtime
+        backtests are all priced off exactly the same feed and the same point names.
+        """
+        pts: dict[str, dict[str, dict[str, Any]]] = {}
+        for pr in self.store.query(
+                """SELECT contract, point, end_period_ts, bid, ask, mean, volume
+                     FROM market_price_points WHERE point IN ('open','t24h','t6h','t1h','close')"""):
+            pts.setdefault(pr["contract"], {})[pr["point"]] = {
+                "bid": pr["bid"], "ask": pr["ask"], "mean": pr["mean"],
+                "ts": pr["end_period_ts"], "volume": pr["volume"]}
+        return pts
+
+    def _settled_puck_line(self) -> list[dict[str, Any]]:
+        """Settled KXNHLSPREAD contracts ("<team> wins by over k.5 goals") with line and side.
+
+        Two things are read, from two different places, and they are not interchangeable:
+
+        * **which team** the contract names -- the exchange's own ticker suffix, stored
+          verbatim in ``market_settlements.rung`` with the rung index discarded
+          (``-VGK3`` -> VGK);
+        * **the line** -- only ``strike_type``/``floor_strike``.  The suffix digit is a rung
+          index, not a line: on 2026-09-21 the live tier's ``-VGK3`` carried
+          ``floor_strike=2.5`` while the historical tier's ``-VGK2`` carried the same 2.5.
+
+        A contract whose team cannot be matched to that game's home/away is skipped and
+        flagged, because guessing would silently turn a wager on Vegas -1.5 into one on Utah
+        -1.5.  As with totals, the candle feed publishes the YES offer only, so these rows
+        can price a **cover** entry; the NO side (the opponent's +1.5) is forward-test only.
+        """
+        rows = self.store.query(
+            """SELECT ms.*, g.home_id, g.away_id
+                 FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
+                WHERE ms.provider='kalshi' AND ms.result IN ('yes','no')
+                  AND ms.series_ticker='KXNHLSPREAD'""")
+        pts = self._candle_points()
+        out: list[dict[str, Any]] = []
+        for ms in rows:
+            line = margin_side_and_strike(ms["strike_type"], ms["floor_strike"])
+            if line is None:
+                self.store.flag(
+                    "unreadable_puck_line",
+                    f"puck-line contract {ms['contract']} has no readable line "
+                    f"(strike_type={ms['strike_type']}, floor_strike={ms['floor_strike']}); "
+                    "skipped rather than assumed", severity="warn",
+                    entity_type="market", entity_id=ms["contract"])
+                continue
+            comparison, strike = line
+            code = suffix_team_code(ms["rung"] if "rung" in ms.keys() else None)
+            team = None
+            if code:
+                tid = self.store.team_id_for(KALSHI_TEAM_ALIASES.get(code, code))
+                if tid is not None and tid == int(ms["home_id"]):
+                    team = "home"
+                elif tid is not None and tid == int(ms["away_id"]):
+                    team = "away"
+            if team is None:
+                self.store.flag(
+                    "unmapped_puck_line_side",
+                    f"puck-line contract {ms['contract']} names suffix {ms['rung']!r} "
+                    f"(team code {code!r}), which is not either side of game {ms['game_id']} "
+                    f"(home {ms['home_id']}, away {ms['away_id']}); skipped rather than "
+                    "assigned to a side by guesswork", severity="warn",
+                    entity_type="market", entity_id=ms["contract"])
+                continue
+            d = dict(ms)
+            d["team"] = team
+            d["strike"] = strike
+            d["comparison"] = comparison
+            d["line_basis"] = "strike_type+floor_strike (team from ticker suffix)"
+            d["points"] = pts.get(ms["contract"], {})
+            out.append(d)
+        return out
+
+    def _settled_overtime(self) -> list[dict[str, Any]]:
+        """Settled KXNHLOVERTIME contracts ("will there be overtime in this game").
+
+        One contract per game and no strike at all -- verified 2026-09-21: the settled rows
+        carry no ``floor_strike``/``strike_type`` and their suffix is ``-OT``, which is not a
+        team code.  The settled history this project has fetched spans 2026-04-28 to
+        2026-06-14 and is entirely playoff games, so the exchange's treatment of a
+        regular-season game decided in a shootout is not covered by it; that is recorded on
+        the row (``settlement_scope``) and handled at settlement, never assumed here.
+        """
+        rows = self.store.query(
+            """SELECT ms.*, g.home_id, g.away_id, g.last_period_type, g.game_type
+                 FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
+                WHERE ms.provider='kalshi' AND ms.result IN ('yes','no')
+                  AND ms.series_ticker='KXNHLOVERTIME'""")
+        pts = self._candle_points()
+        out: list[dict[str, Any]] = []
+        for ms in rows:
+            d = dict(ms)
+            d["selection_side"] = "ot"
+            d["strike"] = None
+            d["line_basis"] = "strike-less contract (verified: no floor_strike/strike_type)"
+            d["points"] = pts.get(ms["contract"], {})
+            out.append(d)
+        return out
+
+    def _strike_market_coverage(self, rows: Sequence[dict[str, Any]], refs: dict[int, GameRef],
+                                pit: dict[int, dict[str, Any]], *, series: str,
+                                report_key: str, flag_kind: str) -> dict[str, Any]:
+        """How much of a strike-priced market's history is actually usable, and why not.
+
+        Same question the totals coverage note answers, asked of KXNHLSPREAD and
+        KXNHLOVERTIME: a priced BACKTEST needs a pre-puck-drop offer from the exchange and a
+        point-in-time feature row for the *same* game, and the two ingest walks are budgeted
+        separately so they can each hold a lot of data and still not overlap.  When they do
+        not, the gap is written to the ledger as a gap.  Nothing is inferred to fill it.
+        """
+        with_offer = [r for r in rows if r.get("points", {}).get(self.entry_point_default)]
+        games_offer = {int(r["game_id"]) for r in with_offer}
+        scored = {g for g in games_offer
+                  if pit.get(g) is not None and pit[g].get("lam_home") is not None}
+        decided = {g for g in games_offer if refs.get(g) is not None and refs[g].decided}
+        cov = {"series": series,
+               "settled_contracts": len(rows),
+               "contracts_with_a_pregame_offer": len(with_offer),
+               "games_with_a_pregame_offer": len(games_offer),
+               "of_those_games_decided_in_the_ledger": len(decided),
+               "of_those_games_with_point_in_time_features": len(scored),
+               "backtestable_games": len(scored & decided)}
+        if cov["backtestable_games"] == 0 and cov["contracts_with_a_pregame_offer"]:
+            cov["reason"] = (
+                f"Every {series} contract with a pre-puck-drop offer belongs to a game with no "
+                "point-in-time feature row, so no entry in this market can be priced honestly "
+                "yet. The market is forward-tested at live offers until the exchange-price walk "
+                "and the NHL feature walk reach the same games. Nothing was inferred to fill "
+                "the gap.")
+            self.store.flag(flag_kind, cov["reason"] + " " + json.dumps(cov, indent=1),
+                            severity="warn", entity_type="market", entity_id=series,
+                            sources="kalshi.candles,nhl.stats_rest")
+        self.report[report_key] = cov
+        self.log(f"{series} price coverage: {cov['contracts_with_a_pregame_offer']} contracts "
+                 f"with a pre-game offer across {cov['games_with_a_pregame_offer']} games; "
+                 f"{cov['backtestable_games']} backtestable")
+        return cov
+
+    def _backtest_strike_market(self, strat: Any, *, refs: dict[int, GameRef],
+                                pit: dict[int, dict[str, Any]],
+                                rows: Sequence[dict[str, Any]], entry_point: str,
+                                market: str, ot_calibrations: Any = None) -> int:
+        """Price a puck-line or overtime rule against settled candle offers (BACKTEST mode).
+
+        Entry price is the ``yes_ask`` of the last candle ending at or before puck drop -- a
+        real, timestamped offer -- and settlement is the contract's own Kalshi result, never
+        this project's reading of it.  Rules that buy the **NO** side are skipped: the candle
+        feed publishes no NO-side offer, and ``no_ask = 1 - yes_bid`` is contradicted by this
+        ledger's own quotes, so there is no honest historical price for them to buy at.  Each
+        game is offered to the rule as a whole ladder of rungs, exactly as the live book is,
+        so the strike it trades is chosen by its own declared target and not by ingest order.
+
+        For the overtime market the calibration handed to the model is the one fitted on
+        games decided **before** the game being priced (``ot_calibrations``), so a wager is
+        never priced with a ratio fitted on its own outcome.
+        """
+        if getattr(strat, "market", "moneyline") != market:
+            return 0
+        if getattr(strat, "quote_side", "YES") != "YES":
+            self.report.setdefault(f"{market}_no_history", []).append(
+                f"{strat.strategy_id} v{strat.version} buys the NO side, which kalshi's "
+                "candlestick history does not publish an offer for; FORWARD TEST ONLY "
+                f"({getattr(strat, 'no_history_reason', None) or 'no historical NO-side price'})")
+            return 0
+        need = "lam_home" if market == "puck_line" else "p_overtime"
+        ladders: dict[tuple, list[dict[str, Any]]] = {}
+        for r in rows:
+            key = (int(r["game_id"]), r.get("team") if market == "puck_line" else "ot")
+            ladders.setdefault(key, []).append(r)
+        for rungs in ladders.values():
+            rungs.sort(key=lambda z: float(z["strike"]) if z.get("strike") is not None else 0.0)
+        placed = 0
+        for (gid, sel_key), rungs in sorted(ladders.items()):
+            g = refs.get(gid)
+            f = pit.get(gid)
+            if g is None or f is None or f.get(need) is None or not g.decided:
+                continue
+            quotes: list[Quote] = []
+            settle_by: dict[str, dict[str, Any]] = {}
+            for ms in rungs:
+                pt = ms["points"].get(entry_point)
+                if not (pt and pt.get("ask") and 0 < float(pt["ask"]) < 1):
+                    continue
+                q = Quote(provider="kalshi", market_key=ms["event_ticker"],
+                          contract=ms["contract"], game_id=gid, game_date=g.game_date,
+                          market_type=market,
+                          selection=(ms["team"] if market == "puck_line" else "ot"),
+                          side="YES", bid=pt.get("bid"), ask=float(pt["ask"]),
+                          bid_size=None, ask_size=None, volume=pt.get("volume"),
+                          liquidity=None, ts_utc=pt["ts"],
+                          label=ms["selection"],
+                          strike=(float(ms["strike"]) if ms.get("strike") is not None else None),
+                          strike_type=(ms.get("comparison") or None),
+                          price_basis=f"kalshi_candle_{entry_point}")
+                quotes.append(q)
+                settle_by[q.contract] = ms
+            if not quotes:
+                continue
+            pred = {k: f[k] for k in ("p_home_ml", "p_away_ml", "p_home_elo", "p_away_elo",
+                                      "p_home_logit", "p_away_logit", "lam_home", "lam_away",
+                                      "exp_total", "p_overtime", "p_tie_reg")
+                    if f.get(k) is not None}
+            if market == "overtime" and ot_calibrations is not None:
+                cal = ot_calibrations(g)
+                pred["ot_calibration"] = cal.as_evidence()
+                if pred.get("p_overtime") is not None:
+                    pred["p_ot_cal"] = cal.apply(float(pred["p_overtime"]))
+            ts = quotes[0].ts_utc
+            ctx = DecisionContext(decision_ts=ts, features=f, predictions=pred, quotes=quotes,
+                                  starters={}, injuries={}, bankroll=strat.starting_bankroll,
+                                  open_exposure=0.0)
+            for sig in strat.evaluate(ctx):
+                if sig.status != "READY TO BET" or sig.quote is None:
+                    continue
+                ms = settle_by.get(sig.quote.contract)
+                if ms is None:
+                    continue
+                pt = ms["points"].get(entry_point)
+                close_pt = ms["points"].get("close")
+                sig.supporting["decision_ts"] = ts
+                sig.supporting["contract"] = ms["contract"]
+                sig.supporting["line_basis"] = ms["line_basis"]
+                sig.supporting["price_basis"] = (
+                    f"kalshi candlestick yes_ask close of the last 60-minute candle ending "
+                    f"{pt['ts']} ({entry_point})")
+                sig.supporting["price_point"] = entry_point
+                sig.supporting["data_labels"] = {
+                    "price": f"SOURCE DATA (kalshi candle {entry_point})",
+                    "features": "DERIVED (point-in-time)",
+                    "model_prob": "MODEL OUTPUT",
+                    "settlement": "SOURCE DATA (kalshi's own contract result)"}
+                bid = self.paper.place(sig, decision_ts=ts, test_mode="BACKTEST",
+                                       provider="kalshi", source_url=self.KALSHI_HIST_URL,
+                                       verification=f"kalshi_candle_{entry_point}",
+                                       depth_volume=(float(pt["volume"])
+                                                     if pt.get("volume") is not None else None))
+                if not bid:
+                    continue
+                placed += 1
+                won = (str(ms["result"]).lower() == "yes")   # the exchange's own settlement
+                close_mid = None
+                if close_pt and close_pt.get("bid") is not None and close_pt.get("ask") is not None:
+                    close_mid = round((float(close_pt["bid"]) + float(close_pt["ask"])) / 2, 4)
+                clv = (round(close_mid - float(sig.quote.ask), 4)
+                       if close_mid is not None and entry_point != "close" else None)
+                strike_txt = (f" (strike {float(ms['strike']):g})"
+                              if ms.get("strike") is not None else "")
+                self.store.settle_bet(
+                    bid, result="WIN" if won else "LOSS",
+                    pnl=_settle_pnl(self.store, bid, won),
+                    close_price=close_mid, clv=clv, settle_ts=ms["settlement_ts"],
+                    reason=f"kalshi {market} contract settled {ms['result']}{strike_txt}")
                 self.store.execute(
                     "UPDATE bets SET price_point=?, close_price_ts=? WHERE bet_id=?",
                     (entry_point, close_pt["ts"] if close_pt else None, bid))
@@ -698,21 +1079,29 @@ class Pipeline:
                         key=lambda x: x.start):
             elo.observe(g)
 
+        PRED_KEYS = ("p_home_ml", "p_away_ml", "p_home_elo", "p_away_elo", "p_home_logit",
+                     "p_away_logit", "p_over", "p_under", "exp_total", "lam_home", "lam_away",
+                     "p_overtime", "p_tie_reg")
+
         def forward_row(gid: int) -> tuple[dict[str, Any], dict[str, Any]] | None:
             f = pit.get(gid)
             if f is not None and f.get("p_home_ml") is not None:
-                return f, {k: f[k] for k in ("p_home_ml", "p_away_ml", "p_home_elo", "p_away_elo",
-                                             "p_home_logit", "p_away_logit", "p_over", "p_under",
-                                             "exp_total", "lam_home", "lam_away")
-                       if k in f and f[k] is not None}
-            f = feats.get(gid)
-            if f is None:
-                return None
-            g = refs[gid]
-            pred = pois.predict(f)
-            pe = elo.prob_home(g.home_id, g.away_id)
-            pred["p_home_elo"], pred["p_away_elo"] = pe, 1 - pe
-            pred["p_home_logit"], pred["p_away_logit"] = pred["p_home_ml"], pred["p_away_ml"]
+                pred = {k: f[k] for k in PRED_KEYS if k in f and f[k] is not None}
+            else:
+                f = feats.get(gid)
+                if f is None:
+                    return None
+                g = refs[gid]
+                pred = pois.predict(f)
+                pe = elo.prob_home(g.home_id, g.away_id)
+                pred["p_home_elo"], pred["p_away_elo"] = pe, 1 - pe
+                pred["p_home_logit"], pred["p_away_logit"] = pred["p_home_ml"], pred["p_away_ml"]
+            # The tie mass is handed over with the calibration that was fitted on strictly
+            # earlier games, plus that calibration's own evidence, so an overtime rule can
+            # see how much history stands behind the number it is being asked to trade on.
+            pred["ot_calibration"] = self.ot_calibration.as_evidence()
+            if pred.get("p_overtime") is not None:
+                pred["p_ot_cal"] = self.ot_calibration.apply(float(pred["p_overtime"]))
             return f, pred
 
         def starters_for(f: dict[str, Any]) -> dict[int, str | None]:
@@ -729,6 +1118,14 @@ class Pipeline:
         settled = self._settled_contracts()
         totals = self._settled_totals()
         self._totals_coverage(totals, refs, pit)
+        puck_lines = self._settled_puck_line()
+        self._strike_market_coverage(puck_lines, refs, pit, series="KXNHLSPREAD",
+                                     report_key="puck_line_price_coverage",
+                                     flag_kind="puck_line_price_coverage")
+        overtimes = self._settled_overtime()
+        self._strike_market_coverage(overtimes, refs, pit, series="KXNHLOVERTIME",
+                                     report_key="overtime_price_coverage",
+                                     flag_kind="overtime_price_coverage")
         live = self._live_quotes(refs, names)
         # Kalshi lists one "Over k.5" contract per strike, so a totals rule is handed the
         # whole ladder for a game and chooses the rung it declares.  Evaluating one rung at a
@@ -736,10 +1133,17 @@ class Pipeline:
         # 2026-09-24 slate -- and refusing every game, which is what the 2026-09-21 CI run
         # recorded on all 84 totals opportunities.
         ladder: dict[tuple, list[Quote]] = {}
+        puck_ladder: dict[tuple, list[Quote]] = {}
         for q in live:
-            if (q.market_type or "moneyline") == "total":
-                ladder.setdefault((q.game_id, q.selection, q.side), []).append(q)
-        for rungs in ladder.values():
+            mtype = q.market_type or "moneyline"
+            if mtype == "total":
+                ladder.setdefault((q.game_id, mtype, q.selection, q.side), []).append(q)
+            elif mtype == "puck_line":
+                # every rung of every team for this game and side travels together: which
+                # team's contract a rule trades comes out of its own margin model, so the
+                # engine must not pre-choose a team by handing the rule one quote at a time.
+                puck_ladder.setdefault((q.game_id, q.side), []).append(q)
+        for rungs in list(ladder.values()) + list(puck_ladder.values()):
             rungs.sort(key=lambda z: float(z.strike) if z.strike is not None else 0.0)
         for s in self.store.latest_versions():
             if s["status"] == "rejected":
@@ -758,12 +1162,25 @@ class Pipeline:
             # No historical injury feed exists, so an injury-sensitive rule cannot be
             # replayed honestly: "no pending injuries" would really mean "unknown".
             backtestable = not getattr(strat, "injury_sensitive", False)
-            if backtestable and getattr(strat, "market", "moneyline") == "total":
+            mkt = getattr(strat, "market", "moneyline")
+            if backtestable and mkt == "total":
                 placed["BACKTEST"] += self._backtest_totals(
                     strat, refs=refs, pit=pit, totals=totals, entry_point=entry_point)
                 self.store.sync_bankroll(strat.strategy_id, strat.version)
-            for ms in (settled if (backtestable and getattr(strat, "market", "moneyline")
-                                   != "total") else ()):
+            elif backtestable and mkt == "puck_line":
+                placed["BACKTEST"] += self._backtest_strike_market(
+                    strat, refs=refs, pit=pit, rows=puck_lines, entry_point=entry_point,
+                    market="puck_line")
+                self.store.sync_bankroll(strat.strategy_id, strat.version)
+            elif backtestable and mkt == "overtime":
+                # the calibration is re-fitted per game on strictly earlier games only
+                def _cal_for(g: GameRef, _rows=self._ot_cal_rows) -> OtCalibration:
+                    return self.ot_calibration_asof(_rows, cutoff=g.start.isoformat())
+                placed["BACKTEST"] += self._backtest_strike_market(
+                    strat, refs=refs, pit=pit, rows=overtimes, entry_point=entry_point,
+                    market="overtime", ot_calibrations=_cal_for)
+                self.store.sync_bankroll(strat.strategy_id, strat.version)
+            for ms in (settled if (backtestable and mkt == "moneyline") else ()):
                 gid = int(ms["game_id"])
                 g = refs.get(gid)
                 f = pit.get(gid)
@@ -821,7 +1238,14 @@ class Pipeline:
                         "model_prob": "MODEL OUTPUT"}
                     bid = self.paper.place(sig, decision_ts=ctx.decision_ts, test_mode="BACKTEST",
                                            provider="kalshi", source_url=src,
-                                           verification=verification)
+                                           verification=verification,
+                                           # a candle publishes no offer size, but it does
+                                           # publish how many contracts traded in that hour:
+                                           # real depth evidence, and a taker cannot have been
+                                           # filled more than the hour traded
+                                           depth_volume=(float(pt["volume"])
+                                                         if pt and pt.get("volume") is not None
+                                                         else None))
                     if bid:
                         placed["BACKTEST"] += 1
                         won = (ms["result"] == "yes")
@@ -852,18 +1276,40 @@ class Pipeline:
                 qtype = q.market_type or "moneyline"
                 if getattr(strat, "market", "moneyline") != qtype:
                     continue
+                if q.side != getattr(strat, "quote_side", "YES"):
+                    # this rule buys the other side of the book.  Filtering here is what
+                    # keeps one game from being evaluated twice by the same rule: a second
+                    # pass over the side it does not trade would overwrite the recorded
+                    # status of the wager the first pass already placed.
+                    continue
                 if qtype == "total":
                     sel = q.selection            # 'over' | 'under', from the exchange's line
                     if sel != getattr(strat, "direction", None):
                         continue
-                    key = (gid, sel, q.side)
+                    key = (gid, qtype, sel, q.side)
                     if key in seen_ladders:
                         continue   # the ladder for this game is decided once, as a whole
                     seen_ladders.add(key)
+                    rungs = ladder.get(key, [q])
+                elif qtype == "puck_line":
+                    sel = "puck_line"
+                    key = (gid, qtype, "*", q.side)
+                    if key in seen_ladders:
+                        continue   # the whole ladder for this game and side is decided once
+                    seen_ladders.add(key)
+                    rungs = puck_ladder.get((gid, q.side), [q])
+                elif qtype == "overtime":
+                    sel = "ot"
+                    key = (gid, qtype, q.side)
+                    if key in seen_ladders:
+                        continue
+                    seen_ladders.add(key)
+                    rungs = [q]      # one strike-less contract per game
                 else:
                     sel = _side_for_selection(q.selection, g, names)
                     if sel is None or sel != strat.bet_side:
                         continue
+                    rungs = [q]
                 fr = forward_row(gid)
                 if fr is None:
                     continue
@@ -871,7 +1317,6 @@ class Pipeline:
                 ref = dk.get(gid) if (q.market_type or "moneyline") == "moneyline" else None
                 if ref and ref.get("home_prob") is not None:
                     pred = dict(pred, p_home_book=ref["home_prob"], p_away_book=ref["away_prob"])
-                rungs = ladder.get((gid, q.selection, q.side), [q]) if qtype == "total" else [q]
                 ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred,
                                       quotes=rungs, starters=starters_for(f), injuries=inj,
                                       bankroll=bankroll, open_exposure=open_exp)
@@ -960,6 +1405,53 @@ class Pipeline:
                                  liquidity=q["liquidity"], ts_utc=q["ts_utc"],
                                  label=q["selection"], strike=strike))
                 continue
+            if mtype == "puck_line":
+                # which team the contract names comes from the exchange's own ticker suffix
+                # (rung index stripped) with the game's team list as a text fallback; if
+                # neither resolves the row is skipped rather than guessed.
+                team = None
+                if g is not None and q["team_abbrev"]:
+                    tid = self.store.team_id_for(q["team_abbrev"])
+                    if tid is not None and tid == g.home_id:
+                        team = "home"
+                    elif tid is not None and tid == g.away_id:
+                        team = "away"
+                if team is None and g is not None:
+                    team = _side_for_selection(q["selection"], g, names)
+                line = margin_side_and_strike(q["strike_type"], q["strike"])
+                if team is None or line is None:
+                    self.store.flag("unreadable_puck_line",
+                                    f"Kalshi contract {q['contract']} could not be read as a "
+                                    f"puck line: team={team or 'unresolved'}, strike_type="
+                                    f"{q['strike_type']!r}, floor_strike={q['strike']!r}. It is "
+                                    "not traded; the line and the side are never assumed.")
+                    continue
+                comparison, strike = line
+                if comparison != "greater":
+                    self.store.flag("unverified_contract_shape",
+                                    f"Kalshi contract {q['contract']} carries strike_type "
+                                    f"'{comparison}', which this engine has never verified "
+                                    "against a settled outcome. Refused rather than assumed.")
+                    continue
+                out.append(Quote(
+                    provider=q["provider"], market_key=q["market_key"], contract=q["contract"],
+                    game_id=gid, game_date=q["game_date"], market_type="puck_line",
+                    selection=team, side=q["side"], bid=q["bid"], ask=q["ask"],
+                    bid_size=q["bid_size"], ask_size=q["ask_size"], volume=q["volume"],
+                    liquidity=q["liquidity"], ts_utc=q["ts_utc"], label=q["selection"],
+                    strike=strike, strike_type=comparison))
+                continue
+            if mtype == "overtime":
+                # one strike-less contract per game; both the YES and the NO row are real
+                # offers the exchange publishes, and a rule may buy either.
+                out.append(Quote(
+                    provider=q["provider"], market_key=q["market_key"], contract=q["contract"],
+                    game_id=gid, game_date=q["game_date"], market_type="overtime",
+                    selection="ot", side=q["side"], bid=q["bid"], ask=q["ask"],
+                    bid_size=q["bid_size"], ask_size=q["ask_size"], volume=q["volume"],
+                    liquidity=q["liquidity"], ts_utc=q["ts_utc"], label=q["selection"],
+                    strike=None, strike_type=None))
+                continue
             if q["side"] != "YES":
                 continue            # a moneyline is quoted once; both teams are separate contracts
             sel = _side_for_selection(q["selection"], g, names) if g is not None else None
@@ -975,6 +1467,14 @@ class Pipeline:
 
     # ------------------------------------------------------------- stage 6
     def stage_settle(self) -> int:
+        # the exchange's own settled result first: for a contract Kalshi has finalized, that
+        # result is what the instrument paid, and it is also the only honest way to settle a
+        # payoff this project has not verified itself (an overtime contract on a shootout
+        # game).  Whatever is still OPEN afterwards is settled from the official NHL result.
+        from_exchange = self.paper.settle_from_exchange()
+        if from_exchange:
+            self.report["settled_from_exchange_result"] = from_exchange
+            self.log(f"settle: {from_exchange} wager(s) settled on kalshi's own contract result")
         n = 0
         for g in self.store.query("SELECT * FROM games WHERE state IN ('FINAL','OFF')"):
             n += self.paper.settle_game(
@@ -982,8 +1482,9 @@ class Pipeline:
                 home_score=g["home_score"], away_score=g["away_score"], state=g["state"],
                 last_period_type=g["last_period_type"])
         self.report["settled_now"] = n
+        self.report["settled_total"] = n + from_exchange
         self.report["signals_expired"] = self.paper.expire_started(utcnow())
-        return n
+        return n + from_exchange
 
     def stage_clv(self) -> int:
         """Attach the closing price (last pre-game candle) to FORWARD TEST bets.
@@ -993,13 +1494,31 @@ class Pipeline:
         is never estimated.
         """
         n = 0
+        # Kalshi's candlestick feed publishes the YES bid/ask only.  A closing *mid of the
+        # YES side* is the closing price of a YES-side wager; comparing a NO-side entry (an
+        # Under, a +1.5 puck line, a "no overtime") against it produces a number with the
+        # wrong sign and the wrong instrument, and ``no_close = 1 - yes_close`` is not
+        # assumed here for the same reason it is not assumed anywhere else in this project:
+        # on the quotes in this ledger ``no_ask != 1 - yes_bid``.  So NO-side wagers get no
+        # closing price and no CLV, and that absence is recorded rather than papered over.
         for b in self.store.query(
-                """SELECT b.bet_id, b.entry_price, b.price, p.bid, p.ask, p.end_period_ts
+                """SELECT b.bet_id, b.entry_price, b.price, p.bid, p.ask, p.end_period_ts,
+                          COALESCE(b.exchange_side, json_extract(b.notes, '$.exchange_side'),
+                                   'YES') AS xs
                      FROM bets b
                      JOIN market_price_points p
                        ON p.contract = json_extract(b.notes, '$.contract') AND p.point='close'
                     WHERE b.test_mode='FORWARD TEST' AND b.close_price IS NULL
                       AND p.bid IS NOT NULL AND p.ask IS NOT NULL"""):
+            if str(b["xs"]).upper() != "YES":
+                self.store.flag(
+                    "clv_unavailable_no_side",
+                    f"bet {b['bet_id']} bought the {str(b['xs']).upper()} side of its contract; "
+                    "kalshi's candlestick history publishes the YES bid/ask only, so there is "
+                    "no timestamped closing price for the side that was bought and no CLV is "
+                    "reported for it (1 - yes_close is not assumed)",
+                    severity="info", entity_type="bet", entity_id=b["bet_id"])
+                continue
             close_mid = round((float(b["bid"]) + float(b["ask"])) / 2, 4)
             entry = float(b["entry_price"] or b["price"])
             self.store.amend_bet(b["bet_id"], {"close_price": close_mid,
@@ -1135,15 +1654,44 @@ def _hydrate(row: Any):
     silently dropped on reload -- gating flags such as requires_goalie simply evaporated
     and the strategy started betting as though it had never been gated.
     """
-    from .strategies import ThresholdStrategy, TotalsStrategy
+    from .strategies import (OvertimeStrategy, PuckLineStrategy, ThresholdStrategy,
+                             TotalsStrategy)
     params = json.loads(row["params_json"] or "{}")
     # the class is part of the stored parameter set: reloading a totals rule as a
     # threshold rule would silently drop its strike logic and let it bet a moneyline
-    cls = TotalsStrategy if params.get("kind") == "totals" else ThresholdStrategy
+    cls = {"totals": TotalsStrategy, "puck_line": PuckLineStrategy,
+           "overtime": OvertimeStrategy}.get(params.get("kind"), ThresholdStrategy)
     kw = dict(params)
     kw.pop("min_edge", None)
     kw.pop("stake_fraction", None)
     kw.pop("kind", None)
+    # derived in each rule's __init__ from its own direction/exchange_side: it is published
+    # in describe() for the audit trail, but reloading must not let a stale blob override it
+    kw.pop("quote_side", None)
+    if cls is PuckLineStrategy:
+        kw.setdefault("contract_team", "model_stronger")
+        kw.setdefault("exchange_side", "YES")
+        kw.setdefault("target_strike", 1.5)
+        return cls(
+            strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
+            name=row["name"], category=row["category"],
+            hypothesis=row["hypothesis"], data_used=row["data_used"], entry_rule=row["entry_rule"],
+            price_rule=row["price_rule"], settlement_rule=row["settlement_rule"],
+            markets=row["markets"], origin=row["origin"], origin_ref=row["origin_ref"],
+            starting_bankroll=float(row["starting_bankroll"]),
+            min_edge=params.get("min_edge", 0.04),
+            stake_fraction=params.get("stake_fraction", 0.25), **kw)
+    if cls is OvertimeStrategy:
+        kw.setdefault("direction", "yes")
+        return cls(
+            strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
+            name=row["name"], category=row["category"],
+            hypothesis=row["hypothesis"], data_used=row["data_used"], entry_rule=row["entry_rule"],
+            price_rule=row["price_rule"], settlement_rule=row["settlement_rule"],
+            markets=row["markets"], origin=row["origin"], origin_ref=row["origin_ref"],
+            starting_bankroll=float(row["starting_bankroll"]),
+            min_edge=params.get("min_edge", 0.03),
+            stake_fraction=params.get("stake_fraction", 0.25), **kw)
     if cls is TotalsStrategy:
         kw.setdefault("direction", "over")
         return cls(

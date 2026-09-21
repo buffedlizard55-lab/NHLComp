@@ -77,6 +77,23 @@ class NhlApi:
         """
         return self._get(f"/scoreboard/{day}")
 
+    def score(self, day: str) -> dict:
+        """``/v1/score/{YYYY-MM-DD}`` -- the day's games with **one row per goal**.
+
+        Verified 2026-09-21 on ``/v1/score/2026-09-20`` (7 games; the retained excerpt is
+        ``data/captured/nhl_score_20260920_game2026010008.json``).  Each finished game
+        publishes ``goals[]`` with ``period``, ``periodDescriptor.periodType`` (REG/OT/SO),
+        ``timeInPeriod``, ``playerId``, ``name.default``, ``teamAbbrev``, ``strength``,
+        ``goalModifier``, ``goalsToDate`` and the running ``awayScore``/``homeScore``, plus
+        ``gameOutcome.lastPeriodType`` and ``homeTeam``/``awayTeam`` ``score``/``sog``.
+
+        That is official period-by-period scoring -- what a period market settles on -- and
+        an independent second reading of ``lastPeriodType`` and shots on goal to cross-check
+        the scoreboard feed this project already uses.  Unlike ``/v1/scoreboard/{day}`` it is
+        a single day, not a window.
+        """
+        return self._get(f"/score/{day}")
+
     def scoreboard_now(self) -> dict:
         return self._get("/scoreboard/now")
 

@@ -1,0 +1,71 @@
+{
+  "_capture": {
+    "source_url": "https://gamma-api.polymarket.com/events?tag_slug=nhl&closed=false&limit=3",
+    "retrieved_at": "2026-09-21T04:12:00Z",
+    "method": "fetched with the Arena fetch tool (no key, no auth); development sandbox has no outbound network, CI does",
+    "completeness": "FIELD-PRESERVING EXCERPT. The response listed 3 open NHL events across 64 chunks; this file retains the first event with its first market only, and only the fields this project parses (prices, book, liquidity, volume, fee schedule, identifiers). Descriptive text fields (description, resolutionSource, images) were dropped at capture time. No retained value was edited.",
+    "why_it_matters": "Proves Polymarket's Gamma API is keyless and free and does list NHL markets with real quoted prices (bestBid 0.021 / bestAsk 0.022), real liquidity ($56,107 on this market, $2.06M on the event) and a published fee schedule (sports_fees_v2, rate 0.03, taker only) -- i.e. a second independent prediction-market price source to cross-check Kalshi against, and the fee figure its own execution model needs. Also proves the fee schedule is per-market data, not a guess."
+  },
+  "events": [
+    {
+      "id": "588160",
+      "ticker": "nhl-2027-champion-20260612185656162",
+      "slug": "nhl-2027-champion-20260612185656162",
+      "title": "NHL: 2027 Champion",
+      "startDate": "2026-06-12T19:43:46.737243Z",
+      "endDate": "2027-07-01T03:59:00Z",
+      "active": true,
+      "closed": false,
+      "liquidity": 2055211.64522,
+      "volume": 728956.6476050001,
+      "openInterest": 37396.49015500001,
+      "volume24hr": 1182.41,
+      "enableOrderBook": true,
+      "negRisk": true,
+      "updatedAt": "2026-09-21T04:10:20.648843Z",
+      "markets": [
+        {
+          "id": "2520276",
+          "question": "Will the Anaheim Ducks be named the 2026-27 NHL Stanley Cup Champion?",
+          "conditionId": "0xcfe564fe5e565d8d64124c73e4b4d06bb1475ce649027134ca110d1fe73f045e",
+          "slug": "will-the-anaheim-ducks-be-named-the-2026-27-nhl-stanley-cup-champion-20260612185657073",
+          "endDate": "2027-07-01T03:59:00Z",
+          "startDate": "2026-06-12T19:43:46.737243Z",
+          "liquidity": "56107.48476",
+          "volume": "24237.809822000003",
+          "outcomes": "[\"Yes\", \"No\"]",
+          "outcomePrices": "[\"0.0215\", \"0.9785\"]",
+          "active": true,
+          "closed": false,
+          "groupItemTitle": "Anaheim Ducks",
+          "questionID": "0x0448e4a55c004b09574e778c3540fcac8d373166b70b8d4b707427aa2e94ec00",
+          "enableOrderBook": true,
+          "orderPriceMinTickSize": 0.001,
+          "orderMinSize": 5,
+          "volumeNum": 24237.809822000003,
+          "liquidityNum": 56107.48476,
+          "volume24hr": 14.38,
+          "volume1wk": 2943.54,
+          "volume1mo": 4945.59,
+          "clobTokenIds": "[\"77180180469445154105037188312587313186766506757733070365580009549280079931400\", \"50142013833389204225188577789175791897160417550371701306351061957838604359264\"]",
+          "acceptingOrders": true,
+          "negRisk": true,
+          "spread": 0.001,
+          "lastTradePrice": 0.021,
+          "bestBid": 0.021,
+          "bestAsk": 0.022,
+          "feesEnabled": true,
+          "feeType": "sports_fees_v2",
+          "feeSchedule": {
+            "exponent": 1,
+            "rate": 0.03,
+            "takerOnly": true,
+            "rebateRate": 0.25
+          },
+          "createdAt": "2026-06-12T19:23:42.611725Z",
+          "updatedAt": "2026-09-21T04:09:58.159256Z"
+        }
+      ]
+    }
+  ]
+}

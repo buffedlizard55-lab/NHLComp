@@ -49,11 +49,51 @@ HIST_BASE = f"{BASE}/historical"
 CANDIDATE_SERIES = [
     "KXNHLGAME",        # observed: per-game NHL winner markets
     "KXNHLTOTAL",       # observed 2026-09-20: full-game total goals, one contract per strike
-    "KXNHLSPREAD",      # observed 2026-09-20: puck line, one contract per team+strike
+    "KXNHLSPREAD",      # observed 2026-09-21: puck line, one contract per team+strike
     "KXNHL1P",          # observed in the series list: 1st period winner
-    "KXNHLOVERTIME",    # observed in the series list: game goes to overtime
+    "KXNHLOVERTIME",    # observed 2026-09-21: game goes to overtime (historical tier)
     "KXNHL",            # observed: Stanley Cup futures
 ]
+
+#: Series this project actually walks for prices (quotes, settled contracts, candles).
+#: Each one is a market family with a settlement rule that can be checked against the
+#: NHL's official result, which is the bar for trading it.
+TRADED_SERIES = ("KXNHLGAME", "KXNHLTOTAL", "KXNHLSPREAD", "KXNHLOVERTIME")
+
+#: Series that exist in Kalshi's ``/series?category=Sports&tags=Hockey`` listing but had
+#: **no contracts at all** when they were last polled (2026-09-21, preseason; see
+#: ``data/captured/kalshi_unlisted_series_20260921.json``).  They are polled on every run
+#: so that the day the exchange lists them the prices are captured from that day forward;
+#: until then nothing is bet on them and no price for them is invented.
+WATCH_SERIES = ("KXNHL1P", "KXNHL2P", "KXNHL3P", "KXNHL1PTOTAL", "KXNHL2PTOTAL",
+                "KXNHL3PTOTAL", "KXNHL1PSPREAD", "KXNHL2OT", "KXNHLSAVES", "KXNHLGOAL",
+                "KXNHLANYGOAL", "KXNHLAST", "KXNHLPTS", "KXNHLFIRSTGOAL")
+
+#: Kalshi series -> this project's market vocabulary.  Built from the series listing the
+#: exchange itself publishes (81 hockey series recorded in ``kalshi_series``), so a new
+#: market family is named rather than silently defaulting to "moneyline".
+SERIES_MARKET_TYPE = {
+    "KXNHLGAME": "moneyline",
+    "KXNHLTOTAL": "total",
+    "KXNHLSPREAD": "puck_line",
+    "KXNHLOVERTIME": "overtime",
+    "KXNHL2OT": "overtime",
+    "KXNHL1P": "first_period",
+    "KXNHL2P": "second_period",
+    "KXNHL3P": "third_period",
+    "KXNHL1PTOTAL": "first_period_total",
+    "KXNHL2PTOTAL": "second_period_total",
+    "KXNHL3PTOTAL": "third_period_total",
+    "KXNHL1PSPREAD": "first_period_spread",
+    "KXNHL2PSPREAD": "second_period_spread",
+    "KXNHL3PSPREAD": "third_period_spread",
+    "KXNHLSAVES": "goalie_prop",
+    "KXNHLGOAL": "player_prop",
+    "KXNHLANYGOAL": "player_prop",
+    "KXNHLAST": "player_prop",
+    "KXNHLPTS": "player_prop",
+    "KXNHLFIRSTGOAL": "player_prop",
+}
 
 #: Kalshi team codes that differ from the NHL triCode.  Everything not listed here is
 #: assumed identical to the NHL abbreviation and is still validated against the teams
@@ -339,6 +379,21 @@ def normalize_candle(c: dict) -> dict[str, Any]:
     }
 
 
+def split_team_codes(raw: str) -> tuple[str, str] | None:
+    """Split a Kalshi team-code pair (``CARVGK``) into ``(away, home)``.
+
+    The split is validated against the NHL triCode list plus :data:`KALSHI_TEAM_ALIASES`.
+    Returns None when zero *or more than one* split is valid: picking one anyway would
+    attach a contract to the wrong game, and the caller always has the rules text to fall
+    back on.  This is the only place in the project that splits a code pair, so the
+    ticker parser and the ingest fallback cannot disagree about how it is done.
+    """
+    known = set(NHL_TRICODES) | set(KALSHI_TEAM_ALIASES)
+    hits = [(raw[:i], raw[i:]) for i in range(2, len(raw) - 1)
+            if raw[:i] in known and raw[i:] in known]
+    return hits[0] if len(hits) == 1 else None
+
+
 def parse_event_ticker(event_ticker: str) -> dict[str, Any] | None:
     """Decode ``KXNHLGAME-26JUN14CARVGK`` -> date + Kalshi team codes.
 
@@ -353,30 +408,63 @@ def parse_event_ticker(event_ticker: str) -> dict[str, Any] | None:
     if mon not in _MONTHS:
         return None
     date = f"{2000 + int(yy):04d}-{_MONTHS[mon]:02d}-{int(dd):02d}"
-    known = set(NHL_TRICODES) | set(KALSHI_TEAM_ALIASES)
-    splits = []
-    for i in range(2, len(rest) - 1):
-        a, b = rest[:i], rest[i:]
-        if a in known and b in known:
-            splits.append((a, b))
-    out = {"series": series, "game_date": date, "raw": rest, "ambiguous": len(splits) != 1}
-    if len(splits) == 1:
-        a, b = splits[0]
+    split = split_team_codes(rest)
+    out = {"series": series, "game_date": date, "raw": rest, "ambiguous": split is None}
+    if split is not None:
+        a, b = split
         out["away_code"], out["home_code"] = a, b
         out["away_abbrev"] = KALSHI_TEAM_ALIASES.get(a, a)
         out["home_abbrev"] = KALSHI_TEAM_ALIASES.get(b, b)
     return out
 
 
-def market_team_code(m: dict) -> str | None:
-    """The contract suffix (``...-CAR``) for team-winner style markets, else None."""
+def contract_suffix(m: dict) -> str | None:
+    """The part of a ticker after its event ticker (``KXNHLSPREAD-26SEP24UTAVGK-VGK3`` ->
+    ``VGK3``), or None when the ticker is not prefixed by its event ticker."""
     t = (m.get("ticker") or "")
     ev = (m.get("event_ticker") or "")
     if ev and t.startswith(ev + "-"):
-        suffix = t[len(ev) + 1:]
-        if suffix.isalpha():
-            return suffix
+        return t[len(ev) + 1:]
     return None
+
+
+#: Contract suffixes that look like a team code but are not one.  ``OT`` is the overtime
+#: series' own suffix (``KXNHLOVERTIME-26JUN14CARVGK-OT``, verified 2026-09-21).
+NON_TEAM_SUFFIXES = frozenset({"OT", "O", "U", "YES", "NO", "TIE", "OT2", "SO"})
+
+def market_team_code(m: dict) -> str | None:
+    """The team code in a contract suffix (``...-CAR`` -> ``CAR``, ``...-VGK3`` -> ``VGK``).
+
+    A suffix is a team code optionally followed by a **rung index**, and the rung index is
+    NOT the line.  Verified 2026-09-21 on KXNHLSPREAD: in the live tier ``-VGK3`` carries
+    ``floor_strike=2.5`` and ``-VGK2`` carries ``1.5``, while in the historical tier of the
+    same series ``-VGK2`` carries ``2.5`` and ``-VGK1`` carries ``1.5``.  The digit moves
+    with how many rungs the exchange listed for that event, so the line is read only from
+    ``floor_strike``/``strike_type`` and the digit is discarded here.
+
+    Returns None for a suffix that is not a team code at all (``-OT`` for the overtime
+    series, ``-O6`` style tokens, numeric-only suffixes), so a caller can never mistake
+    them for a side.
+    """
+    return suffix_team_code(contract_suffix(m))
+
+
+def suffix_team_code(suffix: str | None) -> str | None:
+    """The team code inside a stored contract suffix, with any rung index discarded.
+
+    Split out from :func:`market_team_code` so a row that already holds the suffix (the
+    ``rung`` column of ``market_settlements``) can be read without the original payload.
+    Same rule, same refusals: ``VGK3`` -> ``VGK``, ``OT`` -> None, ``O6`` -> None.
+    """
+    if not suffix:
+        return None
+    mm = re.match(r"^([A-Z]{2,5})\d*$", str(suffix).strip())
+    if not mm:
+        return None
+    code = mm.group(1)
+    if code in NON_TEAM_SUFFIXES:
+        return None
+    return code
 
 
 def normalize_market(m: dict, *, ts_utc: str, retrieved_at: str,
@@ -422,17 +510,28 @@ def normalize_market(m: dict, *, ts_utc: str, retrieved_at: str,
             # parsed out of a string that changes shape.
             "strike": _f(m, "floor_strike"),
             "strike_type": m.get("strike_type") or None,
+            # the team the contract names, from the exchange's own ticker suffix with the
+            # rung index stripped (see market_team_code).  A puck-line contract is quoted
+            # per team per rung, so which team it is belongs on the quote row; the line
+            # itself still comes only from floor_strike/strike_type.
+            "team_abbrev": KALSHI_TEAM_ALIASES.get(
+                market_team_code(m) or "", market_team_code(m)),
         })
     return rows
 
 
 def market_type_for(m: dict) -> str:
-    """Map a Kalshi series to this project's market vocabulary."""
+    """Map a Kalshi series to this project's market vocabulary (:data:`SERIES_MARKET_TYPE`).
+
+    An unrecognised series falls back to the exchange's own ``market_type`` rather than to
+    "moneyline": calling an unknown contract a moneyline is how a rule ends up trading an
+    instrument whose settlement it has never checked.
+    """
     ev = (m.get("event_ticker") or m.get("ticker") or "")
     series = ev.split("-", 1)[0]
-    return {"KXNHLGAME": "moneyline", "KXNHLTOTAL": "total", "KXNHLSPREAD": "puck_line",
-            "KXNHL1P": "first_period", "KXNHLOVERTIME": "overtime"}.get(
-        series, "moneyline" if m.get("market_type") == "binary" else (m.get("market_type") or "binary"))
+    if series in SERIES_MARKET_TYPE:
+        return SERIES_MARKET_TYPE[series]
+    return "moneyline" if m.get("market_type") == "binary" else (m.get("market_type") or "binary")
 
 
 def binary_price_to_decimal(price: float) -> float:

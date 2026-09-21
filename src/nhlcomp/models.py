@@ -105,6 +105,126 @@ def poisson_pmf(lam: float, k: int) -> float:
     return math.exp(-lam) * lam ** k / math.factorial(k)
 
 
+def p_margin_over(lam_home: float, lam_away: float, side: str, strike: float, *,
+                  max_goals: int = 12, ot_home_share: float = 0.55) -> float:
+    """P(``side`` wins by MORE THAN ``strike`` goals) -- the payoff of a Kalshi puck line.
+
+    KXNHLSPREAD contracts read "Vegas wins by over 1.5 goals" (``strike_type=greater``,
+    ``floor_strike=1.5``, verified 2026-09-21) and settle on the **final** result, so the
+    margin is the official final score's differential, overtime and shootout goals included.
+
+    Two regimes follow from that, and mixing them up is the easy way to overprice a
+    favourite:
+
+    * ``strike >= 1``: a game decided in overtime or a shootout has an official margin of
+      exactly one goal (the OT winner scores once; a shootout counts as one goal for the
+      winner), so it can never cover 1.5 or more.  Only the regulation score matrix
+      contributes.
+    * ``strike < 1`` (the 0.5 rung, "wins by over half a goal" = simply wins): the
+      regulation-tie mass matters, and it is split by the same OT winner share the
+      moneyline uses.
+
+    The truncated matrix is renormalised exactly as :func:`p_total_over` does, so the cover
+    / no-cover split is a proper partition.
+    """
+    if strike is None:
+        return float("nan")
+    total = 0.0
+    cover = 0.0
+    tie = 0.0
+    for i in range(max_goals + 1):
+        ph = poisson_pmf(lam_home, i)
+        for j in range(max_goals + 1):
+            w = ph * poisson_pmf(lam_away, j)
+            total += w
+            margin = (i - j) if side == "home" else (j - i)
+            if margin > strike:
+                cover += w
+            elif i == j:
+                tie += w
+    if total <= 0:
+        return float("nan")
+    cover /= total
+    tie /= total
+    if strike < 1.0:
+        cover += tie * (ot_home_share if side == "home" else (1.0 - ot_home_share))
+    return round(min(max(cover, 0.0), 1.0), 6)
+
+
+@dataclass
+class OtCalibration:
+    """A single fitted ratio that maps the Poisson tie mass onto the observed OT rate.
+
+    The independent-Poisson model's ``P(tie after regulation)`` is not automatically the
+    league's real rate of games that go past regulation: correlated scoring, score effects
+    (a trailing team pulls its goalie, a leading team defends a lead) and shootout-era rules
+    all move it.  Rather than assume the model is right, the ratio
+
+        ``scale = observed_rate_past_regulation / mean_modelled_p_tie``
+
+    is fitted on a **chronologically earlier** window only and applied to later games, so a
+    KXNHLOVERTIME wager is priced with a number that has been checked against results
+    instead of one that has not.  Everything needed to audit it is kept: the sample size,
+    both rates and the window it was fitted on.  With too little history ``scale`` stays at
+    1.0 and :attr:`sufficient` is False, so a caller can refuse to trade rather than bet a
+    calibration fitted on 12 games.
+    """
+
+    scale: float = 1.0
+    n: int = 0
+    observed_rate: float | None = None
+    model_mean: float | None = None
+    window: str = ""
+    min_n: int = 100
+    skipped: int = 0
+
+    @property
+    def sufficient(self) -> bool:
+        return self.n >= self.min_n and self.model_mean not in (None, 0.0)
+
+    def fit(self, rows: Sequence[dict[str, Any]], *, window: str = "") -> "OtCalibration":
+        """``rows`` must each carry a model tie probability and the game's official outcome.
+
+        Keys read: ``p_overtime``/``p_tie_reg`` (MODEL OUTPUT, computed from prior games
+        only) and ``_went_past_regulation`` (SOURCE: NHL ``lastPeriodType`` in OT/SO).  Rows
+        missing either are skipped and counted, never coerced.
+        """
+        ps: list[float] = []
+        ys: list[int] = []
+        skipped = 0
+        for r in rows:
+            p = r.get("p_overtime", r.get("p_tie_reg"))
+            y = r.get("_went_past_regulation")
+            if p is None or y is None:
+                skipped += 1
+                continue
+            ps.append(float(p))
+            ys.append(int(y))
+        self.n = len(ps)
+        self.window = window
+        if not ps:
+            self.observed_rate = self.model_mean = None
+            self.scale = 1.0
+            return self
+        self.observed_rate = round(sum(ys) / len(ys), 6)
+        self.model_mean = round(sum(ps) / len(ps), 6)
+        self.scale = (round(self.observed_rate / self.model_mean, 6)
+                      if self.sufficient and self.model_mean else 1.0)
+        self.skipped = skipped
+        return self
+
+    def apply(self, p_tie: float | None) -> float | None:
+        """Calibrated P(game goes past regulation); None in, None out (never 0)."""
+        if p_tie is None:
+            return None
+        return round(min(max(float(p_tie) * self.scale, 0.0), 0.999), 6)
+
+    def as_evidence(self) -> dict[str, Any]:
+        return {"scale": self.scale, "n": self.n, "observed_rate": self.observed_rate,
+                "model_mean_tie_prob": self.model_mean, "window": self.window,
+                "rows_skipped_missing_input": self.skipped, "sufficient": self.sufficient}
+
+
 def p_total_over(lam_home: float, lam_away: float, strike: float, *, max_goals: int = 12) -> float:
     """P(total goals > ``strike``) under independent Poisson scoring.
 
