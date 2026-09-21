@@ -104,6 +104,79 @@ function filterTable(id, q, cols){
     r.style.display = hay.toLowerCase().includes(q)?'':'none';
   }
 }
+// Multi-field filtering: strategy, market, team, player, goalie, season, month, metrics
+const activeFilters = {};
+function applyFilters(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const f = activeFilters[id] || {};
+  if(el.tagName==='TABLE'){
+    for(const r of el.tBodies[0].rows){
+      let show = true;
+      if(f.q){
+        let hay='';
+        for(let i=0;i<r.cells.length;i++) hay+=' '+(r.cells[i].textContent||'');
+        if(!hay.toLowerCase().includes(f.q.toLowerCase())) show=false;
+      }
+      for(const k of ['strategy','market','team','player','goalie','season','month','category','status','mode']){
+        if(f[k] && f[k]!==''){
+          const v = (r.dataset[k]||'').toLowerCase();
+          if(!v.includes(f[k].toLowerCase())) show=false;
+        }
+      }
+      if(f.min_roi!==undefined && f.min_roi!==''){
+        const roi = parseFloat(r.dataset.roi||'');
+        if(!isNaN(roi) && roi < parseFloat(f.min_roi)) show=false;
+      }
+      if(f.min_pnl!==undefined && f.min_pnl!==''){
+        const pnl = parseFloat(r.dataset.pnl||'');
+        if(!isNaN(pnl) && pnl < parseFloat(f.min_pnl)) show=false;
+      }
+      if(f.min_edge!==undefined && f.min_edge!==''){
+        const ed = parseFloat(r.dataset.edge||'');
+        if(!isNaN(ed) && ed < parseFloat(f.min_edge)) show=false;
+      }
+      r.style.display = show?'':'none';
+    }
+    return;
+  }
+  for(const d of el.querySelectorAll('details')){
+    let show = true;
+    if(f.q){
+      const hay = (d.textContent||'').toLowerCase();
+      if(!hay.includes(f.q.toLowerCase())) show=false;
+    }
+    for(const k of ['strategy','market','team','player','goalie','season','month','category','status','mode']){
+      if(f[k] && f[k]!==''){
+        const v = (d.dataset[k]||'').toLowerCase();
+        const hay2 = (d.textContent||'').toLowerCase();
+        if(!v.includes(f[k].toLowerCase()) && !hay2.includes(f[k].toLowerCase())) show=false;
+      }
+    }
+    d.style.display = show?'':'none';
+  }
+}
+function setFilter(id, key, val){
+  if(!activeFilters[id]) activeFilters[id]={};
+  activeFilters[id][key]=val;
+  applyFilters(id);
+}
+function setTextFilter(id, val){
+  if(!activeFilters[id]) activeFilters[id]={};
+  activeFilters[id].q=val;
+  applyFilters(id);
+}
+function clearFilters(id){
+  activeFilters[id]={};
+  const c=document.getElementById(id+'_controls');
+  if(c){
+    for(const el of c.querySelectorAll('input,select')) el.value='';
+  }
+  applyFilters(id);
+}
+function filterCategory(id, v){
+  setFilter(id,'category',v);
+}
 """
 
 
@@ -357,51 +430,81 @@ def page_leaderboard(store: Store, perf: Performance, gen: str) -> str:
             'official result. <b>Backtest</b> is the same rules replayed against the recovered '
             'Kalshi closing candles (flat historical evidence, not live performance). Win rate is '
             'always paired with its 95% Wilson interval — a 3-bet sample proves nothing. Click any '
-            'header to sort; click a username for its wagers.</p>']
+            'header to sort; click a username for its wagers. Filters combine with AND: '
+            'strategy, market, team, player, goalie, season, month, metrics.</p>']
     for mode, tid, title in (("FORWARD TEST", "lb", "Forward test (live paper trading)"),
                              ("BACKTEST", "lbb", "Backtest (Kalshi closing candles, net of fees)")):
         rows_data = perf.leaderboard(test_mode=mode)
         cats = sorted({r["category"] for r in rows_data})
+        markets = sorted({(r.get("markets") or r.get("market") or "") for r in rows_data if (r.get("markets") or r.get("market"))})
         body.append(f"<h2>{e(title)}</h2>")
-        body.append(f'<div class="controls"><input placeholder="filter by username or category…" '
-                    f'oninput="filterTable(\'{tid}\', this.value)">'
-                    f'<select onchange="filterCategory(\'{tid}\', this.value)">'
-                    f'<option value="">all categories</option>'
-                    + "".join(f'<option value="{e(c)}">{e(c)}</option>' for c in cats) + "</select></div>")
-        rows = []
+        body.append(
+            f"<div class=\"controls\" id=\"{tid}_controls\">"
+            f"<input placeholder=\"search username...\" oninput=\"setTextFilter('{tid}', this.value)\">"
+            f"<select onchange=\"setFilter('{tid}','category',this.value)\"><option value=\"\">all categories</option>"
+            + "".join(f'<option value="{e(c)}">{e(c)}</option>' for c in cats) + "</select>"
+            f"<select onchange=\"setFilter('{tid}','market',this.value)\"><option value=\"\">all markets</option>"
+            + "".join(f'<option value="{e(m)}">{e(m)}</option>' for m in markets[:20]) + "</select>"
+            f"<select onchange=\"setFilter('{tid}','status',this.value)\"><option value=\"\">all statuses</option>"
+            f"<option value=\"active\">active</option><option value=\"retired\">retired</option></select>"
+            f"<input placeholder=\"min ROI (e.g. -0.1)\" style=\"width:130px\" oninput=\"setFilter('{tid}','min_roi',this.value)\">"
+            f"<input placeholder=\"min P&L\" style=\"width:100px\" oninput=\"setFilter('{tid}','min_pnl',this.value)\">"
+            f"<button onclick=\"clearFilters('{tid}')\">clear</button>"
+            f"</div>")
+        rows_html = []
         for r in rows_data:
-            rows.append([str(r["rank"]),
-                         f'<a href="strategies.html#{e(r["strategy_id"])}">{e(r["username"])}</a>',
-                         e(r["category"]), e(r["status"]), str(r["n_bets"]), str(r["n_settled"]),
-                         str(r["wins"]), str(r["losses"]), str(r["pushes"]), str(r["open"]),
-                         signed(r["pnl"]), n(r["staked"]), pct(r["roi"]), pct(r["win_rate"]),
-                         f'{pct(r["win_rate_ci"][0], 1)}–{pct(r["win_rate_ci"][1], 1)}',
-                         n(r["avg_price"], 3), n(r["avg_edge"], 4), n(r["max_drawdown"]),
-                         n(r["volatility"]), str(r["longest_losing_streak"]),
-                         pct(r["clv_beat_close"]), n(r["clv_avg"], 4), str(r["n_clv"]),
-                         n(r["starting_bankroll"], 0), n(r["bankroll"])])
-        body.append(_table(tid, ["#", "Username", "Category", "Status", "Bets", "Settled", "W", "L",
-                                 "Push", "Open", "P&L", "Staked", "ROI", "Win rate", "95% CI",
-                                 "Avg price", "Avg edge", "Max DD", "Volatility", "Worst streak",
-                                 "Beat close", "Avg CLV", "n CLV", "Start bank", "Bankroll"],
-                           rows, numeric=tuple(i for i in range(25) if i not in (1, 2, 3))))
+            cat = (r["category"] or "").lower()
+            mkt = (r.get("markets") or r.get("market") or "").lower()
+            strat = (r["strategy_id"] or "").lower()
+            status = (r["status"] or "").lower()
+            pnl = r["pnl"] or 0
+            roi = r["roi"] or 0
+            rows_html.append(
+                f'<tr data-category="{e(cat)}" data-market="{e(mkt)}" data-strategy="{e(strat)}" '
+                f'data-status="{e(status)}" data-pnl="{pnl}" data-roi="{roi}">'
+                f'<td class="num">{r["rank"]}</td>'
+                f'<td><a href="strategies.html#{e(r["strategy_id"])}">{e(r["username"])}</a></td>'
+                f'<td>{e(r["category"])}</td><td>{e(r["status"])}</td>'
+                f'<td class="num">{r["n_bets"]}</td><td class="num">{r["n_settled"]}</td>'
+                f'<td class="num">{r["wins"]}</td><td class="num">{r["losses"]}</td><td class="num">{r["pushes"]}</td><td class="num">{r["open"]}</td>'
+                f'<td class="num">{signed(r["pnl"])}</td><td class="num">{n(r["staked"])}</td><td class="num">{pct(r["roi"])}</td><td class="num">{pct(r["win_rate"])}</td>'
+                f'<td class="num">{pct(r["win_rate_ci"][0],1)}–{pct(r["win_rate_ci"][1],1)}</td>'
+                f'<td class="num">{n(r["avg_price"],3)}</td><td class="num">{n(r["avg_edge"],4)}</td><td class="num">{n(r["max_drawdown"])}</td>'
+                f'<td class="num">{n(r["volatility"])}</td><td class="num">{r["longest_losing_streak"]}</td>'
+                f'<td class="num">{pct(r["clv_beat_close"])}</td><td class="num">{n(r["clv_avg"],4)}</td><td class="num">{r["n_clv"]}</td>'
+                f'<td class="num">{n(r["starting_bankroll"],0)}</td><td class="num">{n(r["bankroll"])}</td>'
+                f'</tr>')
+        ths = "".join(
+            f'<th class="{"num" if i not in (1,2,3) else ""}" onclick="sortTable(\'{tid}\',{i},\'{"n" if i not in (1,2,3) else "s"}\')">{e(h)}</th>'
+            for i, h in enumerate(["#", "Username", "Category", "Status", "Bets", "Settled", "W", "L", "Push", "Open", "P&L", "Staked", "ROI", "Win rate", "95% CI", "Avg price", "Avg edge", "Max DD", "Volatility", "Worst streak", "Beat close", "Avg CLV", "n CLV", "Start bank", "Bankroll"]))
+        body.append(f'<div class="wrap"><table id="{tid}"><thead><tr>{ths}</tr></thead><tbody>{"".join(rows_html) or "<tr><td colspan=25>No rows</td></tr>"}</tbody></table></div>')
         if mode == "BACKTEST":
-            body.append('<p class="small">Backtest bankroll columns are informational: BACKTEST '
-                        'P&amp;L never funds a forward stake.</p>')
-    body.append("""<script>
-function filterCategory(id, v){
-  const t=document.getElementById(id);
-  for(const r of t.tBodies[0].rows)
-    r.style.display = (!v || r.cells[2].textContent===v)?'':'none';
-}
-</script>""")
+            body.append('<p class="small">Backtest bankroll columns are informational: BACKTEST P&amp;L never funds a forward stake.</p>')
     return _page("Leaderboard", "leaderboard.html", "".join(body), gen)
+
 
 
 def page_strategies(store: Store, perf: Performance, gen: str) -> str:
     parts = ["<h2>Strategies</h2>",
              '<p class="small">Strategies are never overwritten — every change creates a new '
-             'version so an edit can be judged on whether it actually helped.</p>']
+             'version so an edit can be judged on whether it actually helped. Filters: strategy, market, team, player, goalie, season, month, metrics.</p>',
+             '<div class="controls" id="strat_controls">'
+             '<input placeholder="search strategies..." oninput="setTextFilter(\'strat_list\', this.value)" style="width:260px">'
+             '<select onchange="setFilter(\'strat_list\',\'category\',this.value)"><option value="">all categories</option>'
+             '<option value="fatigue">fatigue</option><option value="goaltending">goaltending</option><option value="special_teams">special_teams</option>'
+             '<option value="totals">totals</option><option value="puck_line">puck_line</option><option value="ot_shootout">ot_shootout</option>'
+             '<option value="period">period</option><option value="team_totals">team_totals</option><option value="regulation">regulation</option>'
+             '<option value="player_props">player_props</option><option value="goalie_props">goalie_props</option><option value="futures">futures</option>'
+             '<option value="alternate_lines">alternate_lines</option><option value="live_in_game">live</option><option value="market">market</option>'
+             '</select>'
+             '<select onchange="setFilter(\'strat_list\',\'market\',this.value)"><option value="">all markets</option>'
+             '<option value="moneyline">moneyline</option><option value="total">total</option><option value="puck_line">puck_line</option>'
+             '<option value="overtime">overtime</option><option value="period">period</option><option value="team_total">team_total</option>'
+             '<option value="regulation">regulation</option><option value="player">player</option><option value="goalie">goalie</option>'
+             '<option value="futures">futures</option><option value="alternate">alternate</option></select>'
+             '<button onclick="clearFilters(\'strat_list\')">clear</button>'
+             '</div>',
+             '<div id="strat_list">']
     for s in store.query("SELECT * FROM strategies ORDER BY strategy_id, version"):
         key = f"{s['strategy_id']}_v{s['version']}"
         summ = perf.summarize(s["strategy_id"], int(s["version"]))
@@ -410,7 +513,7 @@ def page_strategies(store: Store, perf: Performance, gen: str) -> str:
         b = summ.get("BACKTEST", {})
         pill = {"active": "good", "candidate": "info", "paused": "warn",
                 "retired": "bad", "rejected": "bad"}.get(s["status"], "info")
-        parts.append(f"""<details id="{e(s['strategy_id'])}"><summary>
+        parts.append(f"""<details id="{e(s['strategy_id'])}" data-category="{e(s['category'])}" data-market="{e(s['markets'])}" data-strategy="{e(s['strategy_id'])}"><summary>
 <span class="pill {pill}">{e(s['status'])}</span> <b>{e(s['username'])}</b>
 <span class="mut">{e(s['strategy_id'])} v{s['version']} · {e(s['category'])} ·
 origin {e(s['origin'])}</span></summary>
@@ -471,6 +574,7 @@ ROI {pct(b.get('roi'))}</td></tr>
                          f'<code>data/bets.json</code> and the SQLite database.</p>')
         parts.append(_bets_table(f"bets_{key}", bets))
         parts.append("</details>")
+    parts.append("</div>")
     return _page("Strategies", "strategies.html", "".join(parts), gen)
 
 
@@ -482,20 +586,48 @@ def _ratio(a: Any, b: Any) -> float | None:
 
 
 def _bets_table(id_: str, bets: Sequence[Any]) -> str:
-    rows = []
+    rows_html = []
     for b in bets:
-        rows.append([e(b["bet_id"])[:52], e(b["test_mode"]), e(b["game_date"]), e(b["matchup"]),
-                     e(b["market"]), e(b["selection"]), e(b["provider"]), n(b["price"], 3),
-                     e(_col(b, "price_point") or ""), n(b["model_prob"], 4), n(b["edge"], 4),
-                     n(b["stake"]), n(b["filled_size"], 2), n(b["liquidity"], 0),
-                     n(_col(b, "fee"), 2), e(b["result"]), signed(b["pnl"]), pct(b["roi"]),
-                     n(b["close_price"], 3), n(b["clv"], 4), e(b["verification_status"]),
-                     e(b["decision_ts"])[:19], e(b["bet_ts"])])
-    return _table(id_, ["Bet ID", "Mode", "Game", "Matchup", "Market", "Selection", "Provider",
-                        "Price", "Price point", "Model p", "Edge", "Stake", "Contracts", "Liquidity",
-                        "Fee", "Result", "P&L", "ROI", "Close", "CLV", "Verification",
-                        "Decision ts", "Placed"], rows,
-                  numeric=(7, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19))
+        try:
+            game_date = str(b["game_date"] or "")
+            season = game_date[:4] if len(game_date)>=4 else ""
+            month = game_date[5:7] if len(game_date)>=7 else ""
+        except Exception:
+            game_date = ""
+            season = ""
+            month = ""
+        market = (b["market"] or "").lower()
+        matchup = (b["matchup"] or "").lower()
+        team = matchup
+        strategy = (b["strategy_id"] or "").lower()
+        mode = (b["test_mode"] or "").lower()
+        player = ""
+        goalie = ""
+        pnl = b["pnl"] or 0
+        roi = b["roi"] or 0
+        edge = b["edge"] or 0
+        price = b["price"] or 0
+        rows_html.append(
+            f'<tr data-strategy="{e(strategy)}" data-market="{e(market)}" data-team="{e(team)}" '
+            f'data-player="{e(player)}" data-goalie="{e(goalie)}" data-season="{e(season)}" data-month="{e(month)}" '
+            f'data-mode="{e(mode)}" data-pnl="{pnl}" data-roi="{roi}" data-edge="{edge}" data-price="{price}">'
+            f'<td>{e(b["bet_id"])[:52]}</td>'
+            f'<td>{e(b["test_mode"])}</td><td>{e(b["game_date"])}</td><td>{e(b["matchup"])}</td>'
+            f'<td>{e(b["market"])}</td><td>{e(b["selection"])}</td><td>{e(b["provider"])}</td>'
+            f'<td class="num">{n(b["price"],3)}</td>'
+            f'<td>{e(_col(b, "price_point") or "")}</td>'
+            f'<td class="num">{n(b["model_prob"],4)}</td><td class="num">{n(b["edge"],4)}</td>'
+            f'<td class="num">{n(b["stake"])}</td><td class="num">{n(b["filled_size"],2)}</td><td class="num">{n(b["liquidity"],0)}</td>'
+            f'<td class="num">{n(_col(b, "fee"),2)}</td><td>{e(b["result"])}</td><td class="num">{signed(b["pnl"])}</td><td class="num">{pct(b["roi"])}</td>'
+            f'<td class="num">{n(b["close_price"],3)}</td><td class="num">{n(b["clv"],4)}</td><td>{e(b["verification_status"])}</td>'
+            f'<td>{e(b["decision_ts"])[:19]}</td><td>{e(b["bet_ts"])}</td>'
+            f'</tr>')
+    headers = ["Bet ID", "Mode", "Game", "Matchup", "Market", "Selection", "Provider",
+               "Price", "Price point", "Model p", "Edge", "Stake", "Contracts", "Liquidity",
+               "Fee", "Result", "P&L", "ROI", "Close", "CLV", "Verification",
+               "Decision ts", "Placed"]
+    ths = "".join(f'<th class="{"num" if i in (7,9,10,11,12,13,14,16,17,18,19) else ""}" onclick="sortTable(\'{id_}\',{i},\'{"n" if i in (7,9,10,11,12,13,14,16,17,18,19) else "s"}\')">{e(h)}</th>' for i,h in enumerate(headers))
+    return f'<div class="wrap"><table id="{id_}"><thead><tr>{ths}</tr></thead><tbody>{"".join(rows_html) or f"<tr><td colspan={len(headers)}>No rows yet.</td></tr>"}</tbody></table></div>' 
 
 
 def _col(row: Any, name: str) -> Any:
@@ -509,16 +641,30 @@ def page_upcoming(store: Store, gen: str) -> str:
     body = ["<h2>Upcoming strategy bets</h2>",
             '<p class="small">Every signal a strategy currently wants to act on, including the '
             'ones it is blocked on. A status of PRICE TOO HIGH means the model likes the side '
-            'but the offer is not good enough — the strategy waits instead of chasing.</p>',
-            '<div class="controls"><input placeholder="filter…" '
-            'oninput="filterTable(\'up\', this.value)"></div>']
-    rows = []
-    # the latest live version per strategy, so a signal left behind by a retired version is
-    # visibly historical instead of reading like a current claim
+            'but the offer is not good enough — the strategy waits instead of chasing. '
+            'Filters: strategy, market, team, player, goalie, season, month, metrics (combine with AND).</p>']
+    body.append(
+        '<div class="controls" id="up_controls">'
+        '<input placeholder="search..." oninput="setTextFilter(\'up\', this.value)">'
+        '<select onchange="setFilter(\'up\',\'market\',this.value)"><option value="">all markets</option>'
+        '<option value="moneyline">moneyline</option><option value="total">total</option><option value="puck_line">puck_line</option>'
+        '<option value="overtime">overtime</option><option value="period">period</option><option value="team_total">team_total</option>'
+        '<option value="regulation">regulation</option><option value="player">player</option><option value="goalie">goalie</option>'
+        '<option value="futures">futures</option><option value="alternate">alternate</option></select>'
+        '<select onchange="setFilter(\'up\',\'status\',this.value)"><option value="">all statuses</option>'
+        '<option value="READY TO BET">READY TO BET</option><option value="PRICE TOO HIGH">PRICE TOO HIGH</option>'
+        '<option value="WATCHING">WATCHING</option><option value="WAITING FOR">WAITING</option></select>'
+        '<input placeholder="team id or matchup" style="width:140px" oninput="setFilter(\'up\',\'team\',this.value)">'
+        '<input placeholder="season YYYY" style="width:110px" oninput="setFilter(\'up\',\'season\',this.value)">'
+        '<input placeholder="month MM" style="width:90px" oninput="setFilter(\'up\',\'month\',this.value)">'
+        '<input placeholder="min edge" style="width:90px" oninput="setFilter(\'up\',\'min_edge\',this.value)">'
+        '<button onclick="clearFilters(\'up\')">clear</button>'
+        '</div>')
     latest = {int(r["version"]): r["strategy_id"] for r in store.query(
         "SELECT strategy_id, MAX(version) version FROM strategies GROUP BY strategy_id")}
     status_of = {(r["strategy_id"], int(r["version"])): r["status"] for r in store.query(
         "SELECT strategy_id, version, status FROM strategies")}
+    rows_html = []
     for u in store.query("SELECT * FROM upcoming_bets ORDER BY decision_ts DESC LIMIT 1000"):
         pill = {"READY TO BET": "good", "EXECUTED": "good", "PRICE TOO HIGH": "warn",
                 "PRICE TOO LOW": "warn", "WATCHING": "info", "CANCELLED": "bad",
@@ -528,17 +674,29 @@ def page_upcoming(store: Store, gen: str) -> str:
         vstat = status_of.get((sid, ver), "?")
         version_cell = (f'v{ver} <span class="pill {"bad" if superseded else "info"}">'
                         f'{"superseded" if superseded else e(vstat)}</span>')
-        rows.append([e(u["username"]), e(version_cell), e(u["game_date"]), e(u["matchup"]),
-                     e(u["market"]), e(u["selection"]), e(u["provider"]),
-                     n(u["current_price"], 3),
-                     n(u["required_price"], 3), n(u["model_prob"], 4), n(u["edge"], 4),
-                     n(u["stake"]), f'<span class="pill {pill}">{e(u["status"])}</span>',
-                     e(u["blocking_reason"]), e(u["supporting_data"])[:300], e(u["decision_ts"])])
-    body.append(_table("up", ["Username", "Version", "Game", "Matchup", "Market", "Selection",
-                              "Provider", "Current price", "Required price", "Model p", "Edge",
-                              "Stake", "Status", "Blocking reason", "Supporting data",
-                              "Decision ts"],
-                       rows, numeric=(7, 8, 9, 10, 11)))
+        gd = str(u["game_date"] or "")
+        season = gd[:4] if len(gd)>=4 else ""
+        month = gd[5:7] if len(gd)>=7 else ""
+        market = (u["market"] or "").lower()
+        matchup = (u["matchup"] or "").lower()
+        strategy = (u["strategy_id"] or "").lower()
+        status = (u["status"] or "").lower()
+        edge = u["edge"] or 0
+        rows_html.append(
+            f'<tr data-strategy="{e(strategy)}" data-market="{e(market)}" data-team="{e(matchup)}" '
+            f'data-season="{e(season)}" data-month="{e(month)}" data-status="{e(status)}" data-edge="{edge}">'
+            f'<td>{e(u["username"])}</td><td>{version_cell}</td><td>{e(u["game_date"])}</td><td>{e(u["matchup"])}</td>'
+            f'<td>{e(u["market"])}</td><td>{e(u["selection"])}</td><td>{e(u["provider"])}</td>'
+            f'<td class="num">{n(u["current_price"],3)}</td>'
+            f'<td class="num">{n(u["required_price"],3)}</td><td class="num">{n(u["model_prob"],4)}</td><td class="num">{n(u["edge"],4)}</td>'
+            f'<td class="num">{n(u["stake"])}</td><td><span class="pill {pill}">{e(u["status"])}</span></td>'
+            f'<td>{e(u["blocking_reason"])}</td><td>{e(u["supporting_data"])[:300]}</td><td>{e(u["decision_ts"])}</td>'
+            f'</tr>')
+    headers = ["Username", "Version", "Game", "Matchup", "Market", "Selection",
+               "Provider", "Current price", "Required price", "Model p", "Edge",
+               "Stake", "Status", "Blocking reason", "Supporting data", "Decision ts"]
+    ths = "".join(f'<th class="{"num" if i in (7,8,9,10,11) else ""}" onclick="sortTable(\'up\',{i},\'{"n" if i in (7,8,9,10,11) else "s"}\')">{e(h)}</th>' for i,h in enumerate(headers))
+    body.append(f'<div class="wrap"><table id="up"><thead><tr>{ths}</tr></thead><tbody>{"".join(rows_html) or "<tr><td colspan=16>No signals</td></tr>"}</tbody></table></div>')
     body.append('<p class="small">Signals are never deleted. A row marked <b>superseded</b> was '
                 'written by an older version of that strategy; it stays in the record with the '
                 'reason it carried at the time, and only the latest version trades.</p>')
@@ -567,9 +725,23 @@ def page_positions(store: Store, gen: str) -> str:
 def page_history(store: Store, gen: str) -> str:
     body = ["<h2>Trade history</h2>",
             '<p class="small">Append-only. Corrections are never made in place — they are '
-            'written as amendments with a before/after audit row.</p>',
-            '<div class="controls"><input placeholder="filter by id, team, mode…" '
-            'oninput="filterTable(\'th\', this.value)"></div>']
+            'written as amendments with a before/after audit row. Filters combine with AND: '
+            'strategy, market, team, player, goalie, season, month, metrics.</p>',
+            '<div class="controls" id="th_controls">'
+            '<input placeholder="search..." oninput="setTextFilter(\'th\', this.value)">'
+            '<select onchange="setFilter(\'th\',\'market\',this.value)"><option value="">all markets</option>'
+            '<option value="moneyline">moneyline</option><option value="total">total</option><option value="puck_line">puck_line</option>'
+            '<option value="overtime">overtime</option><option value="period">period</option><option value="team_total">team_total</option>'
+            '<option value="regulation">regulation</option><option value="player">player</option><option value="goalie">goalie</option>'
+            '<option value="futures">futures</option><option value="alternate">alternate</option></select>'
+            '<select onchange="setFilter(\'th\',\'mode\',this.value)"><option value="">all modes</option><option value="BACKTEST">BACKTEST</option><option value="FORWARD">FORWARD</option></select>'
+            '<input placeholder="team/matchup" style="width:130px" oninput="setFilter(\'th\',\'team\',this.value)">'
+            '<input placeholder="strategy id" style="width:130px" oninput="setFilter(\'th\',\'strategy\',this.value)">'
+            '<input placeholder="season YYYY" style="width:100px" oninput="setFilter(\'th\',\'season\',this.value)">'
+            '<input placeholder="month MM" style="width:80px" oninput="setFilter(\'th\',\'month\',this.value)">'
+            '<input placeholder="min ROI" style="width:90px" oninput="setFilter(\'th\',\'min_roi\',this.value)">'
+            '<button onclick="clearFilters(\'th\')">clear</button>'
+            '</div>']
     bets = store.query("SELECT * FROM bets ORDER BY bet_ts DESC LIMIT 1500")
     total = store.one("SELECT COUNT(*) c FROM bets")["c"]
     if total > len(bets):

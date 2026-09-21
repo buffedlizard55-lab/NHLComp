@@ -77,15 +77,20 @@ class Verifier:
                 counts["bad_season"] += 1
                 self.store.flag("impossible_season", f"game {gid} season {g['season']}",
                                 entity_type="game", entity_id=gid, severity="warn")
+        # Preseason split-squad doubleheaders legitimately have same date and
+        # matchup but different start times (e.g. 2024-09-22 18:00 vs 22:00, same
+        # venue). Grouping only by date+teams flagged those as duplicates (2 rows
+        # in the 2026-09-20 ledger). Group by start_time_utc as well so only
+        # truly identical scheduled starts are flagged.
         dup = self.store.query(
-            """SELECT game_date, home_id, away_id, COUNT(*) c FROM games
-               GROUP BY game_date, home_id, away_id HAVING c > 1""")
+            """SELECT game_date, home_id, away_id, start_time_utc, COUNT(*) c FROM games
+               GROUP BY game_date, home_id, away_id, start_time_utc HAVING c > 1""")
         for d in dup:
             counts["duplicate"] += 1
             self.store.flag("duplicate_game",
-                            f"{d['game_date']} {d['away_id']}@{d['home_id']} appears {d['c']} times",
+                            f"{d['game_date']} {d['away_id']}@{d['home_id']} at {d['start_time_utc']} appears {d['c']} times",
                             entity_type="game", entity_id=f"{d['game_date']}:{d['home_id']}:"
-                                                           f"{d['away_id']}", severity="warn")
+                                                           f"{d['away_id']}:{d['start_time_utc']}", severity="warn")
         return counts
 
     # ------------------------------------------------------------------ bets

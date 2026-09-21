@@ -5,19 +5,19 @@
   "missing_result": 0,
   "tied_final": 0,
   "impossible_score": 0,
-  "duplicate": 2,
+  "duplicate": 0,
   "bad_season": 0
  },
  "bets": {
   "impossible_odds": 0,
   "missing_timestamp": 0,
   "bad_pnl": 0,
-  "duplicate_bet": 64,
+  "duplicate_bet": 0,
   "stake_exceeds_bankroll": 0,
   "unmapped": 0
  },
  "totals_bets": {
-  "totals_bets": 226,
+  "totals_bets": 96,
   "totals_missing_strike": 0
  },
  "quotes": {
@@ -67,13 +67,13 @@
   "puck_line_missing_strike": 0,
   "overtime_bets": 0,
   "overtime_unmapped_selection": 0,
-  "bets_on_declared_depth_cap": 1,
+  "bets_on_declared_depth_cap": 2,
   "bets_by_depth_basis": {
-   "declared_cap_no_published_size": 1,
-   "published_offer_size": 3,
-   "traded_volume_at_entry_candle": 45
+   "traded_volume_at_entry_candle": 3091,
+   "published_offer_size": 79,
+   "declared_cap_no_published_size": 2
   },
-  "no_side_bets": 1
+  "no_side_bets": 2
  },
  "period_goals": {
   "games_with_period_scores": 184,
@@ -2307,5 +2307,5 @@
   "max_age_minutes": 30.0,
   "finding": "100 like-for-like price comparison(s) ({'moneyline': 20, 'total': 80}), 0 of them within 30 minutes and 100 recorded as stale; 0 disagreement(s) over 0.05 dollars. Unmatched: {'no_kalshi_quote_for_moneyline': 49, 'no_kalshi_quote_for_total': 168, 'team_nickname_not_mapped:Utah': 3}."
  },
- "open_irregularities": 74
+ "open_irregularities": 3
 }
