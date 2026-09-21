@@ -10,6 +10,7 @@
 [ingest] kalshi.historical: reachable (200) https://api.elections.kalshi.com/trade-api/v2/historical/cutoff
 [ingest] kalshi.settled_markets: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=3&status=settled
 [ingest] espn.nhl_api: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries
+[ingest] espn.nhl_scoreboard: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20251115&limit=1
 [ingest] openmeteo.archive: reachable (200) https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-73.99&current=temperature_2m
 [ingest] moneypuck.downloads: reachable (200) https://moneypuck.com/data.htm
 {
@@ -76,6 +77,11 @@
   "status_code": 200,
   "verdict": "reachable",
   "url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries"
+ },
+ "espn.nhl_scoreboard": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20251115&limit=1"
  },
  "openmeteo.archive": {
   "status_code": 200,

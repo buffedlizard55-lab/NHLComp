@@ -94,8 +94,9 @@ class IngestExtensions:
                                               ask_before, volume, open_interest, open_time,
                                               settlement_ts, retrieved_at, source_url,
                                               series_ticker, tier, floor_strike, close_time,
-                                              title, occurrence_datetime, team_abbrev, market_type)
-               VALUES('kalshi',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                                              title, occurrence_datetime, team_abbrev,
+                                              market_type, strike_type)
+               VALUES('kalshi',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                ON CONFLICT(provider, contract, side) DO UPDATE SET
                  result=excluded.result, settle_price=excluded.settle_price,
                  price_before=excluded.price_before, bid_before=excluded.bid_before,
@@ -106,7 +107,7 @@ class IngestExtensions:
                  floor_strike=excluded.floor_strike, close_time=excluded.close_time,
                  title=excluded.title, occurrence_datetime=excluded.occurrence_datetime,
                  team_abbrev=COALESCE(excluded.team_abbrev, market_settlements.team_abbrev),
-                 market_type=excluded.market_type,
+                 market_type=excluded.market_type, strike_type=excluded.strike_type,
                  settlement_ts=COALESCE(excluded.settlement_ts, market_settlements.settlement_ts)""",
             (m.get("event_ticker"), ticker, game_id,
              (m.get("occurrence_datetime") or "")[:10] or (parsed or {}).get("game_date"),
@@ -117,7 +118,8 @@ class IngestExtensions:
              m.get("open_time"), m.get("settlement_ts"), ts, source_url,
              (m.get("event_ticker") or "").split("-", 1)[0] or None, tier,
              _f(m.get("floor_strike")), m.get("close_time"), m.get("title"),
-             m.get("occurrence_datetime"), team_abbrev, market_type_for(m)))
+             m.get("occurrence_datetime"), team_abbrev, market_type_for(m),
+             m.get("strike_type") or None))
         return game_id
 
     def kalshi_history(self, *, series: str = "KXNHLGAME", max_calls: int = 1500,

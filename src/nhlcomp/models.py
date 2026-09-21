@@ -105,6 +105,32 @@ def poisson_pmf(lam: float, k: int) -> float:
     return math.exp(-lam) * lam ** k / math.factorial(k)
 
 
+def p_total_over(lam_home: float, lam_away: float, strike: float, *, max_goals: int = 12) -> float:
+    """P(total goals > ``strike``) under independent Poisson scoring.
+
+    Kalshi's KXNHLTOTAL contracts are "Over k.5 goals" (``strike_type=greater``,
+    ``floor_strike=k.5``), so this is exactly the quantity the YES side pays on.  The
+    half-goal strikes the exchange lists mean the distribution needs no push handling: a
+    total is either above or below.  The truncated matrix (0..max_goals per team) is
+    renormalised, the same way :meth:`PoissonModel.predict` does it, so the over/under
+    split is a proper partition.
+    """
+    if strike is None:
+        return float("nan")
+    total = 0.0
+    over = 0.0
+    for i in range(max_goals + 1):
+        ph = poisson_pmf(lam_home, i)
+        for j in range(max_goals + 1):
+            w = ph * poisson_pmf(lam_away, j)
+            total += w
+            if i + j > strike:
+                over += w
+    if total <= 0:
+        return float("nan")
+    return round(over / total, 6)
+
+
 @dataclass
 class PoissonModel:
     """Independent-Poisson goal model with an explicit OT/shootout mass.
@@ -160,8 +186,15 @@ class PoissonModel:
             "p_overtime": p_tie,
             "p_over55": sum(v for t, v in p_total.items() if t >= 6),
             "p_under55": sum(v for t, v in p_total.items() if t <= 5),
+            "p_over65": sum(v for t, v in p_total.items() if t >= 7),
+            "exp_total": mean_total,
             "mean_total": mean_total,
         }
+
+    def p_over(self, f: dict[str, Any], strike: float) -> float:
+        """P(total > strike) for the model's own expected goals (see :func:`p_total_over`)."""
+        lh, la = self.expected_goals(f)
+        return p_total_over(lh, la, strike)
 
 
 # --------------------------------------------------------------------- baselines

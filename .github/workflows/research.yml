@@ -86,6 +86,7 @@ jobs:
             --clubs "$CLUBS" \
             --settled-pages 8 \
             --kalshi-budget 1500 \
+            --totals-budget 600 \
             --live-points-budget 120 \
             --cross-check-clubs TOR,BOS,EDM \
             2>&1 | tee data/ingest.log

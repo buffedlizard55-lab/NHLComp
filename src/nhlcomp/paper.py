@@ -118,7 +118,12 @@ class PaperEngine:
         if fill.contracts_filled <= 0:
             return None
         fee = kalshi_taker_fee(fill.price, fill.contracts_filled) if provider == "kalshi" else 0.0
+        strike = getattr(sig.quote, "strike", None)
         bet_id = f"{sig.strategy_id}-v{sig.version}-{sig.game_id}-{sig.market}-{sig.selection}"
+        if strike is not None:
+            # a totals contract is written at a line, so the same strategy can hold an
+            # Over 5.5 and an Over 6.5 on one game; the line is part of the bet's identity
+            bet_id += f"-{strike:g}"
         model_p = sig.model_prob if sig.model_prob == sig.model_prob else None
         row = {
             "bet_id": bet_id,
@@ -148,6 +153,8 @@ class PaperEngine:
             "slippage": fill.slippage,
             "entry_price": fill.price,
             "fee": fee,
+            "strike": (float(strike) if strike is not None else None),
+            "price_basis": (getattr(sig.quote, "price_basis", "exchange") or "exchange"),
             "result": "OPEN",
             "pnl": None,
             "source_url": source_url or (sig.quote.source_url if hasattr(sig.quote, "source_url") else ""),
@@ -160,6 +167,12 @@ class PaperEngine:
                 "bid": sig.quote.bid, "ask": sig.quote.ask,
                 "ask_size": sig.quote.ask_size, "volume": sig.quote.volume,
                 "market_key": sig.quote.market_key, "contract": sig.quote.contract,
+                # the exchange's own wording for the contract, kept verbatim so the ledger
+                # shows exactly which instrument was bought
+                "contract_label": getattr(sig.quote, "label", None),
+                "strike": strike,
+                "price_basis": getattr(sig.quote, "price_basis", "exchange"),
+                "exchange_side": sig.quote.side,
             }, default=str),
             "features_json": json.dumps(sig.supporting, default=str),
             "created_at": utcnow(),
@@ -203,19 +216,35 @@ class PaperEngine:
         closing = {q.selection: q for q in closing_quotes}
         n = 0
         for bet in self.store.query(
-                "SELECT * FROM bets WHERE game_id=? AND result='OPEN' AND market='moneyline'",
+                "SELECT * FROM bets WHERE game_id=? AND result='OPEN' "
+                "AND market IN ('moneyline','total')",
                 (game_id,)):
-            sel = (bet["selection"] or "").lower()
-            if "home" in sel:
-                won = home_won
-            elif "away" in sel:
-                won = away_won
+            market = bet["market"] or "moneyline"
+            total_goals = home_score + away_score
+            if market == "total":
+                won, why = self._settle_total(bet, total_goals)
+                if won is None:
+                    self.store.flag(
+                        "unsettleable_total",
+                        f"bet {bet['bet_id']} cannot be settled: strike="
+                        f"{bet['strike'] if 'strike' in bet.keys() else None} "
+                        f"selection='{bet['selection']}'; left OPEN rather than guessed",
+                        severity="error", entity_type="bet", entity_id=bet["bet_id"])
+                    continue
             else:
-                self.store.flag("unmapped_selection",
-                                f"bet {bet['bet_id']} selection '{bet['selection']}' cannot be "
-                                f"mapped to a side", severity="error",
-                                entity_type="bet", entity_id=bet["bet_id"])
-                continue
+                sel = (bet["selection"] or "").lower()
+                if "home" in sel:
+                    won = home_won
+                elif "away" in sel:
+                    won = away_won
+                else:
+                    self.store.flag("unmapped_selection",
+                                    f"bet {bet['bet_id']} selection '{bet['selection']}' cannot be "
+                                    f"mapped to a side", severity="error",
+                                    entity_type="bet", entity_id=bet["bet_id"])
+                    continue
+                why = (f"official result {home_score}-{away_score} "
+                       f"({'OT' if last_period_type == 'OT' else 'REG'})")
             price = float(bet["entry_price"] or bet["price"])
             contracts = float(bet["filled_size"] or (float(bet["stake"]) / price if price else 0))
             pnl = binary_settlement(price, contracts, won, fee=_fee_of(bet))
@@ -224,13 +253,37 @@ class PaperEngine:
             clv = round(close_price - price, 4) if close_price is not None else None
             self.store.settle_bet(
                 bet["bet_id"], result="WIN" if won else "LOSS", pnl=pnl,
-                close_price=close_price, clv=clv,
-                reason=f"official result {home_score}-{away_score} "
-                       f"({'OT' if last_period_type == 'OT' else 'REG'})")
+                close_price=close_price, clv=clv, reason=why)
             self.store.sync_bankroll(bet["strategy_id"], int(bet["strategy_version"]))
             n += 1
         self.store.commit()
         return n
+
+    @staticmethod
+    def _settle_total(bet: Any, total_goals: int) -> tuple[bool | None, str]:
+        """Settle a totals contract from the official final score.
+
+        Kalshi's KXNHLTOTAL rules count regulation and overtime goals normally and count a
+        shootout as one goal for the winner -- which is exactly what the NHL's official
+        final score already contains -- so the settled total is ``home + away`` with no
+        adjustment.  Returns (None, reason) when the wager cannot be settled honestly, in
+        which case the row stays OPEN and an irregularity is recorded rather than guessed.
+        """
+        try:
+            strike = bet["strike"]
+        except (KeyError, IndexError):
+            strike = None
+        if strike is None:
+            return None, ""
+        sel = (bet["selection"] or "").lower()
+        if sel not in ("over", "under"):
+            return None, ""
+        over = total_goals > float(strike)
+        # an "under" wager is the NO side of an Over contract: it pays when the contract
+        # resolves NO, i.e. when the total is at or below the strike
+        won = over if sel == "over" else (not over)
+        return won, (f"official total {total_goals} vs strike {strike:g} "
+                     f"-> {'over' if over else 'under'}")
 
     PENDING_STATUSES = ('WATCHING', 'QUALIFIED', 'READY TO BET', 'PRICE TOO HIGH', 'PRICE TOO LOW',
                         'WAITING FOR GOALIE', 'WAITING FOR LINEUP', 'WAITING FOR INJURY',

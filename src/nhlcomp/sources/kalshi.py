@@ -415,6 +415,13 @@ def normalize_market(m: dict, *, ts_utc: str, retrieved_at: str,
             "status": m.get("status"),
             "settlement": m.get("result") or None,
             "rules": m.get("rules_primary"),
+            # The line, as the exchange published it.  Kalshi's title text differs between
+            # the live tier ("Full Game: Over 8.5 goals scored") and the historical tier
+            # ("Carolina vs Vegas: Total Goals"), so the strike is taken from the numeric
+            # ``floor_strike`` field and the direction from ``strike_type`` rather than
+            # parsed out of a string that changes shape.
+            "strike": _f(m, "floor_strike"),
+            "strike_type": m.get("strike_type") or None,
         })
     return rows
 
