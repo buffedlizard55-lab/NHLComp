@@ -41,6 +41,35 @@ P&amp;L) and a <i>priced</i> backtest on the games whose Kalshi closing candle w
 train / validation / test splits). The accuracy backtest carries this caveat:</p>
 <div class="note caveat">No verified historical betting-price feed is available, so this run measures predictive accuracy only. PnL, ROI and CLV are deliberately not computed -- doing so would require inventing historical odds. Profit is measured by the forward test instead.</div>
 
+<h2>3b. Markets traded</h2>
+<p><b>Moneyline</b> (KXNHLGAME) is traded on both the backtest and the forward test. <b>Totals</b>
+(KXNHLTOTAL, "Over k.5 goals") is traded as follows, and the asymmetry is deliberate:</p>
+<ul>
+<li>The line is read from the exchange's own <code>floor_strike</code> and
+<code>strike_type</code> fields — never parsed out of a title, because Kalshi words the same
+contract differently on the live tier ("Full Game: Over 8.5 goals scored") and the historical
+tier ("Carolina vs Vegas: Total Goals"). A contract with no readable line is skipped, not
+guessed.</li>
+<li>An <b>Over</b> is the YES side, and the candlestick history publishes the YES offer, so an
+Over rule is backtested at real timestamped prices.</li>
+<li>An <b>Under</b> is the NO side. The candlestick feed publishes only the YES bid/ask, so there
+is no historical NO offer to buy at, and <code>no_ask = 1 − yes_bid</code> is <i>not</i> assumed:
+on the quotes in this ledger that identity fails on 2 of 12 contracts
+(KXNHLGAME-26SEP20SJANA: yes_bid 0.19 against no_ask 0.99). An Under rule therefore carries a
+<code>no_history_reason</code> and is <b>forward-test only</b>, entered at the live
+<code>no_ask_dollars</code> Kalshi actually quotes. Its backtest row reports accuracy only, with
+<code>data_sufficient=0</code> and no P&amp;L.</li>
+<li>Settlement uses the official final score. Kalshi counts regulation and overtime goals
+normally and counts a shootout as one goal for the winner, which is what the NHL's official score
+already contains — so the settled total is <code>home + away</code> with no adjustment. Every
+settled totals contract is also cross-checked against the exchange's own result, and a
+disagreement is recorded as a critical <code>settlement_conflict</code> rather than resolved.</li>
+<li>Puck line (KXNHLSPREAD), first period (KXNHL1P), overtime (KXNHLOVERTIME) and player props
+are registered as series and researched, but nothing is bet on them: there is no period-level
+model and no verified prop feed. They stay in "waiting for other information" instead of being
+traded on an assumption.</li>
+</ul>
+
 <h2>3a. Data labels</h2>
 <ul>
 <li><b>SOURCE DATA</b> — NHL schedule/results, stats REST per-game team and goalie lines, Kalshi
@@ -102,8 +131,8 @@ ASSUMPTION or UNVERIFIED. Bets are append-only; corrections go through
 <code>amend_bet</code>, which writes a before/after audit row.</p>
 
 <h2>8. Current state</h2>
-<p>46 strategies. FORWARD TEST: 0 simulated bets · 0
-settled · 0 open · P&amp;L 0.00 · ROI —. BACKTEST (reported
+<p>49 strategies. FORWARD TEST: 45 simulated bets · 0
+settled · 45 open · P&amp;L 0.00 · ROI 0.0%. BACKTEST (reported
 separately, never merged): 3268 priced wagers · P&amp;L 2,391.66 · ROI
 2.2%.</p>
 
@@ -129,6 +158,6 @@ a batch schedule and cannot execute during a game, so no in-game bet is simulate
 </ul>
 </main>
 <footer>NHLComp · paper-trading research platform · no real money is ever wagered ·
-generated 2026-09-20T23:50:02Z from the SQLite ledger. Every figure is read from the database;
+generated 2026-09-21T02:36:34Z from the SQLite ledger. Every figure is read from the database;
 values that could not be verified from a source are shown as — with a caveat.</footer>
 </body></html>
