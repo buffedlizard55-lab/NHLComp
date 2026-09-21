@@ -144,7 +144,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 991.6575,
+  "bankroll": 954.9375,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -194,7 +194,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 723.36,
+  "bankroll": 736.5,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -219,7 +219,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 848.65,
+  "bankroll": 855.25,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -269,7 +269,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 756.95,
+  "bankroll": 762.37,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -294,7 +294,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 970.5275,
+  "bankroll": 916.7775,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -394,7 +394,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 910.04,
+  "bankroll": 912.1800000000001,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -444,7 +444,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 1000.0,
+  "bankroll": 963.28,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -494,7 +494,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 866.6575,
+  "bankroll": 840.1875,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -519,7 +519,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 712.35,
+  "bankroll": 716.78,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -544,7 +544,7 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 954.71,
+  "bankroll": 919.1800000000001,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -844,7 +844,7 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 739.04,
+  "bankroll": 741.02,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -894,7 +894,7 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 948.84,
+  "bankroll": 922.4938,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -944,7 +944,7 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 723.36,
+  "bankroll": 736.5,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1144,7 +1144,7 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 1000.0,
+  "bankroll": 963.28,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1169,7 +1169,7 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 979.32,
+  "bankroll": 942.6,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1194,7 +1194,7 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 910.04,
+  "bankroll": 912.1800000000001,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1344,7 +1344,7 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 903.92,
+  "bankroll": 921.73,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1369,7 +1369,7 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 949.52,
+  "bankroll": 932.04,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1444,7 +1444,7 @@
   "created_at": "2026-09-20T23:37:07Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 866.6575,
+  "bankroll": 840.1875,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1519,7 +1519,7 @@
   "created_at": "2026-09-21T03:00:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 902.67,
+  "bankroll": 934.45,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1541,10 +1541,10 @@
   "origin_ref": "",
   "parent_version": null,
   "change_note": null,
-  "created_at": "2026-09-21T19:42:40Z",
+  "created_at": "2026-09-21T20:38:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 997.81,
+  "bankroll": 997.8674,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
   "provenance": "MODEL"
@@ -1566,7 +1566,7 @@
   "origin_ref": "",
   "parent_version": null,
   "change_note": null,
-  "created_at": "2026-09-21T19:42:40Z",
+  "created_at": "2026-09-21T20:38:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
   "bankroll": 955.0,
@@ -1591,7 +1591,7 @@
   "origin_ref": "",
   "parent_version": null,
   "change_note": null,
-  "created_at": "2026-09-21T19:42:40Z",
+  "created_at": "2026-09-21T20:38:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
   "bankroll": 1000.0,
@@ -1616,7 +1616,7 @@
   "origin_ref": "",
   "parent_version": null,
   "change_note": null,
-  "created_at": "2026-09-21T19:42:40Z",
+  "created_at": "2026-09-21T20:38:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
   "bankroll": 1000.0,
@@ -1641,7 +1641,7 @@
   "origin_ref": "",
   "parent_version": null,
   "change_note": null,
-  "created_at": "2026-09-21T19:42:40Z",
+  "created_at": "2026-09-21T20:38:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
   "bankroll": 1000.0,
