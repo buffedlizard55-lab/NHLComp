@@ -1369,7 +1369,7 @@
  },
  {
   "finding_id": "FIND_MODEL_COMPARE",
-  "created_at": "2026-09-21T03:00:08Z",
+  "created_at": "2026-09-21T17:16:48Z",
   "title": "Out-of-sample model comparison (held-out chronological window)",
   "body": "Poisson, Elo, a 4-feature logistic model and a home-ice constant were compared on the same held-out window. Lower log loss is better. A complex model is only kept if it beats the constant.",
   "evidence": "{\"poisson\": {\"n\": 525, \"log_loss\": 0.68403, \"brier\": 0.24547}, \"elo\": {\"n\": 525, \"log_loss\": 0.68961, \"brier\": 0.24705}, \"logistic\": {\"n\": 525, \"log_loss\": 0.68693, \"brier\": 0.24689}, \"home_ice_constant\": {\"n\": 525, \"log_loss\": 0.69219, \"brier\": 0.24952}}",
@@ -1378,7 +1378,7 @@
  },
  {
   "finding_id": "FIND_DISCOVERY_SEARCH",
-  "created_at": "2026-09-21T03:00:09Z",
+  "created_at": "2026-09-21T17:16:49Z",
   "title": "Discovery search completed",
   "body": "690 candidate triggers were evaluated (787 games had a recovered Kalshi closing price). With that many tests, a few will clear the threshold by chance alone; survivors are labelled CANDIDATE and only forward-test results can promote them.",
   "evidence": "{\"tested\": 690, \"survivors\": 0}",
@@ -1387,7 +1387,7 @@
  },
  {
   "finding_id": "FIND_MARKET_BASELINE",
-  "created_at": "2026-09-21T03:00:11Z",
+  "created_at": "2026-09-21T17:16:51Z",
   "title": "Market baseline: buying every home / away contract at the Kalshi close",
   "body": "Flat-stake ROI of buying one side of every game that has a recovered closing candle, net of the published taker fee. This is the cost of the spread plus fees; a strategy's priced ROI has to beat it, not zero.",
   "evidence": "{\"home\": {\"n\": 1312, \"roi\": -0.0606, \"pnl\": -79.5258, \"avg_price\": 0.5409, \"hit\": 0.5221, \"mdd\": 85.2756, \"sharpe\": -0.063}, \"away\": {\"n\": 1312, \"roi\": -0.018, \"pnl\": -23.5663, \"avg_price\": 0.4723, \"hit\": 0.4779, \"mdd\": 42.3855, \"sharpe\": -0.0162}}",
@@ -1396,16 +1396,16 @@
  },
  {
   "finding_id": "FIND_COMPETITION_STATE",
-  "created_at": "2026-09-21T03:00:21Z",
+  "created_at": "2026-09-21T17:17:02Z",
   "title": "Competition state snapshot",
   "body": "Aggregate paper-trading state. Win rate is always shown with a sample size and a Wilson interval.",
-  "evidence": "{\"FORWARD TEST\": {\"mode\": \"FORWARD TEST\", \"strategies\": 49, \"bets\": 45, \"settled\": 0, \"open\": 45, \"wins\": 0, \"losses\": 0, \"pnl\": 0.0, \"staked\": 956.86, \"roi\": 0.0, \"win_rate\": null}, \"BACKTEST\": {\"mode\": \"BACKTEST\", \"strategies\": 49, \"bets\": 3268, \"settled\": 3268, \"open\": 0, \"wins\": 1575, \"losses\": 1693, \"pnl\": 2391.66, \"staked\": 109769.1, \"roi\": 0.0218, \"win_rate\": 0.4819}}",
+  "evidence": "{\"FORWARD TEST\": {\"mode\": \"FORWARD TEST\", \"strategies\": 49, \"bets\": 97, \"settled\": 0, \"open\": 97, \"wins\": 0, \"losses\": 0, \"pnl\": 0.0, \"staked\": 2622.65, \"roi\": 0.0, \"win_rate\": null}, \"BACKTEST\": {\"mode\": \"BACKTEST\", \"strategies\": 49, \"bets\": 3403, \"settled\": 3403, \"open\": 0, \"wins\": 1618, \"losses\": 1785, \"pnl\": 2344.98, \"staked\": 111911.76, \"roi\": 0.021, \"win_rate\": 0.4755}}",
   "confidence": "high",
   "kind": "status"
  },
  {
   "finding_id": "FIND_MASTER_SITE_REVIEW",
-  "created_at": "2026-09-21T03:00:21Z",
+  "created_at": "2026-09-21T17:17:02Z",
   "title": "MasterSite directory reviewed 2026-09-21 (14 projects)",
   "body": "The owner's MasterSite index was fetched, every named project was checked against the GitHub API, candidate READMEs were read, and the one data claim that mattered was tested against the live endpoint before anything was reused. Repositories that do not exist: CEO, PinePilot. One reuse candidate (NHL prices from the ESPN scoreboard odds block) was tested and rejected for historical use; the feed itself was kept as a registered source for the results and post-game goalie identification it verifiably supplies.",
   "evidence": "{\n \"reviewed_at\": \"2026-09-21\",\n \"directory\": \"https://buffedlizard55-lab.github.io/MasterSite/\",\n \"sites_in_directory\": 49,\n \"projects_reviewed\": 14,\n \"missing_repositories\": [\n  \"CEO\",\n  \"PinePilot\"\n ],\n \"reused\": [\n  \"KalshiPaperSim\"\n ],\n \"rejected_after_test\": [\n  \"NHL betting prices can be read from ESPN's scoreboard odds block (as SportsPred's ice-hockey page describes).\"\n ],\n \"method\": \"MasterSite index fetched; repository existence checked against the GitHub API; READMEs fetched for every candidate; the one data claim that mattered was tested against the live endpoint.\"\n}",

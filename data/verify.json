@@ -11,12 +11,12 @@
   "impossible_odds": 0,
   "missing_timestamp": 0,
   "bad_pnl": 0,
-  "duplicate_bet": 0,
+  "duplicate_bet": 43,
   "stake_exceeds_bankroll": 0,
   "unmapped": 0
  },
  "totals_bets": {
-  "totals_bets": 0,
+  "totals_bets": 138,
   "totals_missing_strike": 0
  },
  "quotes": {
@@ -32,9 +32,9 @@
   "settlement_conflicts": 0
  },
  "totals_settlements": {
-  "totals_contracts_compared": 7896,
+  "totals_contracts_compared": 7904,
   "totals_conflicts": 0,
   "totals_missing_strike": 0
  },
- "open_irregularities": 5
+ "open_irregularities": 48
 }

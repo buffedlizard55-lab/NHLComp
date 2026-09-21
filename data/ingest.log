@@ -182,63 +182,63 @@
 [ingest] stats REST goalie game rows 20252026/2: 2768
 [ingest] stats REST goalie game rows 20262027/2: 0
 [ingest] kalshi series: 81 hockey series, NHL: ['KXNHL', 'KXNHL1P', 'KXNHL1PSPREAD', 'KXNHL1PTOTAL', 'KXNHL2OT', 'KXNHL2P', 'KXNHL2PSPREAD', 'KXNHL2PTOTAL', 'KXNHL30COMEBACK', 'KXNHL3P', 'KXNHL3PSPREAD', 'KXNHL3PTOTAL', 'KXNHL4NATIONS', 'KXNHLADAMS', 'KXNHLANYGOAL', 'KXNHLAST', 'KXNHLATLANTIC', 'KXNHLCALDER', 'KXNHLCENTRAL', 'KXNHLDRAFTPICK', 'KXNHLDRAFTTOP', 'KXNHLEAST', 'KXNHLEXPANSION', 'KXNHLFINALSEXACT', 'KXNHLFIRSTGOAL', 'KXNHLGAME', 'KXNHLGOAL', 'KXNHLHART', 'KXNHLMETROPOLITAN', 'KXNHLNEXTGM', 'KXNHLNEXTTEAM', 'KXNHLNORRIS', 'KXNHLOVERTIME', 'KXNHLPACIFIC', 'KXNHLPLAYOFF', 'KXNHLPLAYOFFGOALS', 'KXNHLPRES', 'KXNHLPTS', 'KXNHLRETIRE', 'KXNHLRICHARD', 'KXNHLROSS', 'KXNHLSAVES', 'KXNHLSEASONGOALS', 'KXNHLSEASONPTS', 'KXNHLSERIES', 'KXNHLSERIESGAMES', 'KXNHLSERIESOT', 'KXNHLSERIESSCORE', 'KXNHLSERIESSPREAD', 'KXNHLSERIESTOTALGOAL', 'KXNHLSERIESTOTALGOALS', 'KXNHLSPREAD', 'KXNHLTOTAL', 'KXNHLVEZINA', 'KXNHLWEST', 'KXNHLWINS']
-[ingest] kalshi: 58 contracts -> 116 quote rows
-[ingest] kalshi: 232 contracts -> 464 quote rows
-[ingest] kalshi history KXNHLGAME: cutoff=2026-07-22T00:00:00Z live=22 hist=1000 (new 0, unmatched 2) candles ok=8 empty=0 err=0 pending=0 calls=11
-[ingest] kalshi history KXNHLTOTAL: cutoff=2026-07-22T00:00:00Z live=88 hist=7813 (new 7813, unmatched 5) candles ok=590 empty=0 err=0 pending=7306 calls=600
-[ingest] kalshi settled: 22 contracts (7 unmatched to an NHL game)
-[ingest] kalshi live price points: 56 open contracts
-[ingest] NHL partner odds (DraftKings): 21 rows for 7 games
+[ingest] kalshi: 62 contracts -> 124 quote rows
+[ingest] kalshi: 248 contracts -> 496 quote rows
+[ingest] kalshi history KXNHLGAME: cutoff=2026-07-23T00:00:00Z live=24 hist=1000 (new 0, unmatched 2) candles ok=0 empty=0 err=0 pending=0 calls=3
+[ingest] kalshi history KXNHLTOTAL: cutoff=2026-07-23T00:00:00Z live=96 hist=1000 (new 0, unmatched 5) candles ok=597 empty=0 err=0 pending=5523 calls=600
+[ingest] kalshi settled: 24 contracts (7 unmatched to an NHL game)
+[ingest] kalshi live price points: 62 open contracts
+[ingest] NHL partner odds (DraftKings): 28 rows for 7 games
 [ingest] NHL EDGE team snapshots 20262027/2: 0
 [ingest] NHL EDGE team snapshots 20252026/2: 32
-[ingest] espn injuries: 55 entries at 2026-09-21T02:55:28Z
+[ingest] espn injuries: 61 entries at 2026-09-21T17:12:17Z
 {
  "teams": 62,
  "active_teams_20242025": 32,
  "active_teams_20252026": 32,
  "active_teams_20262027": 0,
- "winners_derived": 4,
+ "winners_derived": 0,
  "team_game_rows": 8820,
  "team_game_stats": 5248,
  "goalie_game_stats": 5532,
  "kalshi_series": 81,
- "kalshi_active": 58,
- "kalshi_totals_live": 232,
+ "kalshi_active": 62,
+ "kalshi_totals_live": 248,
  "kalshi_history": {
   "series": "KXNHLGAME",
   "calls_start": 4,
-  "cutoff": "2026-07-22T00:00:00Z",
-  "live_settled": 22,
+  "cutoff": "2026-07-23T00:00:00Z",
+  "live_settled": 24,
   "historical_rows": 1000,
   "historical_new": 0,
   "historical_pages": 1,
   "unmatched_contracts": 2,
-  "candles_ok": 8,
+  "candles_ok": 0,
   "candles_empty": 0,
   "candles_error": 0,
   "candles_pending": 0,
-  "calls_used": 11
+  "calls_used": 3
  },
  "kalshi_totals_history": {
   "series": "KXNHLTOTAL",
-  "calls_start": 15,
-  "cutoff": "2026-07-22T00:00:00Z",
-  "live_settled": 88,
-  "historical_rows": 7813,
-  "historical_new": 7813,
-  "historical_pages": 8,
+  "calls_start": 7,
+  "cutoff": "2026-07-23T00:00:00Z",
+  "live_settled": 96,
+  "historical_rows": 1000,
+  "historical_new": 0,
+  "historical_pages": 1,
   "unmatched_contracts": 5,
-  "candles_ok": 590,
+  "candles_ok": 597,
   "candles_empty": 0,
   "candles_error": 0,
-  "candles_pending": 7306,
+  "candles_pending": 5523,
   "calls_used": 600
  },
- "kalshi_settled": 22,
- "kalshi_live_points": 56,
- "partner_odds": 21,
+ "kalshi_settled": 24,
+ "kalshi_live_points": 62,
+ "partner_odds": 28,
  "edge_snapshots": 0,
  "edge_snapshots_20252026": 32,
- "injuries": 55,
+ "injuries": 61,
  "cross_validation_conflicts": 0
 }
