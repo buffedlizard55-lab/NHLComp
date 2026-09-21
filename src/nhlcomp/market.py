@@ -22,6 +22,7 @@ exists for a point, the point is simply absent.
 from __future__ import annotations
 
 import math
+import re
 
 from typing import Any, Iterable, Sequence
 
@@ -79,6 +80,41 @@ def _point(c: dict) -> dict[str, Any]:
         "volume": c.get("volume"),
         "open_interest": c.get("open_interest"),
     }
+
+
+def total_side_and_strike(strike_type: str | None, floor_strike: float | None
+                          ) -> tuple[str, float] | None:
+    """(direction, strike) for a Kalshi totals contract, from the exchange's own fields.
+
+    ``strike_type='greater'`` with ``floor_strike=8.5`` is the contract "Over 8.5 goals":
+    buying YES is an Over bet, buying NO is an Under bet.  ``'less'`` would be the mirror
+    image.  Nothing is inferred from the title, because Kalshi's title text differs between
+    the live tier ("Full Game: Over 8.5 goals scored") and the historical tier
+    ("Carolina vs Vegas: Total Goals") for the same series.  Returns None when either
+    field is missing, so a contract with an unknown line is never traded.
+    """
+    if floor_strike is None or not strike_type:
+        return None
+    st = str(strike_type).strip().lower()
+    if st == "greater":
+        return ("over", float(floor_strike))
+    if st == "less":
+        return ("under", float(floor_strike))
+    return None
+
+
+def total_side_from_text(text: str | None) -> tuple[str, float] | None:
+    """Fallback line parse from the exchange's own sub-title ("Over 8.5 goals scored").
+
+    Used only when ``strike_type`` is absent from a stored row; the text is still source
+    data from the same payload, so this is a re-read of the source, not an assumption.
+    """
+    if not text:
+        return None
+    m = re.search(r"\b(over|under)\s+(\d+(?:\.\d+)?)", str(text), re.IGNORECASE)
+    if not m:
+        return None
+    return (m.group(1).lower(), float(m.group(2)))
 
 
 def implied_prob(ask: float | None, bid: float | None) -> float | None:

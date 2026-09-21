@@ -59,6 +59,16 @@ class Quote:
     volume: float | None
     liquidity: float | None
     ts_utc: str
+    #: The exchange's own wording for the contract ("Anaheim wins", "Over 6.5 goals
+    #: scored").  ``selection`` is this project's side vocabulary ("home", "away",
+    #: "over", "under") so a rule can match it; ``label`` keeps the original text so the
+    #: ledger can show exactly which contract was quoted.  Never dropped, never edited.
+    label: str | None = None
+    #: Line for a totals/puck-line contract (6.5, 1.5); None for a moneyline.
+    strike: float | None = None
+    #: How ``ask`` was obtained: 'exchange' (the offer as quoted) or 'derived' (see
+    #: pipeline._live_quotes for the NO-side identity).  Recorded on every bet.
+    price_basis: str = "exchange"
 
     @property
     def mid(self) -> float | None:
@@ -162,11 +172,24 @@ class Strategy:
 
     def find_quote(self, ctx: DecisionContext, market_type: str, selection: str,
                    side: str) -> Quote | None:
+        """Match a quote to the side this rule trades.
+
+        ``selection`` is this project's side token ("home"/"away"/"over"/"under").  A
+        quote carries that token in ``Quote.selection``; ``Quote.label`` (the exchange's
+        own wording, "Anaheim wins") is also tried, so a caller that hands over an
+        un-normalized quote still matches on a team name instead of silently reporting
+        "no quote published".  Substring matching is deliberately symmetric because the
+        label may be a place name ("Vegas") or a full name ("Vegas Golden Knights").
+        """
         for q in ctx.quotes:
             if q.market_type != market_type or q.side != side:
                 continue
-            if selection.lower() in q.selection.lower() or q.selection.lower() in selection.lower():
-                return q
+            for cand in (q.selection, getattr(q, "label", None)):
+                if not cand:
+                    continue
+                c = cand.lower().strip()
+                if selection.lower() in c or c in selection.lower():
+                    return q
         return None
 
     def evaluate(self, ctx: DecisionContext) -> list[Signal]:   # pragma: no cover - abstract
@@ -401,6 +424,159 @@ class ThresholdStrategy(Strategy):
             return [Signal(status="WAITING FOR OTHER INFORMATION",
                            blocking_reason="zero offer size at the quoted price", **base)]
         stake = self.size_stake(p, ask, ctx.bankroll, ctx.open_exposure)
+        if stake <= 0:
+            return [Signal(status="CANCELLED", blocking_reason="zero bankroll available", **base)]
+        base.update(stake=stake)
+        return [Signal(status="READY TO BET", **base)]
+
+
+# --------------------------------------------------------------------- totals
+class TotalsStrategy(ThresholdStrategy):
+    """Trade a Kalshi KXNHLTOTAL contract ("Over k.5 goals") with an expected-goals model.
+
+    Why this class exists separately: a totals contract is priced by a *strike*, not by a
+    team, so the rule needs the strike before it can ask its own model for a probability.
+    The strike arrives with the quote (:attr:`Quote.strike`, taken from Kalshi's
+    ``floor_strike``), never from a guess.
+
+    Two directions are possible and they are NOT symmetric in what can be verified:
+
+    * ``over`` buys the **YES** side.  Kalshi's candlestick history publishes
+      ``yes_ask`` for every settled contract, so an ``over`` rule can be *backtested* at
+      real, timestamped prices.
+    * ``under`` buys the **NO** side.  The candlestick feed publishes only the YES bid/ask,
+      so there is no historical NO-side offer to buy at.  ``no_ask = 1 - yes_bid`` is NOT
+      assumed: on the 2026-09-20 quotes already in this ledger that identity fails on 2 of
+      12 contracts (KXNHLGAME-26SEP20SJANA: yes_bid 0.19, no_ask 0.99).  An ``under`` rule
+      therefore carries ``no_history_reason`` and is **forward-test only**, entered at the
+      live ``no_ask_dollars`` Kalshi actually quotes.
+    """
+
+    strategy_id = "NHL_TOTAL_GOALS"
+    category = "totals"
+    market = "total"
+    markets = "total"
+
+    def __init__(self, *, direction: str = "over", min_edge: float = 0.04,
+                 min_price: float = 0.05, min_strike: float = 4.5, max_strike: float = 8.5,
+                 no_history_reason: str | None = None, **kw: Any):
+        # the threshold machinery is inherited only for the shared information gates and
+        # sizing; a totals rule has no feature trigger of its own, so the trigger is set
+        # to a condition that is always satisfied and says so.
+        kw.setdefault("feature", "home_n_prior")
+        kw.setdefault("operator", ">=")
+        kw.setdefault("threshold", 0)
+        kw.setdefault("bet_side", direction)
+        kw.setdefault("use_model", "poisson")
+        kw["min_edge"] = min_edge
+        kw["min_price"] = min_price
+        super().__init__(**kw)
+        self.direction = direction
+        self.market = "total"
+        self.markets = "total"
+        self.min_strike = float(min_strike)
+        self.max_strike = float(max_strike)
+        self.no_history_reason = no_history_reason
+        self.settlement_rule = ("Official NHL final score. Kalshi settles an Over k.5 contract "
+                                "on regulation + overtime goals, with a shootout counted as one "
+                                "goal for the winner -- which is what the official final score "
+                                "already includes, so total = home_score + away_score.")
+        self.params = {**self.params, "kind": "totals", "direction": direction,
+                       "market": "total", "min_strike": self.min_strike,
+                       "max_strike": self.max_strike, "no_history_reason": no_history_reason}
+        side_word = "over" if direction == "over" else "under"
+        self.hypothesis = (f"The independent-Poisson expected-goals model prices a {side_word} "
+                           f"total more accurately than the exchange does, so buying the "
+                           f"{side_word} side when the offer is at least {min_edge:.3f} below the "
+                           f"model probability earns the difference.")
+        self.entry_rule = (f"At decision time compute expected goals from prior games only; buy "
+                           f"the {side_word} side of the quoted strike when the offer is at or "
+                           f"below model P({side_word}) - {min_edge:.3f}. Strikes outside "
+                           f"[{self.min_strike}, {self.max_strike}] are not traded.")
+        self.price_rule = (f"Require an executable offer <= model P({side_word}) - "
+                           f"{self.min_edge:.3f}; never bet into a stale or missing quote.")
+        self.data_used = ("kalshi.trade_api KXNHLTOTAL contracts (floor_strike, yes/no offers, "
+                          "candlesticks) + api-web.nhle.com results for expected goals.")
+        if no_history_reason:
+            self.data_used += f" BACKTEST NOTE: {no_history_reason}"
+
+    # ------------------------------------------------------------------ logic
+    def _lambdas(self, ctx: DecisionContext) -> tuple[float, float] | None:
+        p = ctx.predictions
+        lh, la = p.get("lam_home"), p.get("lam_away")
+        if lh is None or la is None:
+            return None
+        try:
+            return float(lh), float(la)
+        except (TypeError, ValueError):
+            return None
+
+    def evaluate(self, ctx: DecisionContext) -> list[Signal]:
+        from .models import p_total_over      # local import: strategies stay import-light
+        f = ctx.features
+        side = "YES" if self.direction == "over" else "NO"
+        base: dict[str, Any] = dict(
+            strategy_id=self.strategy_id, version=self.version, username=self.username,
+            game_id=int(f.get("game_id") or 0), game_date=f.get("game_date") or "",
+            matchup=f"{f.get('away_id')}@{f.get('home_id')}", market="total",
+            selection=self.direction, side=side, model_prob=float("nan"),
+            fair_price=float("nan"), required_price=float("nan"), stake=0.0,
+            supporting={"market": "total", "direction": self.direction})
+
+        q = self.find_quote(ctx, "total", self.direction, side)
+        if q is None:
+            return [Signal(status="WATCHING", quote=None,
+                           blocking_reason="no KXNHLTOTAL contract quoted for this game", **base)]
+        base["quote"] = q
+        strike = getattr(q, "strike", None)
+        if strike is None:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="contract carries no floor_strike; the line is not "
+                                           "known, so it is not assumed", **base)]
+        base["supporting"] = {**base["supporting"], "strike": strike,
+                              "contract": q.contract, "contract_label": q.label,
+                              "price_basis": q.price_basis}
+        if not (self.min_strike <= float(strike) <= self.max_strike):
+            return [Signal(status="WATCHING",
+                           blocking_reason=f"strike {strike} outside the traded range "
+                                           f"[{self.min_strike}, {self.max_strike}]", **base)]
+
+        lam = self._lambdas(ctx)
+        if lam is None:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="no expected-goals model output for this game", **base)]
+        p_over = p_total_over(lam[0], lam[1], float(strike))
+        p = p_over if self.direction == "over" else round(1.0 - p_over, 6)
+        base["model_prob"] = p
+        base["supporting"] = {**base["supporting"], "lam_home": lam[0], "lam_away": lam[1],
+                              "p_over": p_over,
+                              "data_labels": {"price": f"SOURCE DATA (kalshi, {q.price_basis})",
+                                              "features": "DERIVED (point-in-time)",
+                                              "model_prob": "MODEL OUTPUT (independent Poisson)"}}
+
+        blocked = self._information_gates(ctx)
+        if blocked is not None:
+            status, reason = blocked
+            return [Signal(status=status, blocking_reason=reason, **base)]
+
+        ask = q.ask
+        if ask is None or ask <= 0:
+            return [Signal(status="PRICE TOO HIGH", blocking_reason="no offer on the book", **base)]
+        if ask >= 1.0:
+            return [Signal(status="PRICE TOO HIGH", blocking_reason="offer at or above par", **base)]
+        if ask < self.min_price:
+            return [Signal(status="PRICE TOO LOW",
+                           blocking_reason=f"ask {ask:.2f} below floor {self.min_price:.2f}", **base)]
+        required = round(p - self.min_edge, 4)
+        base.update(fair_price=round(ask, 4), required_price=required)
+        if ask > required:
+            return [Signal(status="PRICE TOO HIGH",
+                           blocking_reason=f"ask {ask:.2f} > required {required:.2f} "
+                                           f"(model P({self.direction})={p:.4f})", **base)]
+        if q.ask_size is not None and float(q.ask_size) <= 0:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="zero offer size at the quoted price", **base)]
+        stake = self.size_stake(p, float(ask), ctx.bankroll, ctx.open_exposure)
         if stake <= 0:
             return [Signal(status="CANCELLED", blocking_reason="zero bankroll available", **base)]
         base.update(stake=stake)
@@ -759,5 +935,34 @@ def build_seed_strategies() -> list[Strategy]:
         hypothesis="A game-time-decision injury is not yet priced in. Held for confirmation "
                    "rather than bet on assumption. Not backtestable: no historical injury data.",
         entry_rule="Condition met, but any day-to-day injury on either team blocks entry.")
+
+    # -- totals (KXNHLTOTAL).  The exchange lists one contract per strike ("Over k.5");
+    # buying YES is an Over bet and buying NO is an Under bet.  Only the Over side has a
+    # verified historical price (the candlestick feed publishes the YES ask), so the Under
+    # rule declares why it cannot be backtested instead of inventing a NO-side history.
+    out.append(TotalsStrategy(
+        strategy_id="NHL_TOTALS_OVER", username="NHL_TOTALS_OVER_030", category="totals",
+        name="Expected-goals model over the exchange total", direction="over", min_edge=0.04,
+        data_used="kalshi.trade_api KXNHLTOTAL floor_strike + yes_ask candlesticks (verified "
+                  "2026-09-21, historical tier back to the 2026 Stanley Cup Final); "
+                  "api-web.nhle.com results for expected goals."))
+    out.append(TotalsStrategy(
+        strategy_id="NHL_TOTALS_UNDER", username="NHL_TOTALS_UNDER_031", category="totals",
+        name="Expected-goals model under the exchange total (forward only)", direction="under",
+        min_edge=0.04,
+        no_history_reason="Kalshi's candlestick feed publishes the YES bid/ask only, so no "
+                          "historical NO-side offer exists to buy an Under at, and "
+                          "no_ask = 1 - yes_bid does not hold on the quotes in this ledger "
+                          "(2 of 12 contracts on 2026-09-20). FORWARD TEST ONLY, entered at the "
+                          "live no_ask_dollars."))
+    # A tighter-edge variant of the Over rule.  Keeping both makes the edge threshold itself
+    # an experiment rather than a tuned constant: only one of them can be right about the
+    # same prices, and the pair shows how much of the result is the threshold's doing.
+    out.append(TotalsStrategy(
+        strategy_id="NHL_TOTALS_OVER_TIGHT", username="NHL_TOTALS_OVER_TIGHT_032",
+        category="totals", name="Expected-goals model over the exchange total (2c edge)",
+        direction="over", min_edge=0.02,
+        data_used="kalshi.trade_api KXNHLTOTAL floor_strike + yes_ask candlesticks (verified); "
+                  "api-web.nhle.com results for expected goals."))
 
     return out

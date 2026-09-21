@@ -95,6 +95,10 @@ class Backtester:
             window: tuple[str, str] | None = None) -> BacktestResult | None:
         if not rows:
             return None
+        if getattr(strat, "market", "moneyline") == "total":
+            # a totals rule is evaluated by run_totals_accuracy: scoring it here would
+            # compare a strike against the moneyline winner, which is a different question
+            return None
         triggered: list[tuple[dict[str, Any], float]] = []
         for r in rows:
             if r.get("_winner") is None:
@@ -170,6 +174,89 @@ class Backtester:
             w = (chunk[0].get("game_date", ""), chunk[-1].get("game_date", ""))
             out[name] = self.run(strat, chunk, label=name, window=w)
         return out
+
+    # ------------------------------------------------------------------ totals
+    TOTALS_CAVEAT = (CAVEAT_NO_PRICE + " Totals variant: this measures whether the "
+                     "expected-goals model beats the coin flip at the exchange's own strikes. "
+                     "It is NOT a profit figure -- an Over wager can only be priced from the "
+                     "YES offer in the candle history, and an Under wager has no historical "
+                     "offer at all.")
+
+    def run_totals_accuracy(self, strat: Strategy, rows: Sequence[dict[str, Any]], *,
+                            strikes_by_game: dict[int, Sequence[float]] | None = None,
+                            default_strikes: Sequence[float] = (5.5, 6.5),
+                            label: str = "totals_accuracy_all",
+                            window: tuple[str, str] | None = None) -> BacktestResult | None:
+        """Accuracy-only evaluation of a totals rule (no price -> no PnL, ever).
+
+        Strikes come from the exchange's own settled contracts when the ledger has them
+        (``strikes_by_game``), otherwise from ``default_strikes``; either way the label
+        states that no profit is claimed, because an accuracy number says nothing about
+        what a wager at an unknown price would have returned.
+        """
+        from .models import p_total_over
+        strikes_by_game = strikes_by_game or {}
+        direction = getattr(strat, "direction", "over")
+        probs: list[float] = []
+        labels: list[int] = []
+        n_games = 0
+        used_exchange_strikes = 0
+        for r in rows:
+            if r.get("_total") is None or r.get("lam_home") is None:
+                continue
+            n_games += 1
+            gid = int(r.get("game_id") or 0)
+            game_strikes = list(strikes_by_game.get(gid) or [])
+            if game_strikes:
+                used_exchange_strikes += 1
+            else:
+                game_strikes = list(default_strikes)
+            for k in game_strikes:
+                p_over = p_total_over(float(r["lam_home"]), float(r["lam_away"]), float(k))
+                hit_over = 1 if float(r["_total"]) > float(k) else 0
+                if direction == "over":
+                    probs.append(p_over)
+                    labels.append(hit_over)
+                else:
+                    probs.append(round(1.0 - p_over, 6))
+                    labels.append(1 - hit_over)
+        n = len(labels)
+        if n == 0:
+            res = BacktestResult(strat.strategy_id, strat.version, label, 0, 0, 0, 0,
+                                 float("nan"), float("nan"), float("nan"), 0.0, 0.0,
+                                 float("nan"), float("nan"), 0,
+                                 "No decided game had both an expected-goals output and a total.",
+                                 window or ("", ""))
+        else:
+            wins = sum(labels)
+            lo, hi = wilson_interval(wins, n)
+            res = BacktestResult(
+                strategy_id=strat.strategy_id, version=strat.version, label=label, n_bets=n,
+                n_wins=wins, n_losses=n - wins, n_push=0, hit_rate=round(wins / n, 4),
+                base_rate=0.5, lift=round(wins / n - 0.5, 4), ci_low=round(lo, 4),
+                ci_high=round(hi, 4), log_loss=round(log_loss(probs, labels), 5),
+                brier=round(brier(probs, labels), 5), data_sufficient=0,
+                caveat=self.TOTALS_CAVEAT,
+                window=window or (rows[0].get("game_date", ""), rows[-1].get("game_date", "")))
+        res.n_games = n_games                                   # type: ignore[attr-defined]
+        self.store.execute(
+            """INSERT INTO backtests(strategy_id, version, label, test_from, test_to, n_bets,
+                                     n_wins, n_losses, n_push, staked, pnl, roi, max_drawdown,
+                                     sharpe, avg_price, data_sufficient, caveat, created_at,
+                                     hit_rate, base_rate, n_games, price_basis)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(strategy_id, version, label) DO UPDATE SET
+                 n_bets=excluded.n_bets, n_wins=excluded.n_wins, n_losses=excluded.n_losses,
+                 hit_rate=excluded.hit_rate, base_rate=excluded.base_rate,
+                 n_games=excluded.n_games, data_sufficient=excluded.data_sufficient,
+                 caveat=excluded.caveat, created_at=excluded.created_at""",
+            (res.strategy_id, res.version, res.label, res.window[0], res.window[1], res.n_bets,
+             res.n_wins, res.n_losses, 0, None, None, None, None, None, None,
+             res.data_sufficient, res.caveat, utcnow(), res.hit_rate, res.base_rate, n_games,
+             "no price: accuracy only" + ("" if used_exchange_strikes else
+                                         " (default strikes 5.5/6.5, no exchange strikes on file)")))
+        self.store.commit()
+        return res
 
 
 # ===================================================================== priced backtests
@@ -277,8 +364,12 @@ class PricedBacktester:
         if not isinstance(strat, ThresholdStrategy):
             return None
         if getattr(strat, "blocked_reason", None) or strat.use_model == "sportsbook" \
-                or getattr(strat, "injury_sensitive", False):
-            return None   # nothing to price: blocked, or needs a feed with no history
+                or getattr(strat, "injury_sensitive", False) \
+                or getattr(strat, "no_history_reason", None) \
+                or getattr(strat, "market", "moneyline") == "total":
+            # nothing to price here: blocked, needs a feed with no history, or a totals rule
+            # (totals are priced from KXNHLTOTAL candles in Pipeline._backtest_totals)
+            return None
         priced = [r for r in rows if r.get("_winner") is not None
                   and r.get(f"mkt_{point}_home_ask") is not None
                   and not r.get("mkt_close_is_latest")]

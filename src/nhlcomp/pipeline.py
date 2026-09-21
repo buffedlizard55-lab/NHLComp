@@ -19,7 +19,7 @@ from .features import FeatureBuilder, GameRef
 from .features_ext import load_extended
 from .http import HttpClient, NetworkUnavailable
 from .ingest import Ingestor
-from .market import american_to_prob, devig_pair
+from .market import american_to_prob, devig_pair, total_side_and_strike, total_side_from_text
 from .models import (EloModel, HomeIceOnly, LogisticRest, PoissonModel, brier, log_loss)
 from .paper import PaperEngine
 from .store import Store, utcnow
@@ -64,6 +64,7 @@ class Pipeline:
                      club_abbrevs: Sequence[str], ingest_settled_pages: int = 5,
                      cross_check_abbrevs: Sequence[str] = (),
                      kalshi_budget: int = 1500, live_points_budget: int = 120,
+                     totals_budget: int = 400,
                      stats_seasons: Sequence[int] | None = None) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["probes"] = self.ing.verify_sources()
@@ -92,8 +93,13 @@ class Pipeline:
         # Kalshi: series registry, live quotes, settled contracts + candle history
         self._safe(out, "kalshi_series", self.ing.kalshi_series_discovery)
         out["kalshi_active"] = self.ing.kalshi_nhl()
+        # totals ("Over k.5 goals"): same exchange, its own series, its own budget so a
+        # long totals walk can never starve the moneyline walk
+        self._safe(out, "kalshi_totals_live", self.ing.kalshi_nhl, series="KXNHLTOTAL")
         self._safe(out, "kalshi_history", self.ing.kalshi_history, series="KXNHLGAME",
                    max_calls=kalshi_budget)
+        self._safe(out, "kalshi_totals_history", self.ing.kalshi_history, series="KXNHLTOTAL",
+                   max_calls=totals_budget)
         # legacy settled sweep kept for the counters the old reports expose
         out["kalshi_settled"] = self.ing.kalshi_settled(max_pages=ingest_settled_pages)
         self._safe(out, "kalshi_live_points", self.ing.kalshi_live_price_points,
@@ -365,9 +371,30 @@ class Pipeline:
         bt = Backtester(self.store)
         pbt = PricedBacktester(self.store)
         decided = [r for r in rows if r.get("_winner") is not None]
+        # the strikes the exchange actually listed per game, so a totals accuracy run is
+        # scored at real lines rather than at strikes we chose ourselves
+        strikes_by_game: dict[int, set[float]] = {}
+        for r in self.store.query(
+                """SELECT game_id, floor_strike FROM market_settlements
+                    WHERE series_ticker='KXNHLTOTAL' AND floor_strike IS NOT NULL
+                      AND game_id IS NOT NULL"""):
+            strikes_by_game.setdefault(int(r["game_id"]), set()).add(float(r["floor_strike"]))
+        strikes_by_game = {k: sorted(v) for k, v in strikes_by_game.items()}
         out = {}
         for s in self.store.latest_versions():
             strat = _hydrate(s)
+            if getattr(strat, "market", "moneyline") == "total":
+                tr = bt.run_totals_accuracy(strat, decided,
+                                            strikes_by_game=strikes_by_game)
+                if tr:
+                    out[s["strategy_id"]] = {
+                        "market": "total", "n": tr.n_bets, "hit": tr.hit_rate,
+                        "base": tr.base_rate, "lift": tr.lift, "ci": [tr.ci_low, tr.ci_high],
+                        "log_loss": tr.log_loss, "brier": tr.brier,
+                        "games": getattr(tr, "n_games", None),
+                        "note": "accuracy only; priced totals bets are written by the "
+                                "forward/backtest stage from KXNHLTOTAL candles"}
+                continue
             res = bt.run(strat, decided, label="all")
             entry = {}
             if res:
@@ -430,6 +457,119 @@ class Pipeline:
             d["points"] = pts.get(ms["contract"], {})
             out.append(d)
         return out
+
+    def _settled_totals(self) -> list[dict[str, Any]]:
+        """Settled KXNHLTOTAL contracts ("Over k.5 goals") with their named price points.
+
+        Each row gains ``direction``/``strike`` taken from the exchange's own
+        ``strike_type``/``floor_strike`` (falling back to the sub-title text of the same
+        payload when the columns predate the strike_type addition), and ``points`` from the
+        candlestick history.  The candle feed publishes the YES offer only, so a settled
+        totals row can price an **Over** entry; the Under side has no historical offer and
+        is forward-test only (see :class:`TotalsStrategy`).
+        """
+        rows = self.store.query(
+            """SELECT ms.*, g.home_id, g.away_id
+                 FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
+                WHERE ms.provider='kalshi' AND ms.result IN ('yes','no')
+                  AND ms.series_ticker='KXNHLTOTAL' AND ms.floor_strike IS NOT NULL""")
+        pts: dict[str, dict[str, dict[str, Any]]] = {}
+        for pr in self.store.query(
+                """SELECT contract, point, end_period_ts, bid, ask, mean, volume
+                     FROM market_price_points WHERE point IN ('open','t24h','t6h','t1h','close')"""):
+            pts.setdefault(pr["contract"], {})[pr["point"]] = {
+                "bid": pr["bid"], "ask": pr["ask"], "mean": pr["mean"],
+                "ts": pr["end_period_ts"], "volume": pr["volume"]}
+        out = []
+        for ms in rows:
+            line = total_side_and_strike(ms["strike_type"], ms["floor_strike"])
+            basis = "strike_type+floor_strike"
+            if line is None:
+                line = total_side_from_text(ms["selection"])
+                basis = "yes_sub_title text"
+            if line is None:
+                self.store.flag("unmapped_totals_line",
+                                f"totals contract {ms['contract']} has no readable line "
+                                f"(strike_type={ms['strike_type']}, floor_strike="
+                                f"{ms['floor_strike']}, selection={ms['selection']!r}); skipped "
+                                f"rather than assumed", severity="warn",
+                                entity_type="market", entity_id=ms["contract"])
+                continue
+            d = dict(ms)
+            d["direction"], d["strike"] = line[0], line[1]
+            d["line_basis"] = basis
+            d["points"] = pts.get(ms["contract"], {})
+            out.append(d)
+        return out
+
+    def _backtest_totals(self, strat: Any, *, refs: dict[int, GameRef],
+                         pit: dict[int, dict[str, Any]], totals: Sequence[dict[str, Any]],
+                         entry_point: str) -> int:
+        """Price a totals rule against settled KXNHLTOTAL candle offers (BACKTEST mode).
+
+        Entry price is the ``yes_ask`` of the last candle ending at or before puck drop --
+        a real, timestamped offer -- and settlement is the contract's own Kalshi result.
+        Under rules are skipped: the candle feed publishes no NO-side offer, and
+        ``no_ask = 1 - yes_bid`` is contradicted by this ledger's own quotes, so there is
+        no honest historical Under price to buy at.
+        """
+        if getattr(strat, "market", "moneyline") != "total":
+            return 0
+        if getattr(strat, "direction", "over") != "over":
+            return 0
+        placed = 0
+        for ms in totals:
+            gid = int(ms["game_id"])
+            g = refs.get(gid)
+            f = pit.get(gid)
+            if g is None or f is None or f.get("lam_home") is None or not g.decided:
+                continue
+            pt = ms["points"].get(entry_point)
+            close_pt = ms["points"].get("close")
+            if not (pt and pt.get("ask") and 0 < float(pt["ask"]) < 1):
+                continue
+            q = Quote(provider="kalshi", market_key=ms["event_ticker"], contract=ms["contract"],
+                      game_id=gid, game_date=g.game_date, market_type="total",
+                      selection=ms["direction"], side="YES", bid=pt.get("bid"),
+                      ask=float(pt["ask"]), bid_size=None, ask_size=None, volume=pt.get("volume"),
+                      liquidity=None, ts_utc=pt["ts"],
+                      label=ms["selection"], strike=float(ms["strike"]))
+            pred = {k: f[k] for k in ("p_home_ml", "p_away_ml", "lam_home", "lam_away",
+                                      "exp_total") if f.get(k) is not None}
+            ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred, quotes=[q],
+                                  starters={}, injuries={}, bankroll=strat.starting_bankroll,
+                                  open_exposure=0.0)
+            for sig in strat.evaluate(ctx):
+                if sig.status != "READY TO BET" or sig.quote is None:
+                    continue
+                sig.supporting["decision_ts"] = ctx.decision_ts
+                sig.supporting["contract"] = ms["contract"]
+                sig.supporting["line_basis"] = ms["line_basis"]
+                sig.supporting["price_basis"] = (
+                    f"kalshi candlestick yes_ask close of the last 60-minute candle ending "
+                    f"{pt['ts']} ({entry_point})")
+                sig.supporting["price_point"] = entry_point
+                bid = self.paper.place(sig, decision_ts=ctx.decision_ts, test_mode="BACKTEST",
+                                       provider="kalshi", source_url=self.KALSHI_HIST_URL,
+                                       verification=f"kalshi_candle_{entry_point}")
+                if not bid:
+                    continue
+                placed += 1
+                won = (ms["result"] == "yes")     # the exchange's own settlement
+                close_mid = None
+                if close_pt and close_pt.get("bid") is not None and close_pt.get("ask") is not None:
+                    close_mid = round((float(close_pt["bid"]) + float(close_pt["ask"])) / 2, 4)
+                clv = (round(close_mid - float(sig.quote.ask), 4)
+                       if close_mid is not None and entry_point != "close" else None)
+                self.store.settle_bet(
+                    bid, result="WIN" if won else "LOSS", pnl=_settle_pnl(self.store, bid, won),
+                    close_price=close_mid, clv=clv, settle_ts=ms["settlement_ts"],
+                    reason=f"kalshi totals contract settled {ms['result']} "
+                           f"(strike {float(ms['strike']):g})")
+                self.store.execute(
+                    "UPDATE bets SET price_point=?, close_price_ts=? WHERE bet_id=?",
+                    (entry_point, close_pt["ts"] if close_pt else None, bid))
+        return placed
 
     def _dk_reference(self) -> dict[int, dict[str, Any]]:
         """Latest sportsbook moneyline per game (DraftKings via the NHL partner feed),
@@ -516,7 +656,8 @@ class Pipeline:
             if f is not None and f.get("p_home_ml") is not None:
                 return f, {k: f[k] for k in ("p_home_ml", "p_away_ml", "p_home_elo", "p_away_elo",
                                              "p_home_logit", "p_away_logit", "p_over", "p_under",
-                                             "exp_total") if k in f and f[k] is not None}
+                                             "exp_total", "lam_home", "lam_away")
+                       if k in f and f[k] is not None}
             f = feats.get(gid)
             if f is None:
                 return None
@@ -539,7 +680,8 @@ class Pipeline:
         inj = self._injury_map()
         dk = self._dk_reference()
         settled = self._settled_contracts()
-        live = self._live_quotes()
+        totals = self._settled_totals()
+        live = self._live_quotes(refs, names)
         for s in self.store.latest_versions():
             if s["status"] == "rejected":
                 continue
@@ -557,7 +699,12 @@ class Pipeline:
             # No historical injury feed exists, so an injury-sensitive rule cannot be
             # replayed honestly: "no pending injuries" would really mean "unknown".
             backtestable = not getattr(strat, "injury_sensitive", False)
-            for ms in (settled if backtestable else ()):
+            if backtestable and getattr(strat, "market", "moneyline") == "total":
+                placed["BACKTEST"] += self._backtest_totals(
+                    strat, refs=refs, pit=pit, totals=totals, entry_point=entry_point)
+                self.store.sync_bankroll(strat.strategy_id, strat.version)
+            for ms in (settled if (backtestable and getattr(strat, "market", "moneyline")
+                                   != "total") else ()):
                 gid = int(ms["game_id"])
                 g = refs.get(gid)
                 f = pit.get(gid)
@@ -597,7 +744,8 @@ class Pipeline:
                 else:
                     continue
                 pred = {k: f[k] for k in ("p_home_ml", "p_away_ml", "p_home_elo", "p_away_elo",
-                                          "p_home_logit", "p_away_logit") if f.get(k) is not None}
+                                          "p_home_logit", "p_away_logit", "lam_home", "lam_away",
+                                          "exp_total") if f.get(k) is not None}
                 # historical injuries are not available -> injury-gated strategies wait
                 ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred,
                                       quotes=[q], starters=starters_for(f), injuries={},
@@ -641,14 +789,22 @@ class Pipeline:
                     continue
                 if not self._pregame(g, as_of):
                     continue   # the game has started: a pre-game rule may not enter now
-                sel = _side_for_selection(q.selection, g, names)
-                if sel is None or sel != strat.bet_side:
+                qtype = q.market_type or "moneyline"
+                if getattr(strat, "market", "moneyline") != qtype:
                     continue
+                if qtype == "total":
+                    sel = q.selection            # 'over' | 'under', from the exchange's line
+                    if sel != getattr(strat, "direction", None):
+                        continue
+                else:
+                    sel = _side_for_selection(q.selection, g, names)
+                    if sel is None or sel != strat.bet_side:
+                        continue
                 fr = forward_row(gid)
                 if fr is None:
                     continue
                 f, pred = fr
-                ref = dk.get(gid)
+                ref = dk.get(gid) if (q.market_type or "moneyline") == "moneyline" else None
                 if ref and ref.get("home_prob") is not None:
                     pred = dict(pred, p_home_book=ref["home_prob"], p_away_book=ref["away_prob"])
                 ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred,
@@ -657,7 +813,11 @@ class Pipeline:
                 for sig in strat.evaluate(ctx):
                     sig.supporting["decision_ts"] = q.ts_utc
                     sig.supporting["price_point"] = "live_quote"
-                    ref = dk.get(gid)
+                    sig.supporting["contract"] = q.contract
+                    sig.supporting["contract_label"] = q.label
+                    sig.supporting["strike"] = q.strike
+                    sig.supporting["quote_side"] = q.side
+                    ref = dk.get(gid) if (q.market_type or "moneyline") == "moneyline" else None
                     if ref and ref.get("home_prob") is not None:
                         p_ref = ref["home_prob"] if sel == "home" else ref["away_prob"]
                         sig.supporting["sportsbook_reference"] = {
@@ -685,19 +845,66 @@ class Pipeline:
         self.log(f"forward: {placed}")
         return placed
 
-    def _live_quotes(self) -> list[Quote]:
-        out = []
+    def _live_quotes(self, refs: dict[int, GameRef] | None = None,
+                     names: dict[int, list[str]] | None = None) -> list[Quote]:
+        """Latest quote per contract *and side*, normalized into this project's vocabulary.
+
+        A stored quote's ``selection`` is the exchange's own wording ("Anaheim wins",
+        "Full Game: Over 8.5 goals scored"), while a rule asks for a side ("home", "away",
+        "over", "under").  Mapping one to the other here -- and keeping the wording in
+        ``Quote.label`` -- is what lets a strategy actually match the quote it was handed.
+        Before this normalization existed, ``find_quote`` compared "home" against
+        "Anaheim wins", never matched, and every forward opportunity was recorded as
+        "no quote published for this market yet" (183 rows in the 2026-09-20 ledger).
+
+        Moneyline: the contract title is resolved to home/away through the games table; a
+        title that cannot be resolved unambiguously is dropped, never guessed.
+        Totals: Kalshi quotes both sides of an "Over k.5" contract directly
+        (``yes_ask_dollars`` and ``no_ask_dollars``), so the YES row is the Over price and
+        the NO row is the Under price.  Both are observed offers; nothing is derived from
+        the other side, because ``no_ask = 1 - yes_bid`` does not hold on this ledger's
+        quotes (2 of 12 contracts on 2026-09-20).
+        """
+        if refs is None:
+            refs = {g.game_id: g for g in self.game_refs(game_types=(1, 2, 3))}
+        if names is None:
+            names = build_team_names(self.store)
+        out: list[Quote] = []
         for q in self.store.query(
-                """SELECT * FROM market_quotes WHERE game_id IS NOT NULL AND ask IS NOT NULL
-                   AND ask > 0 AND ask < 1 AND side='YES'
-                   AND ts_utc = (SELECT MAX(ts_utc) FROM market_quotes q2
-                                 WHERE q2.contract = market_quotes.contract)"""):
+                """SELECT * FROM market_quotes mq
+                    WHERE mq.game_id IS NOT NULL AND mq.ask IS NOT NULL
+                      AND mq.ask > 0 AND mq.ask < 1
+                      AND mq.ts_utc = (SELECT MAX(q2.ts_utc) FROM market_quotes q2
+                                        WHERE q2.contract = mq.contract AND q2.side = mq.side)"""):
+            mtype = q["market_type"] or "moneyline"
+            gid = int(q["game_id"]) if q["game_id"] is not None else None
+            g = refs.get(gid) if gid else None
+            if mtype == "total":
+                line = total_side_and_strike(q["strike_type"], q["strike"])
+                if line is None:
+                    continue        # line unknown: not traded, never assumed
+                yes_dir, strike = line
+                direction = yes_dir if q["side"] == "YES" else ("under" if yes_dir == "over"
+                                                               else "over")
+                out.append(Quote(provider=q["provider"], market_key=q["market_key"],
+                                 contract=q["contract"], game_id=gid, game_date=q["game_date"],
+                                 market_type="total", selection=direction, side=q["side"],
+                                 bid=q["bid"], ask=q["ask"], bid_size=q["bid_size"],
+                                 ask_size=q["ask_size"], volume=q["volume"],
+                                 liquidity=q["liquidity"], ts_utc=q["ts_utc"],
+                                 label=q["selection"], strike=strike))
+                continue
+            if q["side"] != "YES":
+                continue            # a moneyline is quoted once; both teams are separate contracts
+            sel = _side_for_selection(q["selection"], g, names) if g is not None else None
+            if sel is None:
+                continue
             out.append(Quote(provider=q["provider"], market_key=q["market_key"],
-                             contract=q["contract"], game_id=q["game_id"],
-                             game_date=q["game_date"], market_type=q["market_type"],
-                             selection=q["selection"], side=q["side"], bid=q["bid"],
+                             contract=q["contract"], game_id=gid, game_date=q["game_date"],
+                             market_type=mtype, selection=sel, side=q["side"], bid=q["bid"],
                              ask=q["ask"], bid_size=q["bid_size"], ask_size=q["ask_size"],
-                             volume=q["volume"], liquidity=q["liquidity"], ts_utc=q["ts_utc"]))
+                             volume=q["volume"], liquidity=q["liquidity"], ts_utc=q["ts_utc"],
+                             label=q["selection"]))
         return out
 
     # ------------------------------------------------------------- stage 6
@@ -786,6 +993,38 @@ class Pipeline:
         self.store.commit()
         return self.report["competition"]
 
+    def stage_master_site_review(self) -> dict[str, Any]:
+        """Record the review of the owner's MasterSite directory in the findings ledger.
+
+        The brief asks for the master directory to be reviewed and for infrastructure to be
+        reused only after it is verified as relevant and functional.  The review itself
+        lives in :mod:`nhlcomp.mastersite` (fetched sources, per-project verdicts, and the
+        one reuse candidate that was tested and rejected); this stage writes it to the
+        ledger so it is auditable next to every other finding instead of living only in a
+        docstring.
+        """
+        from . import mastersite
+        summary = mastersite.summary()
+        self.store.execute(
+            """INSERT OR REPLACE INTO findings(finding_id, created_at, title, body, evidence,
+                                               confidence, kind) VALUES(?,?,?,?,?,?,?)""",
+            ("FIND_MASTER_SITE_REVIEW", utcnow(),
+             f"MasterSite directory reviewed {mastersite.REVIEW_DATE} "
+             f"({summary['projects_reviewed']} projects)",
+             "The owner's MasterSite index was fetched, every named project was checked against "
+             "the GitHub API, candidate READMEs were read, and the one data claim that mattered "
+             "was tested against the live endpoint before anything was reused. "
+             f"Repositories that do not exist: {', '.join(summary['missing_repositories']) or 'none'}. "
+             "One reuse candidate (NHL prices from the ESPN scoreboard odds block) was tested and "
+             "rejected for historical use; the feed itself was kept as a registered source for "
+             "the results and post-game goalie identification it verifiably supplies.",
+             json.dumps(summary, indent=1), "high", "source_review"))
+        self.store.commit()
+        self.report["master_site_review"] = summary
+        self.log(f"master site review: {summary['projects_reviewed']} projects, "
+                 f"missing repos {summary['missing_repositories']}")
+        return summary
+
     def stage_verify(self) -> dict[str, Any]:
         v = Verifier(self.store)
         self.report["verification"] = v.run_all()
@@ -808,6 +1047,7 @@ class Pipeline:
         self.stage_clv()
         self.stage_reconcile()
         self.stage_analysis()
+        self.stage_master_site_review()
         self.stage_verify()
         self.store.audit("pipeline", "RUN_ALL", "", json.dumps(self.report.get("competition", {})))
         self.store.commit()
@@ -829,11 +1069,26 @@ def _hydrate(row: Any):
     silently dropped on reload -- gating flags such as requires_goalie simply evaporated
     and the strategy started betting as though it had never been gated.
     """
-    from .strategies import ThresholdStrategy
+    from .strategies import ThresholdStrategy, TotalsStrategy
     params = json.loads(row["params_json"] or "{}")
+    # the class is part of the stored parameter set: reloading a totals rule as a
+    # threshold rule would silently drop its strike logic and let it bet a moneyline
+    cls = TotalsStrategy if params.get("kind") == "totals" else ThresholdStrategy
     kw = dict(params)
     kw.pop("min_edge", None)
     kw.pop("stake_fraction", None)
+    kw.pop("kind", None)
+    if cls is TotalsStrategy:
+        kw.setdefault("direction", "over")
+        return cls(
+            strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
+            name=row["name"], category=row["category"],
+            hypothesis=row["hypothesis"], data_used=row["data_used"], entry_rule=row["entry_rule"],
+            price_rule=row["price_rule"], settlement_rule=row["settlement_rule"],
+            markets=row["markets"], origin=row["origin"], origin_ref=row["origin_ref"],
+            starting_bankroll=float(row["starting_bankroll"]),
+            min_edge=params.get("min_edge", 0.04),
+            stake_fraction=params.get("stake_fraction", 0.25), **kw)
     kw.setdefault("feature", "home_n_prior")
     kw.setdefault("operator", ">=")
     kw.setdefault("threshold", 0)

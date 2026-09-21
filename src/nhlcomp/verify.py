@@ -277,12 +277,68 @@ class Verifier:
                 "shootout_goal_definition_adjusted": so_adjusted,
                 "settlement_conflicts": settle_conf}
 
+    def cross_validate_totals_settlements(self) -> dict[str, int]:
+        """Check every settled KXNHLTOTAL contract against the official final score.
+
+        Kalshi resolves an "Over k.5" contract on regulation + overtime goals, counting a
+        shootout as one goal for the winner -- which is exactly what the NHL's official
+        final score already contains.  So the exchange's own ``result`` and this project's
+        settlement rule are two independent statements about the same fact, and any
+        disagreement means one of them is wrong.  Both values are recorded; neither is
+        corrected here.
+        """
+        compared = conflicts = missing_strike = 0
+        for r in self.store.query(
+                """SELECT ms.contract, ms.game_id, ms.result, ms.floor_strike, ms.strike_type,
+                          ms.selection, g.home_score, g.away_score
+                     FROM market_settlements ms JOIN games g ON g.game_id = ms.game_id
+                    WHERE ms.provider='kalshi' AND ms.series_ticker='KXNHLTOTAL'
+                      AND ms.result IN ('yes','no')
+                      AND g.home_score IS NOT NULL AND g.away_score IS NOT NULL"""):
+            strike = _col(r, "floor_strike")
+            if strike is None:
+                missing_strike += 1
+                self.store.flag("missing_strike",
+                                f"totals contract {r['contract']} settled {r['result']} but has "
+                                f"no floor_strike; it cannot be re-derived from the score",
+                                entity_type="market", entity_id=r["contract"], severity="error")
+                continue
+            compared += 1
+            total = int(r["home_score"]) + int(r["away_score"])
+            implied = "yes" if total > float(strike) else "no"
+            if implied != r["result"]:
+                conflicts += 1
+                self.store.flag(
+                    "settlement_conflict",
+                    f"totals contract {r['contract']} (game {r['game_id']}, strike {strike}, "
+                    f"strike_type={_col(r, 'strike_type')!r}, selection={r['selection']!r}): "
+                    f"kalshi settled '{r['result']}' but the official total is {total} "
+                    f"({r['home_score']}-{r['away_score']}), which implies '{implied}'",
+                    entity_type="market", entity_id=r["contract"], severity="critical",
+                    sources="kalshi.trade_api,nhl.api_web")
+        return {"totals_contracts_compared": compared, "totals_conflicts": conflicts,
+                "totals_missing_strike": missing_strike}
+
+    def check_totals_bets(self) -> dict[str, int]:
+        """A totals wager without a line cannot be settled; catch it before settlement does."""
+        counts = {"totals_bets": 0, "totals_missing_strike": 0}
+        for b in self.store.query("SELECT * FROM bets WHERE market='total'"):
+            counts["totals_bets"] += 1
+            if _col(b, "strike") is None:
+                counts["totals_missing_strike"] += 1
+                self.store.flag("missing_strike",
+                                f"totals bet {b['bet_id']} has no strike recorded",
+                                entity_type="bet", entity_id=b["bet_id"], severity="error")
+        return counts
+
     def run_all(self) -> dict[str, Any]:
         summary = {}
         summary["games"] = self.check_games()
         summary["bets"] = self.check_bets()
+        summary["totals_bets"] = self.check_totals_bets()
         summary["quotes"] = self.check_quotes()
         summary["cross_validation"] = self.cross_validate_stats_vs_schedule()
+        summary["totals_settlements"] = self.cross_validate_totals_settlements()
         summary["open_irregularities"] = self.store.one(
             "SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"]
         self.store.audit("verifier", "RUN_ALL", "", json.dumps(summary))

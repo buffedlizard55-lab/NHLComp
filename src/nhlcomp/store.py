@@ -38,9 +38,15 @@ ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("market_settlements", "team_abbrev", "TEXT"),
     ("market_settlements", "market_type", "TEXT"),
     ("market_settlements", "candles_state", "TEXT"),
+    ("market_settlements", "strike_type", "TEXT"),   # kalshi: greater | less (Over | Under)
+    # totals / puck-line quotes need the line the contract was written at
+    ("market_quotes", "strike", "REAL"),
+    ("market_quotes", "strike_type", "TEXT"),
     ("bets", "close_price_ts", "TEXT"),
     ("bets", "price_point", "TEXT"),
     ("bets", "fee", "REAL"),                     # exchange taker fee at the fill (dollars)
+    ("bets", "strike", "REAL"),                  # totals line the wager was placed at
+    ("bets", "price_basis", "TEXT"),             # exchange | derived (how ask was obtained)
     ("backtests", "avg_edge", "REAL"),
     ("backtests", "hit_rate", "REAL"),
     ("backtests", "base_rate", "REAL"),

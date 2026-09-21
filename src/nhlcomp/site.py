@@ -15,6 +15,7 @@ import json
 import os
 from typing import Any, Iterable, Sequence
 
+from . import mastersite
 from .analysis import Performance
 from .backtest import CAVEAT_NO_PRICE
 from .store import Store, utcnow
@@ -218,6 +219,34 @@ def page_dashboard(store: Store, perf: Performance, gen: str) -> str:
                 'quote — see the verification column). FORWARD TEST rows were opened against a '
                 'live quote before the game and settle from the official result. Kalshi\'s '
                 'published taker fee is deducted from both.</p>')
+
+    # per market, per mode: a totals result and a moneyline result are different questions
+    # and are never netted against each other
+    mrows = []
+    for mode in ("BACKTEST", "FORWARD TEST"):
+        for r in store.query(
+                """SELECT market,
+                          COUNT(*) c,
+                          SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN 1 ELSE 0 END) settled,
+                          SUM(CASE WHEN result='OPEN' THEN 1 ELSE 0 END) open_n,
+                          COALESCE(SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN pnl END),0) pnl,
+                          COALESCE(SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN stake END),0) staked,
+                          SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) wins
+                     FROM bets WHERE test_mode=? GROUP BY market ORDER BY c DESC""", (mode,)):
+            settled = int(r["settled"] or 0)
+            mrows.append([e(mode), e(r["market"] or "?"), str(r["c"]), str(settled),
+                          str(r["open_n"] or 0), signed(r["pnl"]), n(r["staked"]),
+                          pct((r["pnl"] / r["staked"]) if r["staked"] else None),
+                          pct((r["wins"] / settled) if settled else None)])
+    if mrows:
+        body.append("<h2>By market (moneyline and totals are reported apart)</h2>")
+        body.append(_table("markets", ["Mode", "Market", "Bets", "Settled", "Open", "P&L",
+                                       "Staked", "ROI", "Win rate"], mrows,
+                           numeric=(2, 3, 4, 5, 6, 7, 8)))
+        body.append('<p class="small">A totals wager settles on the official total '
+                    '(home + away, which already includes the shootout goal exactly as Kalshi\'s '
+                    'KXNHLTOTAL rules define it). An Over is the YES side of an "Over k.5" '
+                    'contract; an Under is the NO side of the same contract.</p>')
 
     # how much real price history backs the backtests
     cov = store.one(
@@ -484,19 +513,35 @@ def page_upcoming(store: Store, gen: str) -> str:
             '<div class="controls"><input placeholder="filter…" '
             'oninput="filterTable(\'up\', this.value)"></div>']
     rows = []
+    # the latest live version per strategy, so a signal left behind by a retired version is
+    # visibly historical instead of reading like a current claim
+    latest = {int(r["version"]): r["strategy_id"] for r in store.query(
+        "SELECT strategy_id, MAX(version) version FROM strategies GROUP BY strategy_id")}
+    status_of = {(r["strategy_id"], int(r["version"])): r["status"] for r in store.query(
+        "SELECT strategy_id, version, status FROM strategies")}
     for u in store.query("SELECT * FROM upcoming_bets ORDER BY decision_ts DESC LIMIT 1000"):
         pill = {"READY TO BET": "good", "EXECUTED": "good", "PRICE TOO HIGH": "warn",
                 "PRICE TOO LOW": "warn", "WATCHING": "info", "CANCELLED": "bad",
                 "EXPIRED": "bad"}.get(u["status"], "info")
-        rows.append([e(u["username"]), e(u["game_date"]), e(u["matchup"]), e(u["market"]),
-                     e(u["selection"]), e(u["provider"]), n(u["current_price"], 3),
+        sid, ver = u["strategy_id"], int(u["strategy_version"] or 1)
+        superseded = latest.get(sid) not in (None, ver)
+        vstat = status_of.get((sid, ver), "?")
+        version_cell = (f'v{ver} <span class="pill {"bad" if superseded else "info"}">'
+                        f'{"superseded" if superseded else e(vstat)}</span>')
+        rows.append([e(u["username"]), e(version_cell), e(u["game_date"]), e(u["matchup"]),
+                     e(u["market"]), e(u["selection"]), e(u["provider"]),
+                     n(u["current_price"], 3),
                      n(u["required_price"], 3), n(u["model_prob"], 4), n(u["edge"], 4),
                      n(u["stake"]), f'<span class="pill {pill}">{e(u["status"])}</span>',
                      e(u["blocking_reason"]), e(u["supporting_data"])[:300], e(u["decision_ts"])])
-    body.append(_table("up", ["Username", "Game", "Matchup", "Market", "Selection", "Provider",
-                              "Current price", "Required price", "Model p", "Edge", "Stake",
-                              "Status", "Blocking reason", "Supporting data", "Decision ts"],
-                       rows, numeric=(6, 7, 8, 9, 10)))
+    body.append(_table("up", ["Username", "Version", "Game", "Matchup", "Market", "Selection",
+                              "Provider", "Current price", "Required price", "Model p", "Edge",
+                              "Stake", "Status", "Blocking reason", "Supporting data",
+                              "Decision ts"],
+                       rows, numeric=(7, 8, 9, 10, 11)))
+    body.append('<p class="small">Signals are never deleted. A row marked <b>superseded</b> was '
+                'written by an older version of that strategy; it stays in the record with the '
+                'reason it carried at the time, and only the latest version trades.</p>')
     return _page("Upcoming Bets", "upcoming.html", "".join(body), gen)
 
 
@@ -609,6 +654,22 @@ def page_research(store: Store, gen: str) -> str:
             for h in store.query("SELECT * FROM hypotheses ORDER BY hyp_id LIMIT 300")]
     parts.append(_table("hyp", ["ID", "Question", "Status", "Testable", "Data available", "Origin"],
                        rows))
+    parts.append("<h2>Master site review</h2>")
+    parts.append(
+        f'<p class="small">The owner\'s directory of verified GitHub Pages sites '
+        f'(<a href="{e(mastersite.MASTER_SITE_URL)}">MasterSite</a>) was reviewed on '
+        f'{e(mastersite.REVIEW_DATE)}: the index was fetched, every named project was checked '
+        f'against the GitHub API, READMEs were read, and the one data claim that mattered was '
+        f'tested against the live endpoint before anything was reused.</p>')
+    rows = [[e(r["project"]), e(r["exists"]), e(r["relevance"]), e(r["verdict"]), e(r["evidence"])]
+            for r in mastersite.REVIEW]
+    parts.append(_table("msite", ["Project", "Exists?", "Relevance to NHL", "Verdict", "Evidence"],
+                        rows))
+    for c in mastersite.REJECTED_REUSE:
+        parts.append(f'<div class="note caveat"><b>Tested and rejected:</b> {e(c["claim"])}<br>'
+                     f'<span class="small">Test: {e(c["test"])}<br>Result: {e(c["result"])}<br>'
+                     f'Kept: {e(c["kept"])}</span></div>')
+
     parts.append("<h2>Experiments</h2>")
     rows = [[e(x["exp_id"]), e(x["kind"]), e(x["strategy_id"]), str(x["version"]),
              e(x["verdict"]), e(x["conclusion"]), e(x["result_json"])[:200]]
@@ -729,6 +790,35 @@ P&amp;L) and a <i>priced</i> backtest on the games whose Kalshi closing candle w
 1-unit stakes at the offer, net of the exchange fee, on the whole window and on chronological
 train / validation / test splits). The accuracy backtest carries this caveat:</p>
 <div class="note caveat">{e(CAVEAT_NO_PRICE)}</div>
+
+<h2>3b. Markets traded</h2>
+<p><b>Moneyline</b> (KXNHLGAME) is traded on both the backtest and the forward test. <b>Totals</b>
+(KXNHLTOTAL, "Over k.5 goals") is traded as follows, and the asymmetry is deliberate:</p>
+<ul>
+<li>The line is read from the exchange's own <code>floor_strike</code> and
+<code>strike_type</code> fields — never parsed out of a title, because Kalshi words the same
+contract differently on the live tier ("Full Game: Over 8.5 goals scored") and the historical
+tier ("Carolina vs Vegas: Total Goals"). A contract with no readable line is skipped, not
+guessed.</li>
+<li>An <b>Over</b> is the YES side, and the candlestick history publishes the YES offer, so an
+Over rule is backtested at real timestamped prices.</li>
+<li>An <b>Under</b> is the NO side. The candlestick feed publishes only the YES bid/ask, so there
+is no historical NO offer to buy at, and <code>no_ask = 1 − yes_bid</code> is <i>not</i> assumed:
+on the quotes in this ledger that identity fails on 2 of 12 contracts
+(KXNHLGAME-26SEP20SJANA: yes_bid 0.19 against no_ask 0.99). An Under rule therefore carries a
+<code>no_history_reason</code> and is <b>forward-test only</b>, entered at the live
+<code>no_ask_dollars</code> Kalshi actually quotes. Its backtest row reports accuracy only, with
+<code>data_sufficient=0</code> and no P&amp;L.</li>
+<li>Settlement uses the official final score. Kalshi counts regulation and overtime goals
+normally and counts a shootout as one goal for the winner, which is what the NHL's official score
+already contains — so the settled total is <code>home + away</code> with no adjustment. Every
+settled totals contract is also cross-checked against the exchange's own result, and a
+disagreement is recorded as a critical <code>settlement_conflict</code> rather than resolved.</li>
+<li>Puck line (KXNHLSPREAD), first period (KXNHL1P), overtime (KXNHLOVERTIME) and player props
+are registered as series and researched, but nothing is bet on them: there is no period-level
+model and no verified prop feed. They stay in "waiting for other information" instead of being
+traded on an assumption.</li>
+</ul>
 
 <h2>3a. Data labels</h2>
 <ul>

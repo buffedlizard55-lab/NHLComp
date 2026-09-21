@@ -441,6 +441,42 @@ SOURCES: tuple[SourceSpec, ...] = (
         probe_urls=("https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries",),
     ),
     SourceSpec(
+        source_id="espn.nhl_scoreboard",
+        name="ESPN NHL scoreboard (date-addressable)",
+        url="https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard",
+        data_type="per-game results, period linescores, three stars, winning/losing goalie, "
+                  "venue, broadcast",
+        nhl_relevance="Second independent source for results and for post-game goalie "
+                      "identification, so a starter read from the NHL stats REST log can be "
+                      "cross-checked instead of trusted",
+        historical_depth="Any past date via ?dates=YYYYMMDD (verified back to the 2025-26 season)",
+        live_available=True,
+        update_frequency="Continuous",
+        api_available=True,
+        auth_required="none",
+        cost="free",
+        genuinely_free="yes",
+        usage_limits="Undocumented; keyless. Payload is large -- one date with one game was 3 "
+                     "response chunks.",
+        licensing="not published",
+        provenance="ESPN (second party); payload itself attributes the data to Draft Kings",
+        reliability="medium",
+        accuracy="editorial feed; used for cross-validation, never as the sole authority",
+        granularity="per game",
+        automated_access="yes",
+        known_limits="NO betting odds on completed games: the 2025-11-15 slate (fetched "
+                     "2026-09-21) carries results, linescores, stars and goalies but no odds "
+                     "block, so this feed cannot supply historical sportsbook prices. ESPN team "
+                     "ids differ from NHL team ids, so joining it to the NHL schedule needs a "
+                     "date + team mapping.",
+        notes="Found by reviewing the owner's MasterSite directory (SportsPred claims to read "
+              "NHL prices from 'the ESPN odds block'); that claim was tested directly on a "
+              "historical date and did not hold for completed games. Recorded as a verified "
+              "negative rather than reused.",
+        probe_urls=("https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard"
+                    "?dates=20251115&limit=1",),
+    ),
+    SourceSpec(
         source_id="openmeteo.archive",
         name="Open-Meteo Historical Weather Archive",
         url="https://archive-api.open-meteo.com/v1/archive",
