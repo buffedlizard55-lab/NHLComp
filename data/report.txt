@@ -5,8 +5,8 @@ NHLComp competition status (BACKTEST and FORWARD TEST are reported separately)
 forward test leaderboard (settled wagers only)
   (none settled yet)
 
-[BACKTEST] strategies: 49  bets: 3268  settled: 3268  open: 0
-[BACKTEST] pnl: 2391.66  staked: 109769.1  roi: 0.0218  win rate: 0.4819
+[BACKTEST] strategies: 49  bets: 3295  settled: 3295  open: 0
+[BACKTEST] pnl: 2416.15  staked: 110253.54  roi: 0.0219  win rate: 0.481
 
 backtest leaderboard (settled wagers only)
     1. NHL_GEN_HOME_G3_IN_4_AND_AWAY_G4_IN__001 n=44   pnl=  613.09 roi=0.453 dd=-173.07 wr_ci=[0.4662, 0.7428]
@@ -31,6 +31,6 @@ backtest leaderboard (settled wagers only)
    20. NHL_SHOT_SHARE_023           n=7    pnl=  156.86 roi=0.6623 dd=-77.35 wr_ci=[0.1582, 0.7495]
 
 market baseline (buy every side at the close, net of fees): {"home": {"n": 1312, "roi": -0.0606, "pnl": -79.5258, "avg_price": 0.5409, "hit": 0.5221, "mdd": 85.2756, "sharpe": -0.063}, "away": {"n": 1312, "roi": -0.018, "pnl": -23.5663, "avg_price": 0.4723, "hit": 0.4779, "mdd": 42.3855, "sharpe": -0.0162}}
-kalshi settled contracts: 10976  with pre-game candle: 3673
+kalshi settled contracts: 10992  with pre-game candle: 4270
 
-open irregularities: 4
+open irregularities: 15

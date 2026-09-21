@@ -2523,6 +2523,41 @@
    "rank": 23
   },
   {
+   "strategy_id": "NHL_TOTALS_OVER",
+   "version": 1,
+   "username": "NHL_TOTALS_OVER_030",
+   "name": "Expected-goals model over the exchange total",
+   "category": "totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 9,
+   "n_settled": 9,
+   "wins": 4,
+   "losses": 5,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": 0.4444,
+   "win_rate_ci": [
+    0.1888,
+    0.7334
+   ],
+   "pnl": 33.91,
+   "staked": 191.26,
+   "roi": 0.1773,
+   "bankroll": 1033.91,
+   "open_exposure": 0,
+   "max_drawdown": -48.4,
+   "volatility": 32.0367,
+   "longest_losing_streak": 2,
+   "avg_price": 0.3767,
+   "avg_edge": 0.0503,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 24
+  },
+  {
    "strategy_id": "NHL_B2B_HOME_FADE",
    "version": 1,
    "username": "NHL_B2B_HOME_FADE_002",
@@ -2555,7 +2590,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 24
+   "rank": 25
   },
   {
    "strategy_id": "NHL_GEN_HOME_G3_IN_4_AND_HOME_PREV_S",
@@ -2590,7 +2625,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 25
+   "rank": 26
   },
   {
    "strategy_id": "NHL_BOOK_VS_EXCHANGE",
@@ -2625,7 +2660,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 26
+   "rank": 27
   },
   {
    "strategy_id": "NHL_EDGE_TRACKING",
@@ -2660,7 +2695,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 27
+   "rank": 28
   },
   {
    "strategy_id": "NHL_GOALIE_FATIGUE",
@@ -2695,7 +2730,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 28
+   "rank": 29
   },
   {
    "strategy_id": "NHL_GOALIE_NEWS",
@@ -2730,7 +2765,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 29
+   "rank": 30
   },
   {
    "strategy_id": "NHL_INJURY_IMPACT",
@@ -2765,7 +2800,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 30
+   "rank": 31
   },
   {
    "strategy_id": "NHL_LINE_COMBO",
@@ -2800,7 +2835,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 31
+   "rank": 32
   },
   {
    "strategy_id": "NHL_LIVE_INGAME",
@@ -2835,7 +2870,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 32
+   "rank": 33
   },
   {
    "strategy_id": "NHL_OT_SURVIVAL",
@@ -2870,7 +2905,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 33
+   "rank": 34
   },
   {
    "strategy_id": "NHL_PERIOD_BET",
@@ -2905,7 +2940,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 34
+   "rank": 35
   },
   {
    "strategy_id": "NHL_PROP_EDGE",
@@ -2940,77 +2975,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 35
-  },
-  {
-   "strategy_id": "NHL_TOTALS_OVER",
-   "version": 1,
-   "username": "NHL_TOTALS_OVER_030",
-   "name": "Expected-goals model over the exchange total",
-   "category": "totals",
-   "status": "active",
-   "test_mode": "FORWARD TEST",
-   "n_bets": 0,
-   "n_settled": 0,
-   "wins": 0,
-   "losses": 0,
-   "pushes": 0,
-   "open": 0,
-   "win_rate": null,
-   "win_rate_ci": [
-    0.0,
-    0.0
-   ],
-   "pnl": 0,
-   "staked": 0,
-   "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
-   "max_drawdown": 0.0,
-   "volatility": null,
-   "longest_losing_streak": 0,
-   "avg_price": null,
-   "avg_edge": null,
-   "clv_beat_close": null,
-   "clv_avg": null,
-   "n_clv": 0,
-   "starting_bankroll": 1000.0,
    "rank": 36
-  },
-  {
-   "strategy_id": "NHL_TOTALS_OVER_TIGHT",
-   "version": 1,
-   "username": "NHL_TOTALS_OVER_TIGHT_032",
-   "name": "Expected-goals model over the exchange total (2c edge)",
-   "category": "totals",
-   "status": "active",
-   "test_mode": "FORWARD TEST",
-   "n_bets": 0,
-   "n_settled": 0,
-   "wins": 0,
-   "losses": 0,
-   "pushes": 0,
-   "open": 0,
-   "win_rate": null,
-   "win_rate_ci": [
-    0.0,
-    0.0
-   ],
-   "pnl": 0,
-   "staked": 0,
-   "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
-   "max_drawdown": 0.0,
-   "volatility": null,
-   "longest_losing_streak": 0,
-   "avg_price": null,
-   "avg_edge": null,
-   "clv_beat_close": null,
-   "clv_avg": null,
-   "n_clv": 0,
-   "starting_bankroll": 1000.0,
-   "rank": 37
   },
   {
    "strategy_id": "NHL_TOTALS_UNDER",
@@ -3045,7 +3010,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 38
+   "rank": 37
   },
   {
    "strategy_id": "NHL_WEATHER_OUTDOOR",
@@ -3076,6 +3041,41 @@
    "longest_losing_streak": 0,
    "avg_price": null,
    "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 38
+  },
+  {
+   "strategy_id": "NHL_TOTALS_OVER_TIGHT",
+   "version": 1,
+   "username": "NHL_TOTALS_OVER_TIGHT_032",
+   "name": "Expected-goals model over the exchange total (2c edge)",
+   "category": "totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 18,
+   "n_settled": 18,
+   "wins": 6,
+   "losses": 12,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": 0.3333,
+   "win_rate_ci": [
+    0.1628,
+    0.5625
+   ],
+   "pnl": -9.41,
+   "staked": 293.18,
+   "roi": -0.0321,
+   "bankroll": 990.59,
+   "open_exposure": 0,
+   "max_drawdown": -75.84,
+   "volatility": 24.8453,
+   "longest_losing_streak": 5,
+   "avg_price": 0.3656,
+   "avg_edge": 0.0388,
    "clv_beat_close": null,
    "clv_avg": null,
    "n_clv": 0,
