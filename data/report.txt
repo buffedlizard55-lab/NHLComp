@@ -1,36 +1,36 @@
 NHLComp competition status (BACKTEST and FORWARD TEST are reported separately)
-[FORWARD TEST] strategies: 54  bets: 102  settled: 0  open: 102
-[FORWARD TEST] pnl: 0.0  staked: 2692.24  roi: 0.0  win rate: None
+[FORWARD TEST] strategies: 78  bets: 81  settled: 0  open: 81
+[FORWARD TEST] pnl: 0.0  staked: 2166.15  roi: 0.0  win rate: None
 
 forward test leaderboard (settled wagers only)
   (none settled yet)
 
-[BACKTEST] strategies: 54  bets: 3490  settled: 3490  open: 0
-[BACKTEST] pnl: 2221.89  staked: 113210.08  roi: 0.0196  win rate: 0.4722
+[BACKTEST] strategies: 78  bets: 3150  settled: 3150  open: 0
+[BACKTEST] pnl: 1612.68  staked: 103306.83  roi: 0.0156  win rate: 0.486
 
 backtest leaderboard (settled wagers only)
     1. NHL_GEN_HOME_G3_IN_4_AND_AWAY_G4_IN__001 n=44   pnl=  613.09 roi=0.453 dd=-173.07 wr_ci=[0.4662, 0.7428]
     2. NHL_GEN_HOME_PK_PCT_L10_001  n=130  pnl=  596.89 roi=0.1377 dd=-401.4767 wr_ci=[0.393, 0.5622]
-    3. NHL_GEN_AWAY_G4_IN_6_001     n=75   pnl=  549.18 roi=0.2373 dd=-227.5528 wr_ci=[0.4216, 0.6418]
+    3. NHL_GEN_AWAY_G4_IN_6_001     n=75   pnl=  549.18 roi=0.2373 dd=-205.31 wr_ci=[0.4216, 0.6418]
     4. NHL_G3IN4_003                n=83   pnl=  531.44 roi=0.214 dd=-235.82 wr_ci=[0.4238, 0.6338]
     5. NHL_GEN_AWAY_G3_IN_4_001     n=83   pnl=  531.44 roi=0.214 dd=-235.82 wr_ci=[0.4238, 0.6338]
-    6. NHL_GOALIE_EDGE_011          n=58   pnl=  471.55 roi=0.2658 dd=-168.25 wr_ci=[0.4245, 0.6725]
-    7. NHL_GEN_AWAY_G3_IN_4_AND_AWAY_G4_IN__001 n=53   pnl=  450.51 roi=0.2875 dd=-119.1838 wr_ci=[0.4509, 0.7074]
+    6. NHL_GEN_AWAY_G3_IN_4_AND_AWAY_G4_IN__001 n=53   pnl=  450.51 roi=0.2875 dd=-119.1838 wr_ci=[0.4509, 0.7074]
+    7. NHL_GOALIE_EDGE_011          n=57   pnl=  415.78 roi=0.2393 dd=-168.25 wr_ci=[0.4159, 0.6663]
     8. NHL_OT_HANGOVER_007          n=38   pnl=  403.61 roi=0.3635 dd=-138.1704 wr_ci=[0.4219, 0.7215]
     9. NHL_PDO_REGRESSION_024       n=32   pnl=  356.54 roi=0.3545 dd=-116.22 wr_ci=[0.3363, 0.6637]
    10. NHL_GEN_HOME_G4_IN_6_AND_AWAY_PREV_O_001 n=15   pnl=   339.5 roi=0.6701 dd=-63.86 wr_ci=[0.4805, 0.891]
    11. NHL_GEN_HOME_G4_IN_6_AND_AWAY_G5_IN__001 n=13   pnl=  326.65 roi=0.8101 dd=-60.2372 wr_ci=[0.4974, 0.9182]
-   12. NHL_GEN_HOME_ROAD_TRIP_LEN_002 n=24   pnl=  280.64 roi=0.3745 dd=-67.7 wr_ci=[0.3507, 0.7211]
-   13. NHL_GEN_AWAY_STREAK_LOSSES_002 n=30   pnl=   272.3 roi=0.2772 dd=-171.0557 wr_ci=[0.3315, 0.6685]
+   12. NHL_GEN_AWAY_STREAK_LOSSES_002 n=29   pnl=  319.26 roi=0.3414 dd=-171.0557 wr_ci=[0.3443, 0.6861]
+   13. NHL_GEN_HOME_ROAD_TRIP_LEN_002 n=24   pnl=  280.64 roi=0.3745 dd=-67.7 wr_ci=[0.3507, 0.7211]
    14. NHL_GEN_HOME_STREAK_WINS_001 n=14   pnl=   241.4 roi=0.6627 dd=-46.37 wr_ci=[0.4535, 0.8828]
    15. NHL_GEN_AWAY_REST_DAYS_002   n=76   pnl=  241.03 roi=0.0978 dd=-280.93 wr_ci=[0.3408, 0.559]
-   16. NHL_HOME_DOG_028             n=142  pnl=  217.33 roi=0.0765 dd=-247.6714 wr_ci=[0.3511, 0.5118]
-   17. NHL_PACE_MISMATCH_005        n=10   pnl=  201.83 roi=0.7094 dd=-66.87 wr_ci=[0.3127, 0.8318]
-   18. NHL_GEN_AWAY_G4_IN_6_AND_AWAY_PREV_O_001 n=13   pnl=  190.65 roi=0.4375 dd=-75.9263 wr_ci=[0.4237, 0.8732]
-   19. NHL_POISSON_ML_008           n=139  pnl=   174.3 roi=0.0367 dd=-492.9887 wr_ci=[0.3318, 0.4932]
+   16. NHL_POISSON_ML_008           n=138  pnl=  221.26 roi=0.0471 dd=-492.9887 wr_ci=[0.3343, 0.4965]
+   17. NHL_HOME_DOG_028             n=142  pnl=  217.33 roi=0.0765 dd=-247.6714 wr_ci=[0.3511, 0.5118]
+   18. NHL_PACE_MISMATCH_005        n=10   pnl=  201.83 roi=0.7094 dd=-50.39 wr_ci=[0.3127, 0.8318]
+   19. NHL_GEN_AWAY_G4_IN_6_AND_AWAY_PREV_O_001 n=13   pnl=  190.65 roi=0.4375 dd=-75.9263 wr_ci=[0.4237, 0.8732]
    20. NHL_SHOT_SHARE_023           n=7    pnl=  156.86 roi=0.6623 dd=-77.35 wr_ci=[0.1582, 0.7495]
 
 market baseline (buy every side at the close, net of fees): {"home": {"n": 1312, "roi": -0.0606, "pnl": -79.5258, "avg_price": 0.5409, "hit": 0.5221, "mdd": 85.2756, "sharpe": -0.063}, "away": {"n": 1312, "roi": -0.018, "pnl": -23.5663, "avg_price": 0.4723, "hit": 0.4779, "mdd": 42.3855, "sharpe": -0.0162}}
-kalshi settled contracts: 16233  with pre-game candle: 7098
+kalshi settled contracts: 16233  with pre-game candle: 8092
 
-open irregularities: 74
+open irregularities: 5

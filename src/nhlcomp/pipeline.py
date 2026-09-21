@@ -613,36 +613,61 @@ class Pipeline:
         Under rules are skipped: the candle feed publishes no NO-side offer, and
         ``no_ask = 1 - yes_bid`` is contradicted by this ledger's own quotes, so there is
         no honest historical Under price to buy at.
+
+        Fixed 2026-09-21: previously looped per-contract, placing one bet per strike
+        rung (e.g. 5.5 and 7.5 for the same game), which violated the one-bet-per-game
+        invariant and triggered 64 duplicate_bet irregularities. Now groups by game and
+        hands the whole ladder to the strategy once, so _pick_strike chooses a single
+        rung (nearest target, lower on ties) exactly as forward-test does.
         """
         if getattr(strat, "market", "moneyline") != "total":
             return 0
         if getattr(strat, "direction", "over") != "over":
             return 0
-        placed = 0
+        # group by game, as puck-line does
+        ladders: dict[int, list[dict[str, Any]]] = {}
         for ms in totals:
             gid = int(ms["game_id"])
+            ladders.setdefault(gid, []).append(ms)
+        for rungs in ladders.values():
+            rungs.sort(key=lambda z: float(z["strike"]) if z.get("strike") is not None else 0.0)
+        placed = 0
+        for gid, rungs in sorted(ladders.items()):
             g = refs.get(gid)
             f = pit.get(gid)
             if g is None or f is None or f.get("lam_home") is None or not g.decided:
                 continue
-            pt = ms["points"].get(entry_point)
-            close_pt = ms["points"].get("close")
-            if not (pt and pt.get("ask") and 0 < float(pt["ask"]) < 1):
+            quotes: list[Quote] = []
+            settle_by: dict[str, dict[str, Any]] = {}
+            for ms in rungs:
+                pt = ms["points"].get(entry_point)
+                if not (pt and pt.get("ask") and 0 < float(pt["ask"]) < 1):
+                    continue
+                q = Quote(provider="kalshi", market_key=ms["event_ticker"], contract=ms["contract"],
+                          game_id=gid, game_date=g.game_date, market_type="total",
+                          selection=ms["direction"], side="YES", bid=pt.get("bid"),
+                          ask=float(pt["ask"]), bid_size=None, ask_size=None, volume=pt.get("volume"),
+                          liquidity=None, ts_utc=pt["ts"],
+                          label=ms["selection"], strike=float(ms["strike"]))
+                quotes.append(q)
+                settle_by[q.contract] = ms
+            if not quotes:
                 continue
-            q = Quote(provider="kalshi", market_key=ms["event_ticker"], contract=ms["contract"],
-                      game_id=gid, game_date=g.game_date, market_type="total",
-                      selection=ms["direction"], side="YES", bid=pt.get("bid"),
-                      ask=float(pt["ask"]), bid_size=None, ask_size=None, volume=pt.get("volume"),
-                      liquidity=None, ts_utc=pt["ts"],
-                      label=ms["selection"], strike=float(ms["strike"]))
+            # decision_ts is the earliest of the ladder's points (all should be same entry_point ts, but use first)
+            ts = quotes[0].ts_utc
             pred = {k: f[k] for k in ("p_home_ml", "p_away_ml", "lam_home", "lam_away",
                                       "exp_total") if f.get(k) is not None}
-            ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred, quotes=[q],
+            ctx = DecisionContext(decision_ts=ts, features=f, predictions=pred, quotes=quotes,
                                   starters={}, injuries={}, bankroll=strat.starting_bankroll,
                                   open_exposure=0.0)
             for sig in strat.evaluate(ctx):
                 if sig.status != "READY TO BET" or sig.quote is None:
                     continue
+                ms = settle_by.get(sig.quote.contract)
+                if ms is None:
+                    continue
+                pt = ms["points"].get(entry_point)
+                close_pt = ms["points"].get("close")
                 sig.supporting["decision_ts"] = ctx.decision_ts
                 sig.supporting["contract"] = ms["contract"]
                 sig.supporting["line_basis"] = ms["line_basis"]
@@ -658,7 +683,7 @@ class Pipeline:
                 if not bid:
                     continue
                 placed += 1
-                won = (ms["result"] == "yes")     # the exchange's own settlement
+                won = (ms["result"] == "yes")
                 close_mid = None
                 if close_pt and close_pt.get("bid") is not None and close_pt.get("ask") is not None:
                     close_mid = round((float(close_pt["bid"]) + float(close_pt["ask"])) / 2, 4)

@@ -16,6 +16,14 @@
 [ingest] espn.nhl_scoreboard: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20251115&limit=1
 [ingest] openmeteo.archive: reachable (200) https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-73.99&current=temperature_2m
 [ingest] moneypuck.downloads: reachable (200) https://moneypuck.com/data.htm
+[ingest] kalshi.period: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHL1P&limit=2&status=open
+[ingest] kalshi.period_total: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHL1PTOTAL&limit=2&status=open
+[ingest] kalshi.team_total: reachable (200) https://api.elections.kalshi.com/trade-api/v2/series?category=Sports&tags=Hockey
+[ingest] kalshi.regulation: reachable (200) https://api.elections.kalshi.com/trade-api/v2/series?category=Sports&tags=Hockey
+[ingest] kalshi.player_props: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGOAL&limit=2&status=open
+[ingest] kalshi.goalie_props: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLSAVES&limit=2&status=open
+[ingest] kalshi.futures: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHL&limit=2&status=open
+[ingest] kalshi.alternate: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLTOTAL&limit=5&status=open
 {
  "nhl.api_web": {
   "status_code": 200,
@@ -114,6 +122,46 @@
   "status_code": 200,
   "verdict": "reachable",
   "url": "https://moneypuck.com/data.htm"
+ },
+ "kalshi.period": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHL1P&limit=2&status=open"
+ },
+ "kalshi.period_total": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHL1PTOTAL&limit=2&status=open"
+ },
+ "kalshi.team_total": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/series?category=Sports&tags=Hockey"
+ },
+ "kalshi.regulation": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/series?category=Sports&tags=Hockey"
+ },
+ "kalshi.player_props": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGOAL&limit=2&status=open"
+ },
+ "kalshi.goalie_props": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLSAVES&limit=2&status=open"
+ },
+ "kalshi.futures": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHL&limit=2&status=open"
+ },
+ "kalshi.alternate": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLTOTAL&limit=5&status=open"
  },
  "research.public": {
   "status": "candidate",

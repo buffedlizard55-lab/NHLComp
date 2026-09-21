@@ -53,6 +53,9 @@ CANDIDATE_SERIES = [
     "KXNHL1P",          # observed in the series list: 1st period winner
     "KXNHLOVERTIME",    # observed 2026-09-21: game goes to overtime (historical tier)
     "KXNHL",            # observed: Stanley Cup futures
+    "KXNHL1PTOTAL", "KXNHL2PTOTAL", "KXNHL3PTOTAL",
+    "KXNHL1PSPREAD", "KXNHLTEAMTOTAL", "KXNHLREG", "KXNHL60MIN",
+    "KXNHLSAVES", "KXNHLGOAL", "KXNHLANYGOAL", "KXNHLAST", "KXNHLPTS", "KXNHLFIRSTGOAL",
 ]
 
 #: Series this project actually walks for prices (quotes, settled contracts, candles).
@@ -66,8 +69,10 @@ TRADED_SERIES = ("KXNHLGAME", "KXNHLTOTAL", "KXNHLSPREAD", "KXNHLOVERTIME")
 #: so that the day the exchange lists them the prices are captured from that day forward;
 #: until then nothing is bet on them and no price for them is invented.
 WATCH_SERIES = ("KXNHL1P", "KXNHL2P", "KXNHL3P", "KXNHL1PTOTAL", "KXNHL2PTOTAL",
-                "KXNHL3PTOTAL", "KXNHL1PSPREAD", "KXNHL2OT", "KXNHLSAVES", "KXNHLGOAL",
-                "KXNHLANYGOAL", "KXNHLAST", "KXNHLPTS", "KXNHLFIRSTGOAL")
+                "KXNHL3PTOTAL", "KXNHL1PSPREAD", "KXNHL2PSPREAD", "KXNHL3PSPREAD",
+                "KXNHL2OT", "KXNHLSAVES", "KXNHLGOAL",
+                "KXNHLANYGOAL", "KXNHLAST", "KXNHLPTS", "KXNHLFIRSTGOAL",
+                "KXNHLTEAMTOTAL", "KXNHLREG", "KXNHL60MIN")
 
 #: Kalshi series -> this project's market vocabulary.  Built from the series listing the
 #: exchange itself publishes (81 hockey series recorded in ``kalshi_series``), so a new
@@ -81,6 +86,22 @@ SERIES_MARKET_TYPE = {
     "KXNHL1P": "first_period",
     "KXNHL2P": "second_period",
     "KXNHL3P": "third_period",
+    "KXNHL1PTOTAL": "period_total",
+    "KXNHL2PTOTAL": "period_total",
+    "KXNHL3PTOTAL": "period_total",
+    "KXNHL1PSPREAD": "period_spread",
+    "KXNHL2PSPREAD": "period_spread",
+    "KXNHL3PSPREAD": "period_spread",
+    "KXNHLTEAMTOTAL": "team_total",
+    "KXNHLREG": "regulation",
+    "KXNHL60MIN": "regulation",
+    "KXNHLSAVES": "goalie_saves",
+    "KXNHLGOAL": "player_goal",
+    "KXNHLANYGOAL": "player_anygoal",
+    "KXNHLAST": "player_assist",
+    "KXNHLPTS": "player_points",
+    "KXNHLFIRSTGOAL": "player_firstgoal",
+    "KXNHL": "futures",
     "KXNHL1PTOTAL": "first_period_total",
     "KXNHL2PTOTAL": "second_period_total",
     "KXNHL3PTOTAL": "third_period_total",

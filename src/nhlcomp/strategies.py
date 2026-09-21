@@ -1510,4 +1510,184 @@ def build_seed_strategies() -> list[Strategy]:
                           "candlestick feed (YES bid/ask only), so this rule is FORWARD TEST "
                           "ONLY, entered at the live no_ask_dollars."))
 
+    # -- missing market families required by brief, registered as blocked so the absence is
+    # a decision, not an oversight. Each has no verified price history on 2026-09-21 and/or
+    # no model, so nothing is bet even if a quote appears.
+
+    # team totals: per-team over/under, distinct from full-game totals
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_TEAM_TOTAL_OVER", username="NHL_TEAM_TOTAL_OVER_038", category="team_totals",
+        name="Team totals over (blocked: no verified market shape yet)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="team_total",
+        blocked_reason="KXNHLTEAMTOTAL series not observed in /series listing on 2026-09-21; no contract shape, no price history, no settlement rule verified. Blocked until shape appears.",
+        data_used="NONE VERIFIED for team totals market shape."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_TEAM_TOTAL_UNDER", username="NHL_TEAM_TOTAL_UNDER_039", category="team_totals",
+        name="Team totals under (blocked)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="team_total",
+        blocked_reason="Team totals market not observed; no price history, no model for team-specific scoring vs opponent defense separately.",
+        data_used="NONE VERIFIED."))
+
+    # regulation: win in regulation vs OT/SO
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_REGULATION", username="NHL_REGULATION_040", category="regulation",
+        name="Regulation win (blocked: no verified contracts)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="regulation",
+        blocked_reason="KXNHLREG / KXNHL60MIN series not observed on 2026-09-21; no contracts, no price history. Settlement would be lastPeriodType==REG and winner, already stored, but market absent.",
+        data_used="NONE VERIFIED for regulation market prices."))
+
+    # period moneyline: 1P/2P/3P
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PERIOD_ML_1P", username="NHL_PERIOD_ML_1P_041", category="period_betting",
+        name="First-period moneyline (blocked: market empty)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="period",
+        blocked_reason="KXNHL1P listed in /series but 0 open and 0 historical contracts on 2026-09-21 (verified negative). No price history, no period-level expected-goals model yet.",
+        data_used="game_period_scores table ingests period goals for research, but no period model exists; kalshi_series_watch records verified negative."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PERIOD_ML_2P", username="NHL_PERIOD_ML_2P_042", category="period_betting",
+        name="Second-period moneyline (blocked)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="period",
+        blocked_reason="KXNHL2P empty on 2026-09-21; no price history, no period model.",
+        data_used="NONE VERIFIED for period prices."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PERIOD_ML_3P", username="NHL_PERIOD_ML_3P_043", category="period_betting",
+        name="Third-period moneyline (blocked)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="period",
+        blocked_reason="KXNHL3P empty on 2026-09-21; no price history.",
+        data_used="NONE VERIFIED."))
+
+    # period totals
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PERIOD_TOTAL_1P_OVER", username="NHL_PERIOD_TOTAL_1P_OVER_044",
+        category="period_totals", name="First-period total over (blocked)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="over", market="period_total",
+        blocked_reason="KXNHL1PTOTAL empty on 2026-09-21; no price history; period totals typically 0.5/1.5/2.5 and need period-level scoring model.",
+        data_used="NONE VERIFIED for period total prices."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PERIOD_TOTAL_2P_OVER", username="NHL_PERIOD_TOTAL_2P_OVER_045",
+        category="period_totals", name="Second-period total over (blocked)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="over", market="period_total",
+        blocked_reason="KXNHL2PTOTAL empty on 2026-09-21; no price history.",
+        data_used="NONE VERIFIED."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PERIOD_TOTAL_3P_OVER", username="NHL_PERIOD_TOTAL_3P_OVER_046",
+        category="period_totals", name="Third-period total over (blocked)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="over", market="period_total",
+        blocked_reason="KXNHL3PTOTAL empty on 2026-09-21; no price history.",
+        data_used="NONE VERIFIED."))
+
+    # alternate lines: explicitly trade 5.5 and 7.5 vs 6.5 standard
+    out.append(TotalsStrategy(
+        strategy_id="NHL_TOTALS_ALT_55_OVER", username="NHL_TOTALS_ALT_55_OVER_047",
+        category="alternate_lines", name="Alternate total 5.5 over (tight line value)",
+        direction="over", min_edge=0.03, target_strike=5.5, min_strike=5.5, max_strike=5.5,
+        data_used="kalshi.trade_api KXNHLTOTAL alternate line 5.5 (verified ladder rung); same data as standard totals."))
+
+    out.append(TotalsStrategy(
+        strategy_id="NHL_TOTALS_ALT_75_UNDER", username="NHL_TOTALS_ALT_75_UNDER_048",
+        category="alternate_lines", name="Alternate total 7.5 under (high line fade)",
+        direction="under", min_edge=0.03, target_strike=7.5, min_strike=7.5, max_strike=7.5,
+        no_history_reason="Under side has no historical NO-side offer; forward-only, same as other unders."))
+
+    out.append(PuckLineStrategy(
+        strategy_id="NHL_PUCK_ALT_25", username="NHL_PUCK_ALT_25_049",
+        category="alternate_lines", name="Alternate puck line -2.5 cover (multi-goal)",
+        contract_team="model_stronger", exchange_side="YES", target_strike=2.5,
+        min_strike=2.5, max_strike=2.5, min_edge=0.05,
+        data_used="kalshi KXNHLSPREAD alternate rung 2.5 (verified)."))
+
+    # player props: goal, assist, points, first goal
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PLAYER_GOAL", username="NHL_PLAYER_GOAL_050", category="player_props",
+        name="Player to score a goal (blocked: no model, no verified pre-game feed)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home", market="player_goal",
+        blocked_reason="KXNHLGOAL listed but 0 contracts on 2026-09-21; no player-level projection model exists; no verified mapping of player names to NHL player_ids for pre-game deployment; no price history.",
+        data_used="NONE VERIFIED for player props pricing/model."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PLAYER_ANYGOAL", username="NHL_PLAYER_ANYGOAL_051", category="player_props",
+        name="Player anytime goal (blocked)", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", market="player_anygoal",
+        blocked_reason="KXNHLANYGOAL empty on 2026-09-21; no model, no price history.",
+        data_used="NONE VERIFIED."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PLAYER_ASSIST", username="NHL_PLAYER_ASSIST_052", category="player_props",
+        name="Player assist (blocked)", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", market="player_assist",
+        blocked_reason="KXNHLAST empty on 2026-09-21; no model.",
+        data_used="NONE VERIFIED."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PLAYER_POINTS", username="NHL_PLAYER_POINTS_053", category="player_props",
+        name="Player points (goal+assist) (blocked)", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", market="player_points",
+        blocked_reason="KXNHLPTS empty on 2026-09-21; no model.",
+        data_used="NONE VERIFIED."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PLAYER_FIRSTGOAL", username="NHL_PLAYER_FIRSTGOAL_054", category="player_props",
+        name="First goal scorer (blocked)", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="home", market="player_firstgoal",
+        blocked_reason="KXNHLFIRSTGOAL empty on 2026-09-21; first-goal is low-probability and needs lineup confirmation; no verified feed.",
+        data_used="NONE VERIFIED."))
+
+    # goalie props: saves
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_GOALIE_SAVES_OVER", username="NHL_GOALIE_SAVES_OVER_055", category="goalie_props",
+        name="Goalie saves over (blocked: no starter feed, no model)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="over", market="goalie_saves",
+        blocked_reason="KXNHLSAVES listed but 0 contracts on 2026-09-21 (verified negative); no verified pre-game starter source, so even if listed forward-test only when starter known; no saves projection model.",
+        data_used="api.nhle.com goalie/summary per-game saves for research; no saves model."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_GOALIE_SAVES_UNDER", username="NHL_GOALIE_SAVES_UNDER_056", category="goalie_props",
+        name="Goalie saves under (blocked)", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="under", market="goalie_saves",
+        blocked_reason="KXNHLSAVES empty; no model; no price history.",
+        data_used="NONE VERIFIED for goalie saves market."))
+
+    # futures
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_FUTURES_CUP", username="NHL_FUTURES_CUP_057", category="futures",
+        name="Stanley Cup futures (blocked: no season model)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="futures",
+        blocked_reason="KXNHL futures (Stanley Cup) have been listed but require season simulation model, long-horizon bankroll lockup, and settlement months in future. No season model exists here; blocked.",
+        data_used="kalshi.trade_api KXNHL futures market exists but not walked for history in this project."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_FUTURES_DIVISION", username="NHL_FUTURES_DIVISION_058", category="futures",
+        name="Division winner futures (blocked)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="futures",
+        blocked_reason="Futures require season model; not traded.",
+        data_used="NONE VERIFIED for futures pricing model."))
+
+    # live/in-game additional blocked variants
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_LIVE_MONEYLINE", username="NHL_LIVE_MONEYLINE_059", category="live_in_game",
+        name="Live moneyline reaction (blocked: batch pipeline)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="moneyline",
+        blocked_reason="Kalshi candlesticks provide 60-min in-game points for research (ig60/ig120), but paper-trading loop runs batch and cannot act during a game; no live execution.",
+        data_used="kalshi candlesticks intraday for research only."))
+
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_LIVE_TOTALS", username="NHL_LIVE_TOTALS_060", category="live_in_game",
+        name="Live totals reaction (blocked)", feature="home_n_prior", operator=">=", threshold=10,
+        bet_side="over", market="total",
+        blocked_reason="Live totals would require in-game scoring model and live price feed execution; batch pipeline cannot execute intraday.",
+        data_used="NONE VERIFIED for live execution."))
+
+    # period spread
+    out.append(ThresholdStrategy(
+        strategy_id="NHL_PERIOD_SPREAD", username="NHL_PERIOD_SPREAD_061", category="period_spread",
+        name="Period spread (blocked: no verified market)", feature="home_n_prior",
+        operator=">=", threshold=10, bet_side="home", market="period_spread",
+        blocked_reason="No KXNHL period spread series observed; period spread would be margin in a single period, needs period model and market listing.",
+        data_used="NONE VERIFIED."))
+
     return out
