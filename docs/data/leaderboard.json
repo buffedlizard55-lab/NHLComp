@@ -78,12 +78,12 @@
    "category": "market",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 0,
+   "n_bets": 1,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 0,
+   "open": 1,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -92,8 +92,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
+   "bankroll": 980.0,
+   "open_exposure": 20.0,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -148,12 +148,12 @@
    "category": "statistical",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 9,
+   "n_bets": 14,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 9,
+   "open": 14,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -162,8 +162,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 809.64,
-   "open_exposure": 190.36,
+   "bankroll": 712.35,
+   "open_exposure": 287.65,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -358,12 +358,12 @@
    "category": "generated",
    "status": "candidate",
    "test_mode": "FORWARD TEST",
-   "n_bets": 5,
+   "n_bets": 10,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 5,
+   "open": 10,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -372,8 +372,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 891.13,
-   "open_exposure": 108.87,
+   "bankroll": 723.36,
+   "open_exposure": 276.64,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -393,12 +393,12 @@
    "category": "generated_schedule",
    "status": "candidate",
    "test_mode": "FORWARD TEST",
-   "n_bets": 5,
+   "n_bets": 10,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 5,
+   "open": 10,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -407,8 +407,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 891.13,
-   "open_exposure": 108.87,
+   "bankroll": 723.36,
+   "open_exposure": 276.64,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -463,12 +463,12 @@
    "category": "generated",
    "status": "candidate",
    "test_mode": "FORWARD TEST",
-   "n_bets": 4,
+   "n_bets": 7,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 4,
+   "open": 7,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -477,8 +477,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 893.28,
-   "open_exposure": 106.72,
+   "bankroll": 756.95,
+   "open_exposure": 243.05,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -638,12 +638,12 @@
    "category": "generated_special_teams",
    "status": "candidate",
    "test_mode": "FORWARD TEST",
-   "n_bets": 3,
+   "n_bets": 7,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 3,
+   "open": 7,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -652,8 +652,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 897.78,
-   "open_exposure": 102.22,
+   "bankroll": 739.04,
+   "open_exposure": 260.96,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -673,12 +673,12 @@
    "category": "generated",
    "status": "candidate",
    "test_mode": "FORWARD TEST",
-   "n_bets": 2,
+   "n_bets": 3,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 2,
+   "open": 3,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -687,8 +687,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 970.98,
-   "open_exposure": 29.02,
+   "bankroll": 970.53,
+   "open_exposure": 29.47,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -708,12 +708,12 @@
    "category": "generated",
    "status": "candidate",
    "test_mode": "FORWARD TEST",
-   "n_bets": 1,
+   "n_bets": 4,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 1,
+   "open": 4,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -722,8 +722,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 976.6,
-   "open_exposure": 23.4,
+   "bankroll": 848.65,
+   "open_exposure": 151.35,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -778,12 +778,12 @@
    "category": "generated_market",
    "status": "candidate",
    "test_mode": "FORWARD TEST",
-   "n_bets": 3,
+   "n_bets": 4,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 3,
+   "open": 4,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -792,8 +792,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 949.29,
-   "open_exposure": 50.71,
+   "bankroll": 948.84,
+   "open_exposure": 51.16,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -953,12 +953,12 @@
    "category": "market",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 2,
+   "n_bets": 3,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 2,
+   "open": 3,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -967,8 +967,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 968.9,
-   "open_exposure": 31.1,
+   "bankroll": 949.52,
+   "open_exposure": 50.48,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -988,12 +988,12 @@
    "category": "market",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 0,
+   "n_bets": 5,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 0,
+   "open": 5,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -1002,8 +1002,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
+   "bankroll": 903.92,
+   "open_exposure": 96.08,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -1023,12 +1023,12 @@
    "category": "injury",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 3,
+   "n_bets": 5,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 3,
+   "open": 5,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -1037,8 +1037,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 947.65,
-   "open_exposure": 52.35,
+   "bankroll": 866.66,
+   "open_exposure": 133.34,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -1156,6 +1156,76 @@
    "rank": 33
   },
   {
+   "strategy_id": "NHL_OT_MODEL_NO",
+   "version": 1,
+   "username": "NHL_OT_MODEL_NO_037",
+   "name": "Calibrated tie mass under the exchange's overtime price (forward only)",
+   "category": "ot_shootout",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 34
+  },
+  {
+   "strategy_id": "NHL_OT_MODEL_YES",
+   "version": 1,
+   "username": "NHL_OT_MODEL_YES_036",
+   "name": "Calibrated tie mass over the exchange's overtime price",
+   "category": "ot_shootout",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 35
+  },
+  {
    "strategy_id": "NHL_OT_SURVIVAL",
    "version": 1,
    "username": "NHL_OT_SURVIVAL_020",
@@ -1188,7 +1258,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 34
+   "rank": 36
   },
   {
    "strategy_id": "NHL_PACE_MISMATCH",
@@ -1223,7 +1293,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 35
+   "rank": 37
   },
   {
    "strategy_id": "NHL_PDO_REGRESSION",
@@ -1233,12 +1303,12 @@
    "category": "shot_quality",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 0,
+   "n_bets": 1,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 0,
+   "open": 1,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -1247,8 +1317,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
+   "bankroll": 910.04,
+   "open_exposure": 89.96,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -1258,7 +1328,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 36
+   "rank": 38
   },
   {
    "strategy_id": "NHL_PERIOD_BET",
@@ -1293,7 +1363,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 37
+   "rank": 39
   },
   {
    "strategy_id": "NHL_POISSON_ML",
@@ -1303,12 +1373,12 @@
    "category": "statistical",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 3,
+   "n_bets": 5,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 3,
+   "open": 5,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -1317,8 +1387,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 947.65,
-   "open_exposure": 52.35,
+   "bankroll": 866.66,
+   "open_exposure": 133.34,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -1328,7 +1398,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 38
+   "rank": 40
   },
   {
    "strategy_id": "NHL_PROP_EDGE",
@@ -1363,7 +1433,112 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 39
+   "rank": 41
+  },
+  {
+   "strategy_id": "NHL_PUCK_LINE_DOG_PLUS",
+   "version": 1,
+   "username": "NHL_PUCK_LINE_DOG_PLUS_034",
+   "name": "Model's weaker side covers +1.5 (forward only)",
+   "category": "puck_line",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 1,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 1,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 955.0,
+   "open_exposure": 45.0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 42
+  },
+  {
+   "strategy_id": "NHL_PUCK_LINE_HOME_25",
+   "version": 1,
+   "username": "NHL_PUCK_LINE_HOME_25_035",
+   "name": "Home team covers the -2.5 rung",
+   "category": "puck_line",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 43
+  },
+  {
+   "strategy_id": "NHL_PUCK_LINE_MODEL_COVER",
+   "version": 1,
+   "username": "NHL_PUCK_LINE_MODEL_COVER_033",
+   "name": "Model margin distribution covers the -1.5 puck line",
+   "category": "puck_line",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 3,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 3,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 997.81,
+   "open_exposure": 2.19,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 44
   },
   {
    "strategy_id": "NHL_REST_EDGE",
@@ -1398,7 +1573,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 40
+   "rank": 45
   },
   {
    "strategy_id": "NHL_ROADTRIP_END",
@@ -1408,12 +1583,12 @@
    "category": "travel",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 0,
+   "n_bets": 1,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 0,
+   "open": 1,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -1422,8 +1597,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
+   "bankroll": 910.04,
+   "open_exposure": 89.96,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -1433,7 +1608,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 41
+   "rank": 46
   },
   {
    "strategy_id": "NHL_SHOT_SHARE",
@@ -1468,7 +1643,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 42
+   "rank": 47
   },
   {
    "strategy_id": "NHL_SPECIAL_TEAMS",
@@ -1503,7 +1678,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 43
+   "rank": 48
   },
   {
    "strategy_id": "NHL_STEAM_FADE",
@@ -1538,7 +1713,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 44
+   "rank": 49
   },
   {
    "strategy_id": "NHL_STEAM_FOLLOW",
@@ -1573,7 +1748,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 45
+   "rank": 50
   },
   {
    "strategy_id": "NHL_TOTALS_OVER",
@@ -1608,7 +1783,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 46
+   "rank": 51
   },
   {
    "strategy_id": "NHL_TOTALS_OVER_TIGHT",
@@ -1618,12 +1793,12 @@
    "category": "totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 0,
+   "n_bets": 3,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 0,
+   "open": 3,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -1632,8 +1807,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
+   "bankroll": 902.67,
+   "open_exposure": 97.33,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -1643,7 +1818,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 47
+   "rank": 52
   },
   {
    "strategy_id": "NHL_TOTALS_UNDER",
@@ -1653,12 +1828,12 @@
    "category": "totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "n_bets": 0,
+   "n_bets": 1,
    "n_settled": 0,
    "wins": 0,
    "losses": 0,
    "pushes": 0,
-   "open": 0,
+   "open": 1,
    "win_rate": null,
    "win_rate_ci": [
     0.0,
@@ -1667,8 +1842,8 @@
    "pnl": 0,
    "staked": 0,
    "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
+   "bankroll": 977.54,
+   "open_exposure": 22.46,
    "max_drawdown": 0.0,
    "volatility": null,
    "longest_losing_streak": 0,
@@ -1678,7 +1853,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 48
+   "rank": 53
   },
   {
    "strategy_id": "NHL_WEATHER_OUTDOOR",
@@ -1713,7 +1888,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 49
+   "rank": 54
   }
  ],
  "BACKTEST": [
@@ -2523,6 +2698,41 @@
    "rank": 23
   },
   {
+   "strategy_id": "NHL_TOTALS_OVER",
+   "version": 1,
+   "username": "NHL_TOTALS_OVER_030",
+   "name": "Expected-goals model over the exchange total",
+   "category": "totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 9,
+   "n_settled": 9,
+   "wins": 4,
+   "losses": 5,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": 0.4444,
+   "win_rate_ci": [
+    0.1888,
+    0.7334
+   ],
+   "pnl": 50.86,
+   "staked": 175.17,
+   "roi": 0.2903,
+   "bankroll": 1050.86,
+   "open_exposure": 0,
+   "max_drawdown": -40.42,
+   "volatility": 30.758,
+   "longest_losing_streak": 2,
+   "avg_price": 0.3767,
+   "avg_edge": 0.0503,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 24
+  },
+  {
    "strategy_id": "NHL_B2B_HOME_FADE",
    "version": 1,
    "username": "NHL_B2B_HOME_FADE_002",
@@ -2555,7 +2765,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 24
+   "rank": 25
   },
   {
    "strategy_id": "NHL_GEN_HOME_G3_IN_4_AND_HOME_PREV_S",
@@ -2590,7 +2800,42 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 25
+   "rank": 26
+  },
+  {
+   "strategy_id": "NHL_TOTALS_OVER_TIGHT",
+   "version": 1,
+   "username": "NHL_TOTALS_OVER_TIGHT_032",
+   "name": "Expected-goals model over the exchange total (2c edge)",
+   "category": "totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 18,
+   "n_settled": 18,
+   "wins": 6,
+   "losses": 12,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": 0.3333,
+   "win_rate_ci": [
+    0.1628,
+    0.5625
+   ],
+   "pnl": 13.35,
+   "staked": 271.56,
+   "roi": 0.0491,
+   "bankroll": 1013.35,
+   "open_exposure": 0,
+   "max_drawdown": -67.86,
+   "volatility": 24.1639,
+   "longest_losing_streak": 5,
+   "avg_price": 0.3656,
+   "avg_edge": 0.0388,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 27
   },
   {
    "strategy_id": "NHL_BOOK_VS_EXCHANGE",
@@ -2625,7 +2870,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 26
+   "rank": 28
   },
   {
    "strategy_id": "NHL_EDGE_TRACKING",
@@ -2660,7 +2905,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 27
+   "rank": 29
   },
   {
    "strategy_id": "NHL_GOALIE_FATIGUE",
@@ -2695,7 +2940,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 28
+   "rank": 30
   },
   {
    "strategy_id": "NHL_GOALIE_NEWS",
@@ -2730,7 +2975,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 29
+   "rank": 31
   },
   {
    "strategy_id": "NHL_INJURY_IMPACT",
@@ -2765,7 +3010,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 30
+   "rank": 32
   },
   {
    "strategy_id": "NHL_LINE_COMBO",
@@ -2800,7 +3045,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 31
+   "rank": 33
   },
   {
    "strategy_id": "NHL_LIVE_INGAME",
@@ -2835,7 +3080,77 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 32
+   "rank": 34
+  },
+  {
+   "strategy_id": "NHL_OT_MODEL_NO",
+   "version": 1,
+   "username": "NHL_OT_MODEL_NO_037",
+   "name": "Calibrated tie mass under the exchange's overtime price (forward only)",
+   "category": "ot_shootout",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 35
+  },
+  {
+   "strategy_id": "NHL_OT_MODEL_YES",
+   "version": 1,
+   "username": "NHL_OT_MODEL_YES_036",
+   "name": "Calibrated tie mass over the exchange's overtime price",
+   "category": "ot_shootout",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 36
   },
   {
    "strategy_id": "NHL_OT_SURVIVAL",
@@ -2870,7 +3185,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 33
+   "rank": 37
   },
   {
    "strategy_id": "NHL_PERIOD_BET",
@@ -2905,7 +3220,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 34
+   "rank": 38
   },
   {
    "strategy_id": "NHL_PROP_EDGE",
@@ -2940,14 +3255,14 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 35
+   "rank": 39
   },
   {
-   "strategy_id": "NHL_TOTALS_OVER",
+   "strategy_id": "NHL_PUCK_LINE_DOG_PLUS",
    "version": 1,
-   "username": "NHL_TOTALS_OVER_030",
-   "name": "Expected-goals model over the exchange total",
-   "category": "totals",
+   "username": "NHL_PUCK_LINE_DOG_PLUS_034",
+   "name": "Model's weaker side covers +1.5 (forward only)",
+   "category": "puck_line",
    "status": "active",
    "test_mode": "FORWARD TEST",
    "n_bets": 0,
@@ -2975,14 +3290,14 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 36
+   "rank": 40
   },
   {
-   "strategy_id": "NHL_TOTALS_OVER_TIGHT",
+   "strategy_id": "NHL_PUCK_LINE_HOME_25",
    "version": 1,
-   "username": "NHL_TOTALS_OVER_TIGHT_032",
-   "name": "Expected-goals model over the exchange total (2c edge)",
-   "category": "totals",
+   "username": "NHL_PUCK_LINE_HOME_25_035",
+   "name": "Home team covers the -2.5 rung",
+   "category": "puck_line",
    "status": "active",
    "test_mode": "FORWARD TEST",
    "n_bets": 0,
@@ -3010,7 +3325,42 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 37
+   "rank": 41
+  },
+  {
+   "strategy_id": "NHL_PUCK_LINE_MODEL_COVER",
+   "version": 1,
+   "username": "NHL_PUCK_LINE_MODEL_COVER_033",
+   "name": "Model margin distribution covers the -1.5 puck line",
+   "category": "puck_line",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 42
   },
   {
    "strategy_id": "NHL_TOTALS_UNDER",
@@ -3045,7 +3395,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 38
+   "rank": 43
   },
   {
    "strategy_id": "NHL_WEATHER_OUTDOOR",
@@ -3080,7 +3430,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 39
+   "rank": 44
   },
   {
    "strategy_id": "NHL_STEAM_FOLLOW",
@@ -3115,7 +3465,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 40
+   "rank": 45
   },
   {
    "strategy_id": "NHL_GEN_HOME_STREAK_LOSSES",
@@ -3150,7 +3500,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 41
+   "rank": 46
   },
   {
    "strategy_id": "NHL_STEAM_FADE",
@@ -3185,7 +3535,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 42
+   "rank": 47
   },
   {
    "strategy_id": "NHL_REST_EDGE",
@@ -3220,7 +3570,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 43
+   "rank": 48
   },
   {
    "strategy_id": "NHL_HOMEICE_STRONG",
@@ -3255,7 +3605,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 44
+   "rank": 49
   },
   {
    "strategy_id": "NHL_HOME_FAV",
@@ -3290,7 +3640,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 45
+   "rank": 50
   },
   {
    "strategy_id": "NHL_SPECIAL_TEAMS",
@@ -3325,7 +3675,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 46
+   "rank": 51
   },
   {
    "strategy_id": "NHL_GEN_AWAY_GAMES_LAST_7",
@@ -3360,7 +3710,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 47
+   "rank": 52
   },
   {
    "strategy_id": "NHL_GEN_HOME_EXP_GOALS",
@@ -3395,7 +3745,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 48
+   "rank": 53
   },
   {
    "strategy_id": "NHL_ELO_ML",
@@ -3430,7 +3780,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 49
+   "rank": 54
   }
  ]
 }

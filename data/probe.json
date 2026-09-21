@@ -9,6 +9,9 @@
 [ingest] kalshi.candles: reachable (200) https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/candlesticks?start_ts=1789603200&end_ts=1789905600&period_interval=60
 [ingest] kalshi.historical: reachable (200) https://api.elections.kalshi.com/trade-api/v2/historical/cutoff
 [ingest] kalshi.settled_markets: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=3&status=settled
+[ingest] kalshi.spread: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLSPREAD&limit=3
+[ingest] kalshi.overtime: reachable (200) https://api.elections.kalshi.com/trade-api/v2/historical/markets?series_ticker=KXNHLOVERTIME&limit=3
+[ingest] polymarket.gamma: reachable (200) https://gamma-api.polymarket.com/events?tag_slug=nhl&closed=false&limit=1
 [ingest] espn.nhl_api: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/injuries
 [ingest] espn.nhl_scoreboard: reachable (200) https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20251115&limit=1
 [ingest] openmeteo.archive: reachable (200) https://api.open-meteo.com/v1/forecast?latitude=40.75&longitude=-73.99&current=temperature_2m
@@ -68,6 +71,21 @@
   "status_code": 200,
   "verdict": "reachable",
   "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=3&status=settled"
+ },
+ "kalshi.spread": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLSPREAD&limit=3"
+ },
+ "kalshi.overtime": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://api.elections.kalshi.com/trade-api/v2/historical/markets?series_ticker=KXNHLOVERTIME&limit=3"
+ },
+ "polymarket.gamma": {
+  "status_code": 200,
+  "verdict": "reachable",
+  "url": "https://gamma-api.polymarket.com/events?tag_slug=nhl&closed=false&limit=1"
  },
  "odds.the_odds_api": {
   "status": "rejected",
