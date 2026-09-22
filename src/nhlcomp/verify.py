@@ -533,6 +533,14 @@ class Verifier:
             out["shootout_treatment"] = (
                 f"evidence exists on {len(shootout_evidence)} shootout game(s): "
                 + "; ".join(shootout_evidence))
+            # the rule is now verified by settled evidence, so an earlier
+            # "settlement rule unverified" flag no longer describes reality
+            self.store.resolve_irregularities_where(
+                "settlement_rule_unverified", "overtime market: UNVERIFIED",
+                f"the exchange's settled history now includes {len(shootout_evidence)} game(s) "
+                f"the NHL recorded as decided in a shootout, so the overtime settlement rule "
+                f"is verified against both sources; " + out["shootout_treatment"][:220],
+                entity_id="KXNHLOVERTIME", actor="verifier")
         return out
 
     def check_strike_market_bets(self) -> dict[str, Any]:
@@ -921,6 +929,83 @@ class Verifier:
         "timestamp_order", "unmapped_selection",
     )
 
+    #: Resolutions carried out by a human-scale research step, recorded in code so they are
+    #: re-applied idempotently on every run and survive a ledger reseed from a snapshot.
+    #: Each is evidence-carrying: the queue row is marked ``resolved`` with the evidence in
+    #: the resolution text, one ``audit_log`` entry names the researcher and verification
+    #: date, and nothing is deleted.  If the identical condition were ever re-raised,
+    #: ``Store.flag`` re-opens the row and the next run re-resolves it with the same
+    #: evidence, so the audit trail never loses either side.
+    MANUAL_RESEARCH_RESOLUTIONS = (
+        {
+            "kind": "unmatched_market",
+            "entity_id": "KXNHLSPREAD-26JAN26LACBJ",
+            "researcher": "arena session 2026-09-22",
+            "verified_at": "2026-09-22",
+            "resolution": (
+                "Investigated 2026-09-22 and closed as an exchange listing anomaly. "
+                "(1) The NHL's own schedule has no Los Angeles @ Columbus game on 2026-01-26: "
+                "CBJ hosted DAL Jan 22, TBL Jan 24 and PHI Jan 28 and visited CHI Jan 30 "
+                "(api-web.nhle.com/v1/club-schedule/CBJ/month/2026-01, cross-checked against "
+                "this ledger's games table), while LAK was at DET on Jan 27 (game 2025020833). "
+                "(2) The exchange no longer lists the market: GET "
+                "https://api.elections.kalshi.com/trade-api/v2/markets/KXNHLSPREAD-26JAN26LACBJ "
+                "returned {\"error\":{\"code\":\"not_found\"}} on 2026-09-22. "
+                "The ingest behaved correctly: the contract was never attached to a guessed "
+                "game. There is nothing to attach and no wager can be derived from it."),
+        },
+    )
+
+    def apply_manual_resolutions(self) -> int:
+        n = 0
+        for res in self.MANUAL_RESEARCH_RESOLUTIONS:
+            rows = self.store.query(
+                "SELECT id FROM irregularities WHERE kind=? AND entity_id=? AND status='open'",
+                (res["kind"], res["entity_id"]))
+            for r in rows:
+                self.store.resolve_irregularity(
+                    int(r["id"]),
+                    f"{res['resolution']} [manual research resolution by "
+                    f"{res['researcher']}, verified {res['verified_at']}]")
+                self.store.audit("verifier", "MANUAL_RESOLUTION", res["kind"],
+                                 json.dumps({"id": r["id"], "entity_id": res["entity_id"],
+                                             "researcher": res["researcher"],
+                                             "verified_at": res["verified_at"]}))
+                n += 1
+        if n:
+            self.store.commit()
+        return n
+
+    def reconcile_unmatched_markets(self) -> int:
+        """Close ``unmatched_market`` flags whose event has since been matched by an ingest.
+
+        ``unmatched_market`` is raised at ingest time, so it cannot go into
+        ``RECONCILABLE_KINDS``: the verifier does not re-derive it, and its silence in a
+        verifier-only process proves nothing.  But whether the market was *later matched*
+        is observable here directly -- if the event ticker now has quotes in the ledger,
+        some ingest did attach it, and the flag no longer describes reality.
+        """
+        rows = self.store.query(
+            "SELECT id, entity_id FROM irregularities "
+            "WHERE kind='unmatched_market' AND status='open'")
+        closed = 0
+        for r in rows:
+            ev = r["entity_id"] or ""
+            if not ev or not ev.startswith("KXNHL"):
+                continue
+            hit = self.store.one(
+                "SELECT 1 FROM market_quotes WHERE market_key=? LIMIT 1", (ev,))
+            if hit:
+                self.store.resolve_irregularity(
+                    int(r["id"]),
+                    "a later ingest matched this event to an NHL game and stored quotes for "
+                    "it, so the flag no longer describes reality (audited; nothing deleted)")
+                self.store.audit("verifier", "RECONCILE_UNMATCHED_MARKET", "unmatched_market",
+                                 json.dumps({"id": r["id"], "event_ticker": ev}))
+                closed += 1
+        self.store.commit()
+        return closed
+
     def reconcile_stale_flags(self) -> dict[str, int]:
         """Close open flags of a re-derived kind that no longer reproduce.
 
@@ -973,6 +1058,10 @@ class Verifier:
         summary["strike_market_bets"] = self.check_strike_market_bets()
         summary["period_goals"] = self.check_period_goal_reconciliation()
         summary["second_market"] = self.cross_check_polymarket()
+        # evidence-carrying research resolutions first, so a queue count reflects what a
+        # reader should act on; then flags whose condition is observable as recovered
+        summary["manual_resolutions"] = self.apply_manual_resolutions()
+        summary["unmatched_markets_closed"] = self.reconcile_unmatched_markets()
         # last: every check above has now re-raised whatever it still finds, so anything left
         # open without having been re-raised describes a condition that no longer exists
         summary["stale_flags_closed"] = self.reconcile_stale_flags()

@@ -202,6 +202,42 @@ class Ingestor(IngestExtensions):
             missing = [t for t in (g["home_id"], g["away_id"])
                        if self.store.one("SELECT 1 FROM teams WHERE team_id=?", (t,)) is None]
             if missing:
+                # A team id the NHL teams endpoint never listed can be one of two things:
+                # a data problem (guess-territory), or a genuinely non-NHL opponent in a
+                # pre-season exhibition -- e.g. team 7509, EHC Red Bull München ("MUN"),
+                # which hosted Buffalo in the 2024 Global Series at SAP Garden.  The
+                # schedule payload's own abbrev tells them apart, and that abbrev is SOURCE
+                # data: if it is not one of the franchises in the teams table, the opponent
+                # is an exhibition club and the game is excluded *by design* -- recorded as
+                # an info irregularity and superseding the old error, not silently dropped.
+                abbrevs = {g["home_id"]: g.get("home_abbrev"),
+                           g["away_id"]: g.get("away_abbrev")}
+                missing_abbrevs = [a for a in (abbrevs.get(t) for t in missing) if a]
+                known = {r["abbrev"] for r in
+                         self.store.query("SELECT DISTINCT abbrev FROM teams")}
+                if (g.get("game_type") == 1 and missing_abbrevs
+                        and len(missing_abbrevs) == len(missing)
+                        and all(a not in known for a in missing_abbrevs)):
+                    self.store.flag(
+                        "non_nhl_opponent_excluded",
+                        f"game {g['game_id']} on {g.get('game_date')} names opponent(s) "
+                        f"{sorted(set(missing_abbrevs))} which the NHL teams endpoint does not "
+                        f"list: a non-NHL exhibition opponent (identity taken from the schedule "
+                        f"payload itself); the game is excluded by design and never enters "
+                        f"models, backtests or the competition",
+                        severity="info", entity_type="game", entity_id=str(g["game_id"]),
+                        sources=source_id)
+                    self.store.resolve_irregularities_where(
+                        "unknown_team", f"game {g['game_id']} ",
+                        f"re-ingest identified the opponent from the schedule payload's own "
+                        f"abbrev ({', '.join(sorted(set(missing_abbrevs)))}): not one of the NHL "
+                        f"franchises, i.e. a non-NHL exhibition opponent; the game is excluded "
+                        f"by design and this entry is superseded by "
+                        f"kind=non_nhl_opponent_excluded",
+                        actor="ingest")
+                    self.log(f"game {g['game_id']}: non-NHL opponent(s) "
+                             f"{sorted(set(missing_abbrevs))} - excluded by design")
+                    continue
                 self.store.flag(
                     "unknown_team",
                     f"game {g['game_id']} on {g.get('game_date')} references team id(s) "
@@ -310,6 +346,13 @@ class Ingestor(IngestExtensions):
             self.store.flag("no_markets", f"no {series} markets with status={status}",
                             severity="info", entity_type="source", entity_id="kalshi.trade_api")
             return 0
+        # the same query returned contracts this run, so an earlier "no markets" for it
+        # described a transient exchange state, not a standing condition
+        self.store.resolve_irregularities_where(
+            "no_markets", f"no {series} markets with status={status}",
+            f"the same query returned {len(markets)} markets in this run; the earlier empty "
+            f"result was a transient exchange state (e.g. off-season, no slate yet)",
+            actor="ingest")
         url = f"https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker={series}"
         self.store.record_raw(url, json.dumps(markets), source_id="kalshi.trade_api")
         ts = utcnow()
@@ -486,6 +529,11 @@ class Ingestor(IngestExtensions):
                             severity="warn", entity_type="source",
                             entity_id="kalshi.settled_markets")
             return 0
+        self.store.resolve_irregularities_where(
+            "no_markets", f"no settled {series} markets returned",
+            f"the same settled-markets query returned {len(markets)} contracts in this run; "
+            f"the earlier empty result was transient",
+            actor="ingest")
         url = f"https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker={series}&status=settled"
         self.store.record_raw(url, json.dumps(markets), source_id="kalshi.settled_markets")
         ts = utcnow()

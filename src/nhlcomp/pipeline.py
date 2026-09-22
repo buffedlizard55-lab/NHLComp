@@ -606,6 +606,16 @@ class Pipeline:
                             "totals entry can be priced honestly. " + json.dumps(gap, indent=1),
                             severity="warn", entity_type="market", entity_id="KXNHLTOTAL",
                             sources="kalshi.candles,nhl.stats_rest")
+        elif gap["backtestable_games"] > 0:
+            # the two walks have met: a coverage gap flagged in an earlier run no longer
+            # holds, so it is closed with a note (audited, nothing deleted)
+            self.store.resolve_irregularities_where(
+                "totals_price_coverage", "Totals price history and feature history",
+                f"the walks now overlap: {gap['backtestable_games']} totals game(s) have both a "
+                f"pre-puck-drop exchange offer and a point-in-time feature row, so priced "
+                f"totals backtests exist",
+                entity_id="KXNHLTOTAL", actor="pipeline")
+
         self.report["totals_price_coverage"] = gap
         self.log(f"totals price coverage: {gap['contracts_with_a_pregame_offer']} contracts with "
                  f"a pre-game offer across {gap['games_with_a_pregame_offer']} games; "
@@ -912,6 +922,15 @@ class Pipeline:
             self.store.flag(flag_kind, cov["reason"] + " " + json.dumps(cov, indent=1),
                             severity="warn", entity_type="market", entity_id=series,
                             sources="kalshi.candles,nhl.stats_rest")
+        elif cov["backtestable_games"] > 0:
+            # the price walk and the feature walk have met for this series: an earlier
+            # coverage flag no longer describes reality and is closed, not deleted
+            self.store.resolve_irregularities_where(
+                flag_kind, f"Every {series} contract with a pre-puck-drop offer",
+                f"the walks now overlap: {cov['backtestable_games']} {series} game(s) have both "
+                f"a pre-puck-drop exchange offer and a point-in-time feature row",
+                entity_id=series, actor="pipeline")
+
         self.report[report_key] = cov
         self.log(f"{series} price coverage: {cov['contracts_with_a_pregame_offer']} contracts "
                  f"with a pre-game offer across {cov['games_with_a_pregame_offer']} games; "
@@ -1939,6 +1958,21 @@ class Pipeline:
                  f"missing repos {summary['missing_repositories']}")
         return summary
 
+    def stage_research_log(self) -> int:
+        """Record the autonomous research log (verified/rejected sources, status notes).
+
+        Requirement 2 makes research a standing duty, and requirement 16 wants discovered,
+        verified and rejected sources reported separately.  The entries live in
+        :mod:`nhlcomp.research` with their evidence and are written to the findings table so
+        the Research Lab page and the final report are generated from the ledger, not from
+        prose that could drift from it.
+        """
+        from . import research
+        n = research.record(self.store)
+        self.report["research_log_entries"] = n
+        self.log(f"research log: {n} verified finding(s) on record")
+        return n
+
     def stage_verify(self) -> dict[str, Any]:
         v = Verifier(self.store)
         self.report["verification"] = v.run_all()
@@ -1962,6 +1996,7 @@ class Pipeline:
         self.stage_reconcile()
         self.stage_analysis()
         self.stage_master_site_review()
+        self.stage_research_log()
         self.stage_verify()
         self.store.audit("pipeline", "RUN_ALL", "", json.dumps(self.report.get("competition", {})))
         self.store.commit()

@@ -422,6 +422,13 @@ class IngestExtensions:
                     self.store.flag("broken_api", f"stats REST team/summary isGame {season}/{gt}: {exc}",
                                     severity="warn", entity_type="source", entity_id="nhl.stats_rest")
                     continue
+                # the identical fetch just succeeded, so an earlier timeout flag for this
+                # season/game-type described a transient failure, not a standing condition
+                self.store.resolve_irregularities_where(
+                    "broken_api", f"stats REST team/summary isGame {season}/{gt}:",
+                    f"the same fetch succeeded in this run ({len(rows)} rows); the earlier "
+                    f"failure was a transient read timeout",
+                    actor="ingest_ext")
                 url = (f"{STATS_REST}/team/summary?isAggregate=false&isGame=true&cayenneExp="
                        f"seasonId={season} and gameTypeId={gt}")
                 if rows:
@@ -467,6 +474,11 @@ class IngestExtensions:
                     self.store.flag("broken_api", f"stats REST goalie/summary isGame {season}/{gt}: {exc}",
                                     severity="warn", entity_type="source", entity_id="nhl.stats_rest")
                     continue
+                self.store.resolve_irregularities_where(
+                    "broken_api", f"stats REST goalie/summary isGame {season}/{gt}:",
+                    f"the same fetch succeeded in this run ({len(rows)} rows); the earlier "
+                    f"failure was a transient read timeout",
+                    actor="ingest_ext")
                 url = (f"{STATS_REST}/goalie/summary?isAggregate=false&isGame=true&cayenneExp="
                        f"seasonId={season} and gameTypeId={gt}")
                 if rows:
