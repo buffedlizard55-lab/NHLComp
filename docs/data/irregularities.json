@@ -1,5 +1,33 @@
 [
  {
+  "id": 886,
+  "ts_utc": "2026-09-22T07:17:30Z",
+  "kind": "no_depth_evidence_at_entry",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26FEB26TORFLA-TOR1@1772150400",
+  "detail": "KXNHLSPREAD-26FEB26TORFLA-TOR1: the entry point at 1772150400 publishes no depth at all (capacity 0 contract(s): no offer size and no traded volume), so 1 signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them, and nothing was assumed in its place: with no published size and no traded volume there is no evidence any contract could have been bought at that price.",
+  "sources": "kalshi.candles",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 890,
+  "ts_utc": "2026-09-22T07:17:30Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLTOTAL-25DEC07PITDAL-5@1765148400",
+  "detail": "KXNHLTOTAL-25DEC07PITDAL-5: published depth 14 contract(s) at 1765148400 was already fully claimed (14) by earlier wagers, so 1 further signal(s) could not be filled (NHL_TOTALS_OVER_TIGHT). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
   "id": 868,
   "ts_utc": "2026-09-22T06:46:36Z",
   "kind": "no_depth_evidence_at_entry",

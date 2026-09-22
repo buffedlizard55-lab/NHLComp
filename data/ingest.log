@@ -1,5 +1,5 @@
 [ingest] nhl.api_web: reachable (200) https://api-web.nhle.com/v1/scoreboard/now
-[ingest] nhl.stats_rest: unreachable (None) https://api.nhle.com/stats/rest/en/team
+[ingest] nhl.stats_rest: reachable (200) https://api.nhle.com/stats/rest/en/team
 [ingest] nhl.api_v1: unreachable (None) https://api.nhl.com/api/v1/teams
 [ingest] nhl.legacy_statsapi: unreachable (None) https://statsapi.web.nhl.com/api/v1/teams
 [ingest] nhl.edge: reachable (200) https://api-web.nhle.com/v1/edge/skater-speed-top-10/F/max/20252026/2
@@ -186,6 +186,8 @@
 [ingest] scoreboard 2026-09-28: 68 games (0 new, 68 updated)
 [ingest] scoreboard 2026-10-05: 73 games (0 new, 73 updated)
 [ingest] team_game rebuilt: 8820 rows from 4410 games
+[ingest] stats REST team game rows 20242025/2: 2624
+[ingest] stats REST team game rows 20252026/2: 2624
 [ingest] stats REST team game rows 20262027/2: 0
 [ingest] stats REST goalie game rows 20242025/2: 2764
 [ingest] stats REST goalie game rows 20252026/2: 2768
@@ -193,11 +195,11 @@
 [ingest] kalshi series: 82 hockey series, NHL: ['KXNHL', 'KXNHL1P', 'KXNHL1PSPREAD', 'KXNHL1PTOTAL', 'KXNHL2OT', 'KXNHL2P', 'KXNHL2PSPREAD', 'KXNHL2PTOTAL', 'KXNHL30COMEBACK', 'KXNHL3P', 'KXNHL3PSPREAD', 'KXNHL3PTOTAL', 'KXNHL4NATIONS', 'KXNHLADAMS', 'KXNHLANYGOAL', 'KXNHLAST', 'KXNHLATLANTIC', 'KXNHLCALDER', 'KXNHLCENTRAL', 'KXNHLDRAFTPICK', 'KXNHLDRAFTTOP', 'KXNHLEAST', 'KXNHLEXPANSION', 'KXNHLFINALSEXACT', 'KXNHLFIRSTGOAL', 'KXNHLGAME', 'KXNHLGOAL', 'KXNHLHART', 'KXNHLMETROPOLITAN', 'KXNHLNEXTGM', 'KXNHLNEXTTEAM', 'KXNHLNORRIS', 'KXNHLOT', 'KXNHLOVERTIME', 'KXNHLPACIFIC', 'KXNHLPLAYOFF', 'KXNHLPLAYOFFGOALS', 'KXNHLPRES', 'KXNHLPTS', 'KXNHLRETIRE', 'KXNHLRICHARD', 'KXNHLROSS', 'KXNHLSAVES', 'KXNHLSEASONGOALS', 'KXNHLSEASONPTS', 'KXNHLSERIES', 'KXNHLSERIESGAMES', 'KXNHLSERIESOT', 'KXNHLSERIESSCORE', 'KXNHLSERIESSPREAD', 'KXNHLSERIESTOTALGOAL', 'KXNHLSERIESTOTALGOALS', 'KXNHLSPREAD', 'KXNHLTOTAL', 'KXNHLVEZINA', 'KXNHLWEST', 'KXNHLWINS']
 [ingest] kalshi: 54 contracts -> 108 quote rows
 [ingest] kalshi: 216 contracts -> 432 quote rows
-[ingest] kalshi history KXNHLGAME: cutoff=2026-07-23T00:00:00Z live=40 hist=1000 (new 0, unmatched 2) candles ok=0 empty=0 err=0 pending=0 calls=3
-[ingest] kalshi history KXNHLTOTAL: cutoff=2026-07-23T00:00:00Z live=160 hist=1000 (new 0, unmatched 5) candles ok=597 empty=0 err=0 pending=2005 calls=600
+[ingest] kalshi history KXNHLGAME: cutoff=2026-07-24T00:00:00Z live=40 hist=1000 (new 0, unmatched 2) candles ok=0 empty=0 err=0 pending=0 calls=3
+[ingest] kalshi history KXNHLTOTAL: cutoff=2026-07-24T00:00:00Z live=160 hist=1000 (new 0, unmatched 5) candles ok=597 empty=0 err=0 pending=1408 calls=600
 [ingest] kalshi: 108 contracts -> 216 quote rows
-[ingest] kalshi history KXNHLSPREAD: cutoff=2026-07-23T00:00:00Z live=80 hist=1000 (new 0, unmatched 4) candles ok=397 empty=0 err=0 pending=3234 calls=400
-[ingest] kalshi history KXNHLOVERTIME: cutoff=2026-07-23T00:00:00Z live=0 hist=49 (new 0, unmatched 0) candles ok=0 empty=0 err=0 pending=0 calls=3
+[ingest] kalshi history KXNHLSPREAD: cutoff=2026-07-24T00:00:00Z live=80 hist=1000 (new 0, unmatched 4) candles ok=397 empty=0 err=0 pending=2837 calls=400
+[ingest] kalshi history KXNHLOVERTIME: cutoff=2026-07-24T00:00:00Z live=0 hist=49 (new 0, unmatched 0) candles ok=0 empty=0 err=0 pending=0 calls=3
 [ingest] kalshi series watch: 19 series polled, 0 listing contracts
 [ingest] kalshi settled: 40 contracts (11 unmatched to an NHL game)
 [ingest] kalshi live price points: 54 open contracts
@@ -206,7 +208,7 @@
 [ingest] NHL partner odds (DraftKings): 32 rows for 8 games
 [ingest] NHL EDGE team snapshots 20262027/2: 0
 [ingest] NHL EDGE team snapshots 20252026/2: 32
-[ingest] espn injuries: 67 entries at 2026-09-22T06:35:17Z
+[ingest] espn injuries: 67 entries at 2026-09-22T07:09:06Z
 {
  "teams": 62,
  "active_teams_20242025": 32,
@@ -214,7 +216,7 @@
  "active_teams_20262027": 0,
  "winners_derived": 0,
  "team_game_rows": 8820,
- "team_game_stats": 0,
+ "team_game_stats": 5248,
  "goalie_game_stats": 5532,
  "kalshi_series": 82,
  "kalshi_active": 54,
@@ -222,7 +224,7 @@
  "kalshi_history": {
   "series": "KXNHLGAME",
   "calls_start": 4,
-  "cutoff": "2026-07-23T00:00:00Z",
+  "cutoff": "2026-07-24T00:00:00Z",
   "live_settled": 40,
   "historical_rows": 1000,
   "historical_new": 0,
@@ -237,7 +239,7 @@
  "kalshi_totals_history": {
   "series": "KXNHLTOTAL",
   "calls_start": 7,
-  "cutoff": "2026-07-23T00:00:00Z",
+  "cutoff": "2026-07-24T00:00:00Z",
   "live_settled": 160,
   "historical_rows": 1000,
   "historical_new": 0,
@@ -246,7 +248,7 @@
   "candles_ok": 597,
   "candles_empty": 0,
   "candles_error": 0,
-  "candles_pending": 2005,
+  "candles_pending": 1408,
   "calls_used": 600
  },
  "kalshi_spread_live": 108,
@@ -254,7 +256,7 @@
  "kalshi_spread_history": {
   "series": "KXNHLSPREAD",
   "calls_start": 609,
-  "cutoff": "2026-07-23T00:00:00Z",
+  "cutoff": "2026-07-24T00:00:00Z",
   "live_settled": 80,
   "historical_rows": 1000,
   "historical_new": 0,
@@ -263,13 +265,13 @@
   "candles_ok": 397,
   "candles_empty": 0,
   "candles_error": 0,
-  "candles_pending": 3234,
+  "candles_pending": 2837,
   "calls_used": 400
  },
  "kalshi_overtime_history": {
   "series": "KXNHLOVERTIME",
   "calls_start": 1009,
-  "cutoff": "2026-07-23T00:00:00Z",
+  "cutoff": "2026-07-24T00:00:00Z",
   "live_settled": 0,
   "historical_rows": 49,
   "historical_new": 0,
@@ -284,117 +286,117 @@
  "kalshi_series_watch": {
   "KXNHL1P": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "first_period",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL2P": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "second_period",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL3P": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "third_period",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL1PTOTAL": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "first_period_total",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL2PTOTAL": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "second_period_total",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL3PTOTAL": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "third_period_total",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL1PSPREAD": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "first_period_spread",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL2PSPREAD": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "second_period_spread",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL3PSPREAD": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "third_period_spread",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL2OT": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "overtime",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHLSAVES": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "goalie_prop",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHLGOAL": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "player_prop",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHLANYGOAL": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "player_prop",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHLAST": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "player_prop",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHLPTS": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "player_prop",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHLFIRSTGOAL": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "player_prop",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHLTEAMTOTAL": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "team_total",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHLREG": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "regulation",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   },
   "KXNHL60MIN": {
    "open_contracts": 0,
-   "checked_at": "2026-09-22T06:45:28Z",
+   "checked_at": "2026-09-22T07:16:28Z",
    "market_type": "regulation",
-   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T06:45:28Z. Verified negative; nothing is inferred to fill it."
+   "note": "queried and empty: the exchange lists no open contract for this series as of 2026-09-22T07:16:28Z. Verified negative; nothing is inferred to fill it."
   }
  },
  "kalshi_settled": 40,
