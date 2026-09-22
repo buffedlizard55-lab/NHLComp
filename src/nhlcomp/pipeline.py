@@ -26,7 +26,8 @@ from .models import (EloModel, HomeIceOnly, LogisticRest, OtCalibration, Poisson
 from .paper import PaperEngine
 from .store import Store, utcnow
 from .sources.kalshi import KALSHI_TEAM_ALIASES, suffix_team_code
-from .strategies import DecisionContext, Quote, build_seed_strategies
+from .strategies import (PLAYOFFS, REGULAR_SEASON, DecisionContext, Quote,
+                          build_seed_strategies)
 from .verify import Verifier
 
 
@@ -174,6 +175,14 @@ class Pipeline:
 
     def stage_features(self, *, seasons: Sequence[int] | None = None,
                        game_types: tuple[int, ...] = (2,)) -> list[dict[str, Any]]:
+        # stamp every pre-existing wager with the season phase of its game before anything
+        # reads the ledger per phase.  DERIVED from games.game_type (SOURCE DATA); audited;
+        # no price, stake, result or P&L is touched.
+        filled = self.store.backfill_bet_game_type()
+        if filled:
+            self.report["bet_game_type_backfilled"] = filled
+            self.log(f"backfilled game_type on {filled} bet row(s) from games.game_type "
+                     "(derived; audited)")
         self._feature_kw = {"seasons": seasons, "game_types": game_types}
         refs = self.game_refs(seasons=seasons, game_types=game_types)
         fb = FeatureBuilder(refs)
@@ -637,6 +646,8 @@ class Pipeline:
             f = pit.get(gid)
             if g is None or f is None or f.get("lam_home") is None or not g.decided:
                 continue
+            if not self._in_scope(strat, g):
+                continue
             quotes: list[Quote] = []
             settle_by: dict[str, dict[str, Any]] = {}
             for ms in rungs:
@@ -944,6 +955,8 @@ class Pipeline:
             f = pit.get(gid)
             if g is None or f is None or f.get(need) is None or not g.decided:
                 continue
+            if not self._in_scope(strat, g):
+                continue
             quotes: list[Quote] = []
             settle_by: dict[str, dict[str, Any]] = {}
             for ms in rungs:
@@ -1050,6 +1063,22 @@ class Pipeline:
                 "home_prob": round(ph, 4), "away_prob": round(pa, 4),
                 "vig": round(ph_raw + pa_raw - 1.0, 4)}
         return out
+
+    @staticmethod
+    def _in_scope(strat: Any, g: GameRef | None) -> bool:
+        """Is this strategy allowed to trade this game's season phase?
+
+        A rule declares the NHL ``gameTypeId`` values it was built for (``game_types``,
+        default regular season + playoffs).  Without this check the pipeline let every
+        regular-season model loose on September preseason games, where the roster on the ice
+        is not the roster the model rates: on the 2026-09-21 ledger **all 102** forward-test
+        wagers were preseason games, so the headline competition was measuring a rule in a
+        setting it had no evidence for.  See ``Strategy.game_types``.
+        """
+        if g is None:
+            return False
+        scope = getattr(strat, "game_types", None) or (REGULAR_SEASON, PLAYOFFS)
+        return int(g.game_type) in {int(x) for x in scope}
 
     @staticmethod
     def _pregame(g: GameRef, as_of: str | None = None) -> bool:
@@ -1211,6 +1240,8 @@ class Pipeline:
                 f = pit.get(gid)
                 if g is None or f is None or f.get("p_home_ml") is None or not g.decided:
                     continue
+                if not self._in_scope(strat, g):
+                    continue
                 sel = self._side_for_contract(ms, g, names)
                 if sel is None:
                     continue
@@ -1291,11 +1322,15 @@ class Pipeline:
 
             # ---------------------------------------------------- FORWARD TEST
             seen_ladders: set[tuple] = set()
+            out_of_scope = 0
             for q in live:
                 gid = q.game_id
                 g = refs.get(gid) if gid else None
                 if g is None or g.decided:
                     continue
+                if not self._in_scope(strat, g):
+                    out_of_scope += 1
+                    continue   # this rule was not built for that phase of the season
                 if not self._pregame(g, as_of):
                     continue   # the game has started: a pre-game rule may not enter now
                 qtype = q.market_type or "moneyline"
@@ -1376,9 +1411,62 @@ class Pipeline:
                     else:
                         skipped += 1
         self.store.commit()
+        # A signal the venue's own book could not have filled is not a silent non-event.
+        # The published depth of a book level is shared by every rule that trades it, so a
+        # rule that asks for more contracts than are left is *blocked by finite liquidity*,
+        # and that is recorded once per contract with the size that was already claimed.
+        for (contract, ts), info in sorted(self.paper.depth_blocked.items()):
+            # Two different findings wear the same "no wager" shape and must not be reported
+            # as one: an entry point that published no depth at all is a gap in what the
+            # venue publishes, while a level that earlier wagers took is the shared-book
+            # effect this engine exists to model.  The flag kind names which one it is.
+            blocked_by = ", ".join(info["strategies"][:6]) + (
+                ", …" if len(info["strategies"]) > 6 else "")
+            if info.get("reason") == "no_depth_published":
+                self.store.flag(
+                    "no_depth_evidence_at_entry",
+                    f"{contract}: the entry point at {ts} publishes no depth at all (capacity "
+                    f"{info['capacity']:g} contract(s): no offer size and no traded volume), so "
+                    f"{len(info['strategies'])} signal(s) could not be filled ({blocked_by}). "
+                    "No wager is recorded for them, and nothing was assumed in its place: with "
+                    "no published size and no traded volume there is no evidence any contract "
+                    "could have been bought at that price.",
+                    severity="warn", entity_type="market", entity_id=f"{contract}@{ts}",
+                    sources="kalshi.candles")
+            else:
+                self.store.flag(
+                    "depth_exhausted_by_earlier_wagers",
+                    f"{contract}: published depth {info['capacity']:g} contract(s) at {ts} was "
+                    f"already fully claimed ({info['already_claimed']:g}) by earlier wagers, so "
+                    f"{len(info['strategies'])} further signal(s) could not be filled "
+                    f"({blocked_by}). No wager is recorded for them; the price was real, the "
+                    "size was not there.",
+                    severity="warn", entity_type="market", entity_id=f"{contract}@{ts}",
+                    sources="kalshi.trade_api")
+        for contract, info in sorted(self.paper.wide_book_skipped.items()):
+            self.store.flag(
+                "wide_book_no_entry",
+                f"{contract}: bid {info['bid']:g} / ask {info['ask']:g} is a "
+                f"{info['spread']:g}-wide two-sided book (declared maximum "
+                f"{info['max_spread']:g}), so the published ask is not an offer a participant "
+                f"would have met. ASSUMPTION, not source data: the threshold is this project's, "
+                f"and the entry is refused with the numbers recorded rather than filled.",
+                severity="warn", entity_type="market", entity_id=contract,
+                sources="kalshi.trade_api")
+        self.store.commit()
         self.report["placed"] = placed
         self.report["non_executable_signals"] = skipped
-        self.log(f"forward: {placed}")
+        levels = list(self.paper.depth_blocked.values())
+        self.report["depth_blocked_levels"] = len(levels)
+        self.report["depth_blocked_no_evidence_levels"] = sum(
+            1 for v in levels if v.get("reason") == "no_depth_published")
+        self.report["depth_blocked_shared_levels"] = sum(
+            1 for v in levels if v.get("reason") == "already_claimed")
+        self.report["wide_book_refusals"] = len(self.paper.wide_book_skipped)
+        self.report["forward_quotes_out_of_season_scope"] = out_of_scope
+        self.log(f"forward: {placed}"
+                 + (f" ({out_of_scope} quote(s) skipped as outside the rule's season scope)"
+                    if out_of_scope else ""))
         return placed
 
     def _live_quotes(self, refs: dict[int, GameRef] | None = None,
@@ -1682,6 +1770,14 @@ def _hydrate(row: Any):
     from .strategies import (OvertimeStrategy, PuckLineStrategy, ThresholdStrategy,
                              TotalsStrategy)
     params = json.loads(row["params_json"] or "{}")
+    # Fall back to the stored column for the season scope: params_json may predate it (and a
+    # hand-built legacy row in a test has no column at all, hence the guard).
+    stored_scope = (row["game_types"] if "game_types" in row.keys() else None)
+    if stored_scope is not None and "game_types" not in params:
+        try:
+            params["game_types"] = json.loads(stored_scope)
+        except (TypeError, ValueError):
+            pass
     # the class is part of the stored parameter set: reloading a totals rule as a
     # threshold rule would silently drop its strike logic and let it bet a moneyline
     cls = {"totals": TotalsStrategy, "puck_line": PuckLineStrategy,

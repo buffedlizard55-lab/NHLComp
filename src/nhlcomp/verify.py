@@ -58,7 +58,7 @@ class Verifier:
             if g["state"] in ("FINAL", "OFF"):
                 if g["home_score"] is None or g["away_score"] is None:
                     counts["missing_result"] += 1
-                    self.store.flag("missing_result", f"game {gid} FINAL without scores",
+                    self.store.flag("missing_result", f"game {gid} {g['state']} without scores",
                                     entity_type="game", entity_id=gid, severity="error")
                 elif g["home_score"] == g["away_score"]:
                     counts["tied_final"] += 1
@@ -145,17 +145,32 @@ class Verifier:
                 self.store.flag("unmapped_selection",
                                 f"bet {bid} selection '{b['selection']}' is not home/away",
                                 entity_type="bet", entity_id=bid, severity="error")
-        # duplicate wagers: same strategy/game/market/selection placed more than once
+        # duplicate wagers: same strategy/game/market/selection **and same line** placed
+        # more than once.
+        #
+        # The line is part of the instrument's identity, not decoration: Kalshi lists one
+        # "Over k.5" contract per strike, and ``PaperEngine.place`` puts the strike in the
+        # ``bet_id`` precisely so that one rule may hold both an Over 5.5 and an Over 7.5 on
+        # the same game.  Grouping without the strike made every such pair look like a
+        # duplicate and wrote 64 false ``duplicate_bet`` irregularities into the 2026-09-21
+        # ledger -- which is worse than noise, because a queue full of false positives is a
+        # queue nobody reads.  With the strike included, the same query returns none on that
+        # ledger, while a genuine double-entry at the *same* strike still trips it (the
+        # append-only ``record_bet`` also refuses a repeated ``bet_id``).
         for d in self.store.query(
-                """SELECT strategy_id, strategy_version, game_id, market, selection, COUNT(*) c
-                   FROM bets GROUP BY 1,2,3,4,5 HAVING c > 1"""):
+                """SELECT strategy_id, strategy_version, game_id, market, selection,
+                          COALESCE(strike, -1) AS line, COALESCE(test_mode, '') AS mode,
+                          COUNT(*) c
+                     FROM bets GROUP BY 1,2,3,4,5,6,7 HAVING c > 1"""):
             counts["duplicate_bet"] += 1
-            self.store.flag("duplicate_bet",
-                            f"{d['strategy_id']} v{d['strategy_version']} has {d['c']} bets on "
-                            f"{d['market']}/{d['selection']} for game {d['game_id']}",
-                            entity_type="bet",
-                            entity_id=f"{d['strategy_id']}:{d['game_id']}:{d['selection']}",
-                            severity="warn")
+            line = "" if d["line"] == -1 else f" at line {d['line']:g}"
+            self.store.flag(
+                "duplicate_bet",
+                f"{d['strategy_id']} v{d['strategy_version']} has {d['c']} {d['mode']} bets on "
+                f"{d['market']}/{d['selection']}{line} for game {d['game_id']}",
+                entity_type="bet",
+                entity_id=f"{d['strategy_id']}:{d['game_id']}:{d['selection']}:{d['line']:g}",
+                severity="warn")
         # bankroll discipline
         for s in self.store.latest_versions():
             open_exposure = self.store.one(
@@ -609,19 +624,32 @@ class Verifier:
     def _polymarket_team_abbrev(self, name: str | None) -> str | None:
         """Map a Polymarket outcome nickname ("Red Wings") to exactly one NHL abbrev.
 
-        Matched by suffix against ``teams.full_name`` among active franchises, and only when
-        the match is unique: an ambiguous nickname is left unmapped and counted, never
-        guessed, because a wrong team turns a corroboration into a fake conflict.
+        Two rules, each requiring a **unique** match among active franchises, and the second
+        only consulted when the first finds nothing:
+
+        1. **Suffix** on the full name ("Red Wings" -> Detroit Red Wings).
+        2. **Word-boundary prefix** on the full name ("Utah" -> Utah Mammoth).  This is what
+           resolves the one case the suffix rule could not: Polymarket names the Utah
+           franchise simply "Utah", and its full name is neither "Utah Hockey Club" (the
+           club's earlier name, stored inactive) nor anything ending in "utah".  A prefix is
+           only ever used when it names exactly one active club -- "New" prefixes three of
+           them and so stays unmapped, which is the point: a wrong team turns a corroboration
+           into a fake conflict.
         """
         if not name:
             return None
         want = name.strip().lower()
         if not want:
             return None
-        hits = {r["abbrev"] for r in self.store.query(
-            "SELECT abbrev, full_name FROM teams WHERE active=1")
-            if (r["full_name"] or "").lower().endswith(want)}
-        return hits.pop() if len(hits) == 1 else None
+        teams = [(r["abbrev"], (r["full_name"] or "").lower()) for r in self.store.query(
+            "SELECT abbrev, full_name FROM teams WHERE active=1")]
+        hits = {ab for ab, full in teams if full.endswith(want)}
+        if len(hits) == 1:
+            return hits.pop()
+        if hits:
+            return None      # genuinely ambiguous nickname: never guessed
+        prefix = {ab for ab, full in teams if full.startswith(want + " ")}
+        return prefix.pop() if len(prefix) == 1 else None
 
     def _kalshi_quote_for(self, game_id: Any, before_ts: str | None, *, market_type: str,
                           side: str, strike: float | None = None,
@@ -803,6 +831,17 @@ class Verifier:
     #: evidence lives.  Each entry is matched by kind plus a WHERE clause over columns this
     #: project wrote, so a genuine irregularity can never be swept up by it.
     FALSE_POSITIVE_REPAIRS: tuple[dict[str, str], ...] = (
+        {"kind": "unmapped_injury",
+         "where": "entity_id='injuries'",
+         "resolution": ("Self-inflicted, resolved not deleted. The NHL API and ESPN's injury feed "
+                        "do not agree on abbreviation style: the NHL returns LAK/NJD/SJS/TBL and "
+                        "ESPN returns LA/NJ/SJ/TB. Every ESPN injury row for those four clubs "
+                        "failed to resolve, so four franchises had no injury context feeding the "
+                        "injury-gated strategies at all while this queue recorded 11-13 "
+                        "unmappable entries. Fixed on 2026-09-22 by the ABBREV_ALIASES table in "
+                        "store.py, applied only when the abbreviation is not already a team in "
+                        "its own right. Re-probe the flag by re-ingesting: if any entry still "
+                        "cannot be mapped, _injury_context raises a fresh flag with the count.")},
         {"kind": "conflicting_source",
          "where": ("sources='kalshi.historical|nhl.api_web' AND (entity_id LIKE 'KXNHLSPREAD-%' "
                    "OR entity_id LIKE 'KXNHLTOTAL-%' OR entity_id LIKE 'KXNHLOVERTIME-%')"),
@@ -816,6 +855,18 @@ class Verifier:
                         "cross_validate_puck_line_settlements, cross_validate_totals_settlements, "
                         "cross_validate_overtime_settlements -- which found 0 conflicts on the "
                         "same ledger.")},
+        {"kind": "depth_exhausted_by_earlier_wagers",
+         "where": "detail LIKE '%published depth 0 contract(s)%'",
+         "resolution": ("Self-inflicted mislabel, resolved not deleted.  The first version of the "
+                        "shared-depth book reported every unfillable signal as 'an earlier wager "
+                        "took this level', including entry points that published no depth at all "
+                        "(a candle that traded nothing) -- so the row read 'published depth 0 "
+                        "contract(s) ... was already fully claimed (0) by earlier wagers', which "
+                        "contradicts itself and blames the strategies for a gap in the venue's "
+                        "data.  Fixed on 2026-09-22: a zero-depth entry point is now recorded as "
+                        "no_depth_evidence_at_entry and this kind is kept for levels that really "
+                        "were shared.  The correct flag is raised afresh on the next run for every "
+                        "entry point that still publishes nothing.")},
         {"kind": "source_disagreement",
          "where": ("sources='polymarket.gamma,kalshi.trade_api' AND "
                    "detail LIKE '%while kalshi asks%'"),
@@ -856,6 +907,56 @@ class Verifier:
         self.store.commit()
         return resolved
 
+    #: Irregularity kinds that this verifier re-derives in full on **every** call to
+    #: :meth:`run_all`.  Because each of these iterates every row of its table, a flag of
+    #: this kind that is still open but was *not* re-raised this run can only mean the
+    #: condition behind it has gone away -- a data repair, a corrected game row, a strategy
+    #: version that no longer trades.  Anything not on this list (an ingest-time flag such as
+    #: ``broken_api``, or a pipeline-time flag such as ``unreadable_puck_line``) is left
+    #: alone: this verifier never re-derives it, so its silence proves nothing.
+    RECONCILABLE_KINDS = (
+        "crossed_book", "duplicate_bet", "duplicate_game", "exposure_exceeds_bankroll",
+        "impossible_odds", "impossible_result", "impossible_season", "incorrect_pnl",
+        "insufficient_liquidity", "missing_result", "missing_strike", "missing_timestamp",
+        "timestamp_order", "unmapped_selection",
+    )
+
+    def reconcile_stale_flags(self) -> dict[str, int]:
+        """Close open flags of a re-derived kind that no longer reproduce.
+
+        ``Store.flag`` uses ``INSERT OR IGNORE`` so a condition is never recorded twice --
+        but that also means a flag raised once stayed open forever, even after the code that
+        raised it was fixed.  The 2026-09-21 ledger still carried two ``duplicate_game``
+        irregularities for 2024-09-22 and 2025-09-21 that the current check no longer
+        produces: those are genuine NHL preseason *split-squad doubleheaders* (FLA v NSH at
+        Amerant Bank Arena at 18:00Z **and** 22:00Z, two different game ids, two different
+        final scores), which an earlier version matched on date/home/away alone.  Leaving
+        them open overstated the verification queue by two and, worse, trained a reader to
+        ignore it.
+
+        Nothing is deleted.  Each row is marked ``resolved`` with the reason, and one
+        ``audit_log`` entry per kind records how many rows were closed and why.
+        """
+        closed: dict[str, int] = {}
+        for kind in self.RECONCILABLE_KINDS:
+            rows = self.store.query(
+                "SELECT id, entity_id FROM irregularities WHERE kind=? AND status='open'",
+                (kind,))
+            stale = [r for r in rows if (kind, r["entity_id"] or "") not in self.store.flag_seen]
+            if not stale:
+                continue
+            detail = ("the check that raises this kind re-ran on every row of its table in "
+                      "this pass and did not reproduce this entity, so the condition no "
+                      "longer holds; closed rather than deleted, original detail retained")
+            for r in stale:
+                self.store.resolve_irregularity(int(r["id"]), detail, status="resolved")
+            self.store.audit("verifier", "RECONCILE_STALE_FLAG", kind,
+                             json.dumps({"closed": len(stale), "checked": len(rows),
+                                         "entity_ids": [r["entity_id"] for r in stale][:20]}))
+            closed[kind] = len(stale)
+        self.store.commit()
+        return closed
+
     def run_all(self) -> dict[str, Any]:
         summary = {}
         # first, so a run's counts are not inflated by flags a previous version of this
@@ -872,8 +973,13 @@ class Verifier:
         summary["strike_market_bets"] = self.check_strike_market_bets()
         summary["period_goals"] = self.check_period_goal_reconciliation()
         summary["second_market"] = self.cross_check_polymarket()
+        # last: every check above has now re-raised whatever it still finds, so anything left
+        # open without having been re-raised describes a condition that no longer exists
+        summary["stale_flags_closed"] = self.reconcile_stale_flags()
         summary["open_irregularities"] = self.store.one(
             "SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"]
+        summary["irregularities_total"] = self.store.one(
+            "SELECT COUNT(*) c FROM irregularities")["c"]
         self.store.audit("verifier", "RUN_ALL", "", json.dumps(summary))
         self.store.commit()
         return summary

@@ -19,6 +19,24 @@ def _safe_div(a: float, b: float) -> float | None:
     return (a / b) if b else None
 
 
+#: NHL ``gameTypeId`` values, kept local so this module has no strategy import.
+PHASE_LABELS = {1: "preseason", 2: "regular season", 3: "playoffs"}
+#: The phase the competition is scored on.  A rule fitted on regular-season form has a
+#: verified claim on regular-season and playoff games and none at all on a September
+#: preseason roster, so preseason wagers -- which is what the ledger held before the scope
+#: gate of 2026-09-22 -- are reported on their own line and never merged into these totals.
+COMPETITION_PHASES = (2, 3)
+#: Every phase, for a caller that explicitly wants the whole ledger in one number.
+ALL_PHASES = (1, 2, 3)
+
+
+def phase_of(game_type: Any) -> str:
+    try:
+        return PHASE_LABELS.get(int(game_type), f"game_type {game_type}")
+    except (TypeError, ValueError):
+        return "unknown phase"
+
+
 class Performance:
     def __init__(self, store: Store):
         self.store = store
@@ -110,6 +128,46 @@ class Performance:
             }
         out["strategy"] = dict(s)
         out["breakdowns"] = self.breakdowns(strategy_id, version)
+        # The mode totals above are the strategy's *own* ledger: its bankroll has to account
+        # for every wager it actually holds, preseason included.  Which means they must be
+        # read next to the phase split, or a strategy whose only wagers were preseason games
+        # looks like it is competing when it is not.
+        phases: dict[str, Any] = {}
+        for gtype, label in sorted(PHASE_LABELS.items()):
+            bets = [b for b in self.strategy_bets(strategy_id, version)
+                    if b.get("game_type") == gtype]
+            if not bets:
+                continue
+            settled_p = [b for b in bets if b.get("result") in ("WIN", "LOSS", "PUSH", "VOID")]
+            wins_p = sum(1 for b in settled_p if b["result"] == "WIN")
+            losses_p = sum(1 for b in settled_p if b["result"] == "LOSS")
+            pnl_p = sum(float(b["pnl"] or 0) for b in settled_p)
+            staked_p = sum(float(b["stake"] or 0) for b in settled_p)
+            phases[label] = {
+                "game_type": gtype, "bets": len(bets), "settled": len(settled_p),
+                "open": len(bets) - len(settled_p), "wins": wins_p, "losses": losses_p,
+                "pnl": round(pnl_p, 2), "staked": round(staked_p, 2),
+                "roi": round(pnl_p / staked_p, 4) if staked_p else None,
+                "win_rate": round(wins_p / (wins_p + losses_p), 4) if (wins_p + losses_p) else None,
+                "scored_in_competition": gtype in COMPETITION_PHASES,
+            }
+        unlabelled = [b for b in self.strategy_bets(strategy_id, version)
+                      if b.get("game_type") is None]
+        if unlabelled:
+            phases["phase not recorded (row predates bets.game_type)"] = {
+                "game_type": None, "bets": len(unlabelled),
+                "settled": sum(1 for b in unlabelled
+                               if b.get("result") in ("WIN", "LOSS", "PUSH", "VOID")),
+                "open": sum(1 for b in unlabelled if b.get("result") == "OPEN"),
+                "wins": sum(1 for b in unlabelled if b["result"] == "WIN"),
+                "losses": sum(1 for b in unlabelled if b["result"] == "LOSS"),
+                "pnl": round(sum(float(b["pnl"] or 0) for b in unlabelled), 2),
+                "staked": round(sum(float(b["stake"] or 0) for b in unlabelled), 2),
+                "roi": None, "win_rate": None, "scored_in_competition": False,
+            }
+        out["phases"] = phases
+        out["preseason_bets"] = sum(1 for b in self.strategy_bets(strategy_id, version)
+                                    if b.get("game_type") == 1)
         return out
 
     def breakdowns(self, strategy_id: str, version: int) -> dict[str, dict[str, Any]]:
@@ -160,6 +218,11 @@ class Performance:
                 "strategy_id": s["strategy_id"], "version": int(s["version"]),
                 "username": s["username"], "name": s["name"], "category": s["category"],
                 "status": s["status"], "test_mode": s["test_mode"],
+                # composition: how much of this strategy's ledger is preseason, which is
+                # *not* scored.  A row with preseason_bets > 0 must not be read as a
+                # competition result without that column in view.
+                "preseason_bets": summ.get("preseason_bets", 0),
+                "phases": summ.get("phases", {}),
                 **{k: m[k] for k in ("n_bets", "n_settled", "wins", "losses", "pushes", "open",
                                      "win_rate", "win_rate_ci", "pnl", "staked", "roi",
                                      "bankroll", "open_exposure", "max_drawdown", "volatility",
@@ -172,17 +235,31 @@ class Performance:
             r["rank"] = i
         return rows
 
-    def competition_totals(self, *, test_mode: str | None = None) -> dict[str, Any]:
+    def competition_totals(self, *, test_mode: str | None = None,
+                           phases: Sequence[int] | None = COMPETITION_PHASES) -> dict[str, Any]:
         """Aggregate ledger state.  ``test_mode`` restricts to BACKTEST or FORWARD TEST; the
-        default aggregates both and is labelled ``mode='ALL'`` so a reader can tell."""
-        where = " WHERE test_mode=?" if test_mode else ""
-        params = (test_mode,) if test_mode else ()
+        default aggregates both and is labelled ``mode='ALL'`` so a reader can tell.
+
+        ``phases`` restricts to NHL ``gameTypeId`` values and **defaults to
+        :data:`COMPETITION_PHASES` (regular season + playoffs)**, so a caller that forgets to
+        think about the phase still gets the scored competition rather than a number quietly
+        inflated by preseason wagers on rosters no model here has seen.  Pass
+        :data:`ALL_PHASES`, or ``None`` for no filter at all, to aggregate everything.
+        """
+        clauses, params = [], []
+        if test_mode:
+            clauses.append("test_mode=?")
+            params.append(test_mode)
+        if phases is not None:
+            clauses.append("COALESCE(game_type, 2) IN (%s)" % ",".join("?" * len(phases)))
+            params.extend(int(p) for p in phases)
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
         rows = self.store.query(
             f"""SELECT COALESCE(SUM(pnl),0) pnl, COALESCE(SUM(stake),0) staked, COUNT(*) n,
                       SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) wins,
                       SUM(CASE WHEN result='LOSS' THEN 1 ELSE 0 END) losses,
                       SUM(CASE WHEN result='OPEN' THEN 1 ELSE 0 END) open
-               FROM bets{where}""", params)[0]
+               FROM bets{where}""", tuple(params))[0]
         settled = int(rows["wins"] or 0) + int(rows["losses"] or 0)
         return {
             "mode": test_mode or "ALL",
@@ -195,6 +272,58 @@ class Performance:
             if rows["staked"] else None,
             "win_rate": round(int(rows["wins"] or 0) / settled, 4) if settled else None,
         }
+
+    def phase_breakdown(self, *, test_mode: str | None = None) -> list[dict[str, Any]]:
+        """The ledger split by season phase, with the scored competition called out.
+
+        Every wager carries the ``game_type`` of the game it was placed on (1 preseason,
+        2 regular season, 3 playoffs).  Reporting the phases apart is not cosmetic: all 102
+        forward-test wagers on the 2026-09-21 ledger were preseason games, so a single merged
+        leaderboard was presenting a regular-season model's view of AHL-heavy September
+        rosters as though it were the competition.
+        """
+        out: list[dict[str, Any]] = []
+        for gtype, label in sorted(PHASE_LABELS.items()):
+            for mode in (None, "BACKTEST", "FORWARD TEST"):
+                t = self.competition_totals(test_mode=mode, phases=(gtype,))
+                if not t["bets"]:
+                    continue
+                t["phase"] = label
+                t["game_type"] = gtype
+                t["scored_in_competition"] = gtype in COMPETITION_PHASES
+                if test_mode and mode != test_mode:
+                    continue
+                out.append(t)
+        # rows written before bets.game_type existed have no phase recorded; report them
+        # explicitly rather than letting them fall into a phase they were never assigned
+        for mode in (None, "BACKTEST", "FORWARD TEST"):
+            if test_mode and mode != test_mode:
+                continue
+            clauses = ["game_type IS NULL"]
+            params: list[Any] = []
+            if mode:
+                clauses.append("test_mode=?")
+                params.append(mode)
+            r = self.store.query(
+                f"""SELECT COALESCE(SUM(pnl),0) pnl, COALESCE(SUM(stake),0) staked, COUNT(*) n,
+                           SUM(CASE WHEN result IN ('WIN','LOSS') THEN 1 ELSE 0 END) settled,
+                           SUM(CASE WHEN result='OPEN' THEN 1 ELSE 0 END) open,
+                           SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) wins
+                      FROM bets WHERE {' AND '.join(clauses)}""", tuple(params))[0]
+            if not r["n"]:
+                continue
+            settled = int(r["settled"] or 0)
+            out.append({
+                "mode": mode or "ALL", "phase": "phase not recorded (row predates bets.game_type)",
+                "game_type": None, "scored_in_competition": False,
+                "strategies": len(self.store.latest_versions()),
+                "bets": int(r["n"]), "settled": settled, "open": int(r["open"] or 0),
+                "wins": int(r["wins"] or 0), "losses": settled - int(r["wins"] or 0),
+                "pnl": round(float(r["pnl"] or 0), 2), "staked": round(float(r["staked"] or 0), 2),
+                "roi": round(float(r["pnl"] or 0) / float(r["staked"]), 4) if r["staked"] else None,
+                "win_rate": round(int(r["wins"] or 0) / settled, 4) if settled else None,
+            })
+        return out
 
     def post_settlement_analysis(self, bet_id: str) -> dict[str, Any]:
         """Brief section 46: explain each settled wager without over-claiming."""

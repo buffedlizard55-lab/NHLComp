@@ -366,8 +366,13 @@ class ExecutionBase(unittest.TestCase):
         self.future = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=3)
         self.past = datetime(2026, 6, 5, 0, 30, tzinfo=timezone.utc)
         self.gid_future, self.gid_past = 2026010030, 2025030412
+        # A *regular-season* fixture.  The game id coincides with the real 2026-09-24
+        # preseason UTA-at-VGK game, but the row here is synthetic and the scope gate added
+        # on 2026-09-22 refuses preseason games to any rule that has not declared itself for
+        # them, so a fixture meant to exercise ordinary entry and settlement mechanics must
+        # be an ordinary game.  The preseason refusal has its own test.
         self.add_game(self.gid_future, self.future.date().isoformat(), self.future, VGK, UTA,
-                      state="FUT", game_type=1, season=20262027)
+                      state="FUT", game_type=2, season=20262027)
         self.add_game(self.gid_past, self.past.date().isoformat(), self.past, CAR, VGK,
                       state="FINAL", hs=4, as_=3, lpt="OT", game_type=3)
         self.store.commit()

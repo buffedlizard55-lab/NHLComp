@@ -48,6 +48,19 @@ UNKNOWN_DEPTH_CAP_CONTRACTS = 100.0
 DEPTH_BASIS_OFFER = "published_offer_size"
 DEPTH_BASIS_VOLUME = "traded_volume_at_entry_candle"
 DEPTH_BASIS_CAP = "declared_cap_no_published_size"
+#: the fill was cut short not by the book itself but by depth an earlier wager had already
+#: taken from the same book level (see :class:`PaperEngine` on shared depth)
+DEPTH_BASIS_SHARED = "shared_with_earlier_wagers"
+
+#: A two-sided book wider than this is not treated as a tradeable offer.  On a thin
+#: preseason NHL market Kalshi does publish rows such as bid 0.11 / ask 0.74 -- a 0.63-wide
+#: book with an 87-contract "offer" on the ask -- and filling against one produces a wager
+#: whose price no participant would ever have met.  This is a declared ASSUMPTION (a chosen
+#: threshold, not source data); every entry it blocks is recorded as an irregularity with the
+#: bid, the ask and the spread, never dropped in silence.  The 2025-26 regular-season
+#: book that this project *did* backtest against had a median spread of 0.02 and an
+#: interquartile range well under 0.10, so the threshold does not touch the liquid market.
+WIDE_BOOK_MAX_SPREAD = 0.50
 
 
 @dataclass
@@ -61,12 +74,15 @@ class Fill:
     liquidity: float | None
     #: which depth evidence capped this fill (see DEPTH_BASIS_*)
     depth_basis: str = DEPTH_BASIS_OFFER
+    #: contracts still claimable at this book level after this fill, when a shared budget was
+    #: applied (None when the caller did not ask for one)
+    depth_remaining_after: float | None = None
 
 
-def simulate_fill(stake: float, ask: float, ask_size: float | None, *,
-                  traded_volume: float | None = None,
-                  unknown_cap: float = UNKNOWN_DEPTH_CAP_CONTRACTS) -> Fill:
-    """Single-level fill, capped by the best depth evidence available.
+def evidence_depth(ask_size: float | None, traded_volume: float | None, *,
+                   unknown_cap: float = UNKNOWN_DEPTH_CAP_CONTRACTS
+                   ) -> tuple[float, float | None, str]:
+    """Best available evidence for how many contracts are on offer, and its basis.
 
     Order of evidence, strongest first:
 
@@ -75,28 +91,51 @@ def simulate_fill(stake: float, ask: float, ask_size: float | None, *,
        no book size, but it does have volume).  Zero means no fill: nothing traded at that
        price in that hour, so claiming a fill would be inventing liquidity.
     3. ``unknown_cap`` -- a declared assumption of last resort, labelled as such on the row.
+
+    Returns ``(capacity_in_contracts, liquidity_field, depth_basis)``.  ``capacity`` is the
+    size of the book level itself; it is *not* yet net of anything already consumed.
     """
-    if stake <= 0 or ask is None or ask <= 0:
-        return Fill(0.0, 0.0, ask or 0.0, 0.0, max(stake, 0.0), 0.0, ask_size,
-                    DEPTH_BASIS_OFFER if ask_size is not None else DEPTH_BASIS_CAP)
-    requested = stake / ask
     if ask_size is not None:
-        filled = min(requested, float(ask_size))
-        liquidity: float | None = float(ask_size)
-        basis = DEPTH_BASIS_OFFER
-    elif traded_volume is not None:
-        liquidity = float(traded_volume)
-        basis = DEPTH_BASIS_VOLUME
-        filled = 0.0 if float(traded_volume) <= 0 else min(requested, float(traded_volume))
-    else:
-        filled = min(requested, float(unknown_cap))
-        liquidity = None
-        basis = DEPTH_BASIS_CAP
+        return float(ask_size), float(ask_size), DEPTH_BASIS_OFFER
+    if traded_volume is not None:
+        return float(traded_volume), float(traded_volume), DEPTH_BASIS_VOLUME
+    return float(unknown_cap), None, DEPTH_BASIS_CAP
+
+
+def simulate_fill(stake: float, ask: float, ask_size: float | None, *,
+                  traded_volume: float | None = None,
+                  unknown_cap: float = UNKNOWN_DEPTH_CAP_CONTRACTS,
+                  remaining: float | None = None) -> Fill:
+    """Single-level fill, capped by the best depth evidence available.
+
+    ``remaining`` is the part of that book level nobody has claimed yet.  A published offer
+    size describes the *book*, not any one strategy: when several rules decide against the
+    same quote they are bidding for the same contracts, and the second one cannot also have
+    the whole level.  When ``remaining`` is supplied the fill is capped by it and
+    ``depth_remaining_after`` reports what is left; ``None`` means the caller is not
+    modelling a shared book and the evidence cap is used as-is.
+    """
+    capacity, liquidity, basis = evidence_depth(ask_size, traded_volume,
+                                                unknown_cap=unknown_cap)
+    if remaining is not None:
+        if remaining < capacity:
+            basis = DEPTH_BASIS_SHARED
+        capacity = min(capacity, max(0.0, float(remaining)))
+    if stake <= 0 or ask is None or ask <= 0:
+        return Fill(0.0, 0.0, ask or 0.0, 0.0, max(stake, 0.0), 0.0, liquidity,
+                    DEPTH_BASIS_OFFER if ask_size is not None else DEPTH_BASIS_CAP,
+                    None if remaining is None else round(float(remaining), 4))
+    requested = stake / ask
+    filled = min(requested, capacity) if capacity > 0 else 0.0
+    # what is left is the budget minus what this fill actually took, not minus the whole
+    # level: a wager smaller than the level must leave the rest of it for the next rule
+    left_after = None if remaining is None else round(max(0.0, float(remaining) - filled), 4)
     filled_stake = filled * ask
     return Fill(contracts_requested=round(requested, 4), contracts_filled=round(filled, 4),
                 price=ask, stake=round(filled_stake, 4),
                 unfilled_stake=round(max(stake - filled_stake, 0.0), 4),
-                slippage=0.0, liquidity=liquidity, depth_basis=basis)
+                slippage=0.0, liquidity=liquidity, depth_basis=basis,
+                depth_remaining_after=left_after)
 
 
 def binary_settlement(entry_price: float, contracts: float, won: bool, *, fee: float = 0.0) -> float:
@@ -116,9 +155,73 @@ def _fee_of(bet: Any) -> float:
 
 
 class PaperEngine:
+    """Execution, settlement and the shared-depth book.
+
+    Every wager this engine writes consumes part of a published book level, and that level
+    belongs to the *market*, not to the strategy that happened to look at it first.  The
+    engine therefore keeps a per-``(contract, side, quote timestamp)`` budget, seeded from
+    the wagers already in the ledger and decremented by each new fill in the same run.
+
+    This matters because the failure it prevents is invisible in the output: on the
+    2026-09-21 ledger, ``KXNHLGAME-26SEP21NYRNJ-NYR`` published an ``ask_size`` of **6**
+    contracts at the close, and seven strategies independently booked fills summing to
+    **1,443.7** contracts against it -- each one priced as though the whole level were
+    available to it alone.  Seventeen of the twenty contracts more than one strategy traded
+    on that ledger were over-claimed.  A wager whose recorded price and size could not both
+    have existed is not a paper trade, it is an assumption, and it was inflating every
+    strategy that shared a popular quote.
+    """
+
     def __init__(self, store: Store, *, actor: str = "paper_engine"):
         self.store = store
         self.actor = actor
+        self._depth_used: dict[tuple[str, str, str], float] | None = None
+        #: book levels a rule asked for and could not get, keyed by ``(contract, entry ts)``:
+        #: one contract can be blocked at two entry points, and collapsing them would
+        #: under-report the blocked opportunity set.  The pipeline turns each into one
+        #: irregularity naming which of the two causes it was, so a blocked wager is
+        #: visible rather than merely absent.
+        self.depth_blocked: dict[tuple[str, str], dict[str, Any]] = {}
+        #: book levels refused because the two sides were quoted implausibly far apart
+        self.wide_book_skipped: dict[str, dict[str, Any]] = {}
+
+    # ------------------------------------------------------------------ depth book
+    @staticmethod
+    def depth_key(contract: str | None, side: str | None, ts: str | None) -> tuple[str, str, str]:
+        return (contract or "", (side or "YES").upper(), ts or "")
+
+    def depth_used(self) -> dict[tuple[str, str, str], float]:
+        """Contracts already claimed at each book level, from the ledger.
+
+        Built once per engine and then incremented in memory, so the work a run does is one
+        grouped scan rather than a query per fill.
+        """
+        if self._depth_used is None:
+            used: dict[tuple[str, str, str], float] = {}
+            for r in self.store.query(
+                    """SELECT json_extract(notes, '$.contract') AS c,
+                              COALESCE(exchange_side,
+                                       json_extract(notes, '$.exchange_side'),
+                                       'YES') AS s,
+                              decision_ts AS t,
+                              SUM(COALESCE(filled_size, 0)) AS n
+                         FROM bets
+                        WHERE json_extract(notes, '$.contract') IS NOT NULL
+                          AND result <> 'VOID'
+                        GROUP BY 1, 2, 3"""):
+                if r["n"]:
+                    used[self.depth_key(r["c"], r["s"], r["t"])] = float(r["n"])
+            self._depth_used = used
+        return self._depth_used
+
+    def _claim_depth(self, key: tuple[str, str, str], contracts: float) -> None:
+        used = self.depth_used()
+        used[key] = used.get(key, 0.0) + float(contracts)
+
+    def depth_remaining(self, contract: str | None, side: str | None, ts: str | None,
+                        capacity: float) -> float:
+        key = self.depth_key(contract, side, ts)
+        return max(0.0, float(capacity) - self.depth_used().get(key, 0.0))
 
     # ------------------------------------------------------------------ record
     def record_upcoming(self, sig: Signal, *, provider: str, source_url: str = "") -> None:
@@ -164,9 +267,51 @@ class PaperEngine:
         """
         if sig.status != "READY TO BET" or sig.quote is None:
             return None
-        fill = simulate_fill(sig.stake, sig.quote.ask, sig.quote.ask_size,
-                             traded_volume=depth_volume)
+        ask = sig.quote.ask
+        # ---------------------------------------------------------------- wide book
+        # A two-sided book quoted this far apart is not an offer anyone would meet; see
+        # WIDE_BOOK_MAX_SPREAD.  Recorded with the numbers, never dropped silently.
+        bid, ask_v = sig.quote.bid, ask
+        if bid is not None and ask_v is not None and (float(ask_v) - float(bid)) >= WIDE_BOOK_MAX_SPREAD:
+            contract = sig.quote.contract or sig.quote.market_key
+            self.wide_book_skipped[contract] = {
+                "contract": contract, "bid": float(bid), "ask": float(ask_v),
+                "spread": round(float(ask_v) - float(bid), 4),
+                "ask_size": sig.quote.ask_size, "side": sig.quote.side,
+                "strategy_id": sig.strategy_id, "max_spread": WIDE_BOOK_MAX_SPREAD}
+            return None
+        # ---------------------------------------------------------------- shared depth
+        capacity, _liquidity, _basis = evidence_depth(
+            sig.quote.ask_size, depth_volume)
+        remaining = self.depth_remaining(sig.quote.contract, sig.quote.side, decision_ts,
+                                         capacity)
+        fill = simulate_fill(sig.stake, ask, sig.quote.ask_size,
+                            traded_volume=depth_volume, remaining=remaining)
         if fill.contracts_filled <= 0:
+            # Nothing left at this book level.  This is not "no signal": it is a signal the
+            # venue could not have filled, and it is recorded as such so a reader can see
+            # how much of a strategy's opportunity set is blocked by real, finite depth.
+            #
+            # *Why* it could not fill is recorded too, because the two causes are not the
+            # same finding and blaming the wrong one would be a lie about the data:
+            #
+            #   ``no_depth_published``  the entry point carries no depth evidence at all
+            #                           (a candle whose volume is zero, say) -- a limitation
+            #                           of what the venue published, not of the strategies;
+            #   ``already_claimed``     the level did publish depth and earlier wagers in the
+            #                           same run took it -- the shared-book effect.
+            #
+            # Keyed by (contract, timestamp): one contract can be blocked at two entry
+            # points, and collapsing them would under-report the blocked opportunity set.
+            contract = sig.quote.contract or sig.quote.market_key
+            reason = "already_claimed" if capacity > 0 else "no_depth_published"
+            entry = self.depth_blocked.setdefault((contract, decision_ts), {
+                "contract": contract, "side": sig.quote.side,
+                "ts": decision_ts, "capacity": capacity,
+                "already_claimed": round(capacity - remaining, 4),
+                "reason": reason, "ask": ask, "strategies": []})
+            if sig.strategy_id not in entry["strategies"]:
+                entry["strategies"].append(sig.strategy_id)
             return None
         fee = kalshi_taker_fee(fill.price, fill.contracts_filled) if provider == "kalshi" else 0.0
         strike = getattr(sig.quote, "strike", None)
@@ -234,20 +379,37 @@ class PaperEngine:
                 "price_basis": getattr(sig.quote, "price_basis", "exchange"),
                 "exchange_side": sig.quote.side,
                 "depth_basis": fill.depth_basis,
+                "depth_remaining_after": fill.depth_remaining_after,
+                "entry_bid": sig.quote.bid,
+                "entry_spread": (round(float(sig.quote.ask) - float(sig.quote.bid), 4)
+                                 if (sig.quote.bid is not None and sig.quote.ask is not None)
+                                 else None),
                 "depth_cap_note": (
                     "the venue published no offer size for this side; the fill is capped at the "
                     f"declared {UNKNOWN_DEPTH_CAP_CONTRACTS:g}-contract assumption"
-                    if fill.depth_basis == DEPTH_BASIS_CAP else None),
+                    if fill.depth_basis == DEPTH_BASIS_CAP else
+                    "the best available depth evidence for this book level had already been "
+                    "partly claimed by earlier wagers on the same contract and quote; this "
+                    "fill takes only what was left"
+                    if fill.depth_basis == DEPTH_BASIS_SHARED else None),
             }, default=str),
             "features_json": json.dumps(sig.supporting, default=str),
             "created_at": utcnow(),
         }
-        row["season"] = self.store.one("SELECT season FROM games WHERE game_id=?",
-                                       (sig.game_id,))
-        row["season"] = int(row["season"]["season"]) if row["season"] else None
+        g = self.store.one("SELECT season, game_type FROM games WHERE game_id=?", (sig.game_id,))
+        row["season"] = int(g["season"]) if g else None
+        # which phase of the season this wager belongs to, stored on the row rather than
+        # derived at read time: the competition is reported per phase, and a bet must never
+        # move between tables because somebody edited a games row.
+        row["game_type"] = int(g["game_type"]) if g else None
         ok = self.store.record_bet(row)
         self.store.commit()
         if ok:
+            # the book level is only spent once the wager is actually in the ledger, so a
+            # rejected duplicate bet_id (a re-run) does not silently consume liquidity
+            self._claim_depth(
+                self.depth_key(sig.quote.contract, sig.quote.side, decision_ts),
+                fill.contracts_filled)
             self.store.execute(
                 """UPDATE upcoming_bets SET status='EXECUTED'
                    WHERE strategy_id=? AND strategy_version=? AND game_id=? AND market=?
@@ -290,7 +452,9 @@ class PaperEngine:
         if state not in ("FINAL", "OFF"):
             return 0
         if home_score is None or away_score is None:
-            self.store.flag("missing_result", f"game {game_id} is {state} with no score",
+            # The wording is deliberate and shared with Verifier.check_games: the same
+            # condition must produce one queue row, not two rows saying it two ways.
+            self.store.flag("missing_result", f"game {game_id} {state} without scores",
                             severity="error", entity_type="game", entity_id=str(game_id))
             return 0
         home_won = home_score > away_score
