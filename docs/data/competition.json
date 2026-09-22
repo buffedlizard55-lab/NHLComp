@@ -15,14 +15,14 @@
  "BACKTEST": {
   "mode": "BACKTEST",
   "strategies": 78,
-  "bets": 3726,
-  "settled": 3726,
+  "bets": 3801,
+  "settled": 3801,
   "open": 0,
-  "wins": 1752,
-  "losses": 1974,
-  "pnl": 1547.82,
-  "staked": 118331.73,
-  "roi": 0.0131,
-  "win_rate": 0.4702
+  "wins": 1790,
+  "losses": 2011,
+  "pnl": 1437.91,
+  "staked": 120085.83,
+  "roi": 0.012,
+  "win_rate": 0.4709
  }
 }

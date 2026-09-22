@@ -1,12 +1,12 @@
 [
  {
-  "id": 868,
-  "ts_utc": "2026-09-22T06:46:36Z",
+  "id": 631,
+  "ts_utc": "2026-09-22T07:08:56Z",
   "kind": "no_depth_evidence_at_entry",
   "severity": "warn",
   "entity_type": "market",
-  "entity_id": "KXNHLSPREAD-26APR02TORSJ-TOR1@1775181600",
-  "detail": "KXNHLSPREAD-26APR02TORSJ-TOR1: the entry point at 1775181600 publishes no depth at all (capacity 0 contract(s): no offer size and no traded volume), so 1 signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them, and nothing was assumed in its place: with no published size and no traded volume there is no evidence any contract could have been bought at that price.",
+  "entity_id": "KXNHLSPREAD-26FEB26TORFLA-TOR1@1772150400",
+  "detail": "KXNHLSPREAD-26FEB26TORFLA-TOR1: the entry point at 1772150400 publishes no depth at all (capacity 0 contract(s): no offer size and no traded volume), so 1 signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them, and nothing was assumed in its place: with no published size and no traded volume there is no evidence any contract could have been bought at that price.",
   "sources": "kalshi.candles",
   "auto_corrected": 0,
   "status": "open",
@@ -14,36 +14,8 @@
   "resolved_at": null
  },
  {
-  "id": 869,
-  "ts_utc": "2026-09-22T06:46:36Z",
-  "kind": "no_depth_evidence_at_entry",
-  "severity": "warn",
-  "entity_type": "market",
-  "entity_id": "KXNHLSPREAD-26APR04WPGCBJ-WPG1@1775343600",
-  "detail": "KXNHLSPREAD-26APR04WPGCBJ-WPG1: the entry point at 1775343600 publishes no depth at all (capacity 0 contract(s): no offer size and no traded volume), so 1 signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them, and nothing was assumed in its place: with no published size and no traded volume there is no evidence any contract could have been bought at that price.",
-  "sources": "kalshi.candles",
-  "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
- },
- {
-  "id": 870,
-  "ts_utc": "2026-09-22T06:46:36Z",
-  "kind": "no_depth_evidence_at_entry",
-  "severity": "warn",
-  "entity_type": "market",
-  "entity_id": "KXNHLSPREAD-26APR05FLAPIT-FLA2@1775415600",
-  "detail": "KXNHLSPREAD-26APR05FLAPIT-FLA2: the entry point at 1775415600 publishes no depth at all (capacity 0 contract(s): no offer size and no traded volume), so 1 signal(s) could not be filled (NHL_PUCK_ALT_25). No wager is recorded for them, and nothing was assumed in its place: with no published size and no traded volume there is no evidence any contract could have been bought at that price.",
-  "sources": "kalshi.candles",
-  "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
- },
- {
-  "id": 871,
-  "ts_utc": "2026-09-22T06:46:36Z",
+  "id": 632,
+  "ts_utc": "2026-09-22T07:08:56Z",
   "kind": "no_depth_evidence_at_entry",
   "severity": "warn",
   "entity_type": "market",
@@ -56,8 +28,120 @@
   "resolved_at": null
  },
  {
-  "id": 872,
-  "ts_utc": "2026-09-22T06:46:36Z",
+  "id": 635,
+  "ts_utc": "2026-09-22T07:08:56Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLTOTAL-25DEC07PITDAL-5@1765148400",
+  "detail": "KXNHLTOTAL-25DEC07PITDAL-5: published depth 14 contract(s) at 1765148400 was already fully claimed (14) by earlier wagers, so 1 further signal(s) could not be filled (NHL_TOTALS_OVER_TIGHT). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 625,
+  "ts_utc": "2026-09-22T07:01:09Z",
+  "kind": "broken_api",
+  "severity": "warn",
+  "entity_type": "source",
+  "entity_id": "nhl.stats_rest",
+  "detail": "stats REST goalie/summary isGame 20242025/2: GET https://api.nhle.com/stats/rest/en/goalie/summary?isAggregate=false&isGame=true&start=100&limit=100&cayenneExp=seasonId=20242025%20and%20gameTypeId=2 failed: The read operation timed out",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 624,
+  "ts_utc": "2026-09-22T07:00:04Z",
+  "kind": "broken_api",
+  "severity": "warn",
+  "entity_type": "source",
+  "entity_id": "nhl.stats_rest",
+  "detail": "stats REST team/summary isGame 20262027/2: GET https://api.nhle.com/stats/rest/en/team/summary?isAggregate=false&isGame=true&start=0&limit=100&cayenneExp=seasonId=20262027%20and%20gameTypeId=2 failed: The read operation timed out",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 623,
+  "ts_utc": "2026-09-22T06:59:00Z",
+  "kind": "broken_api",
+  "severity": "warn",
+  "entity_type": "source",
+  "entity_id": "nhl.stats_rest",
+  "detail": "stats REST team/summary isGame 20252026/2: GET https://api.nhle.com/stats/rest/en/team/summary?isAggregate=false&isGame=true&start=0&limit=100&cayenneExp=seasonId=20252026%20and%20gameTypeId=2 failed: The read operation timed out",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 622,
+  "ts_utc": "2026-09-22T06:57:55Z",
+  "kind": "broken_api",
+  "severity": "warn",
+  "entity_type": "source",
+  "entity_id": "nhl.stats_rest",
+  "detail": "stats REST team/summary isGame 20242025/2: GET https://api.nhle.com/stats/rest/en/team/summary?isAggregate=false&isGame=true&start=500&limit=100&cayenneExp=seasonId=20242025%20and%20gameTypeId=2 failed: The read operation timed out",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 610,
+  "ts_utc": "2026-09-22T04:15:21Z",
+  "kind": "no_depth_evidence_at_entry",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR02TORSJ-TOR1@1775181600",
+  "detail": "KXNHLSPREAD-26APR02TORSJ-TOR1: the entry point at 1775181600 publishes no depth at all (capacity 0 contract(s): no offer size and no traded volume), so 1 signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them, and nothing was assumed in its place: with no published size and no traded volume there is no evidence any contract could have been bought at that price.",
+  "sources": "kalshi.candles",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 611,
+  "ts_utc": "2026-09-22T04:15:21Z",
+  "kind": "no_depth_evidence_at_entry",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR04WPGCBJ-WPG1@1775343600",
+  "detail": "KXNHLSPREAD-26APR04WPGCBJ-WPG1: the entry point at 1775343600 publishes no depth at all (capacity 0 contract(s): no offer size and no traded volume), so 1 signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them, and nothing was assumed in its place: with no published size and no traded volume there is no evidence any contract could have been bought at that price.",
+  "sources": "kalshi.candles",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 612,
+  "ts_utc": "2026-09-22T04:15:21Z",
+  "kind": "no_depth_evidence_at_entry",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR05FLAPIT-FLA2@1775415600",
+  "detail": "KXNHLSPREAD-26APR05FLAPIT-FLA2: the entry point at 1775415600 publishes no depth at all (capacity 0 contract(s): no offer size and no traded volume), so 1 signal(s) could not be filled (NHL_PUCK_ALT_25). No wager is recorded for them, and nothing was assumed in its place: with no published size and no traded volume there is no evidence any contract could have been bought at that price.",
+  "sources": "kalshi.candles",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 613,
+  "ts_utc": "2026-09-22T04:15:21Z",
   "kind": "no_depth_evidence_at_entry",
   "severity": "warn",
   "entity_type": "market",
@@ -70,8 +154,8 @@
   "resolved_at": null
  },
  {
-  "id": 873,
-  "ts_utc": "2026-09-22T06:46:36Z",
+  "id": 614,
+  "ts_utc": "2026-09-22T04:15:21Z",
   "kind": "no_depth_evidence_at_entry",
   "severity": "warn",
   "entity_type": "market",
@@ -84,8 +168,8 @@
   "resolved_at": null
  },
  {
-  "id": 874,
-  "ts_utc": "2026-09-22T06:46:36Z",
+  "id": 615,
+  "ts_utc": "2026-09-22T04:15:21Z",
   "kind": "no_depth_evidence_at_entry",
   "severity": "warn",
   "entity_type": "market",
@@ -98,8 +182,8 @@
   "resolved_at": null
  },
  {
-  "id": 875,
-  "ts_utc": "2026-09-22T06:46:36Z",
+  "id": 616,
+  "ts_utc": "2026-09-22T04:15:21Z",
   "kind": "depth_exhausted_by_earlier_wagers",
   "severity": "warn",
   "entity_type": "market",
@@ -112,36 +196,8 @@
   "resolved_at": null
  },
  {
-  "id": 865,
-  "ts_utc": "2026-09-22T06:39:08Z",
-  "kind": "broken_api",
-  "severity": "warn",
-  "entity_type": "source",
-  "entity_id": "nhl.stats_rest",
-  "detail": "stats REST team/summary isGame 20252026/2: GET https://api.nhle.com/stats/rest/en/team/summary?isAggregate=false&isGame=true&start=100&limit=100&cayenneExp=seasonId=20252026%20and%20gameTypeId=2 failed: The read operation timed out",
-  "sources": null,
-  "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
- },
- {
-  "id": 864,
-  "ts_utc": "2026-09-22T06:37:41Z",
-  "kind": "broken_api",
-  "severity": "warn",
-  "entity_type": "source",
-  "entity_id": "nhl.stats_rest",
-  "detail": "stats REST team/summary isGame 20242025/2: GET https://api.nhle.com/stats/rest/en/team/summary?isAggregate=false&isGame=true&start=0&limit=100&cayenneExp=seasonId=20242025%20and%20gameTypeId=2 failed: The read operation timed out",
-  "sources": null,
-  "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
- },
- {
-  "id": 731,
-  "ts_utc": "2026-09-22T05:08:38Z",
+  "id": 601,
+  "ts_utc": "2026-09-22T04:00:32Z",
   "kind": "clv_unavailable_no_side",
   "severity": "info",
   "entity_type": "bet",
@@ -154,8 +210,8 @@
   "resolved_at": null
  },
  {
-  "id": 732,
-  "ts_utc": "2026-09-22T05:08:38Z",
+  "id": 602,
+  "ts_utc": "2026-09-22T04:00:32Z",
   "kind": "clv_unavailable_no_side",
   "severity": "info",
   "entity_type": "bet",
@@ -166,6 +222,76 @@
   "status": "open",
   "resolution": null,
   "resolved_at": null
+ },
+ {
+  "id": 596,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR02TORSJ-TOR1",
+  "detail": "KXNHLSPREAD-26APR02TORSJ-TOR1: published depth 0 contract(s) at 1775181600 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "resolved",
+  "resolution": "Self-inflicted mislabel, resolved not deleted.  The first version of the shared-depth book reported every unfillable signal as 'an earlier wager took this level', including entry points that published no depth at all (a candle that traded nothing) -- so the row read 'published depth 0 contract(s) ... was already fully claimed (0) by earlier wagers', which contradicts itself and blames the strategies for a gap in the venue's data.  Fixed on 2026-09-22: a zero-depth entry point is now recorded as no_depth_evidence_at_entry and this kind is kept for levels that really were shared.  The correct flag is raised afresh on the next run for every entry point that still publishes nothing.",
+  "resolved_at": "2026-09-22T04:15:27Z"
+ },
+ {
+  "id": 597,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR04WPGCBJ-WPG1",
+  "detail": "KXNHLSPREAD-26APR04WPGCBJ-WPG1: published depth 0 contract(s) at 1775343600 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "resolved",
+  "resolution": "Self-inflicted mislabel, resolved not deleted.  The first version of the shared-depth book reported every unfillable signal as 'an earlier wager took this level', including entry points that published no depth at all (a candle that traded nothing) -- so the row read 'published depth 0 contract(s) ... was already fully claimed (0) by earlier wagers', which contradicts itself and blames the strategies for a gap in the venue's data.  Fixed on 2026-09-22: a zero-depth entry point is now recorded as no_depth_evidence_at_entry and this kind is kept for levels that really were shared.  The correct flag is raised afresh on the next run for every entry point that still publishes nothing.",
+  "resolved_at": "2026-09-22T04:15:27Z"
+ },
+ {
+  "id": 598,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR05FLAPIT-FLA2",
+  "detail": "KXNHLSPREAD-26APR05FLAPIT-FLA2: published depth 0 contract(s) at 1775415600 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_ALT_25). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "resolved",
+  "resolution": "Self-inflicted mislabel, resolved not deleted.  The first version of the shared-depth book reported every unfillable signal as 'an earlier wager took this level', including entry points that published no depth at all (a candle that traded nothing) -- so the row read 'published depth 0 contract(s) ... was already fully claimed (0) by earlier wagers', which contradicts itself and blames the strategies for a gap in the venue's data.  Fixed on 2026-09-22: a zero-depth entry point is now recorded as no_depth_evidence_at_entry and this kind is kept for levels that really were shared.  The correct flag is raised afresh on the next run for every entry point that still publishes nothing.",
+  "resolved_at": "2026-09-22T04:15:27Z"
+ },
+ {
+  "id": 599,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26MAR24TORBOS-TOR1",
+  "detail": "KXNHLSPREAD-26MAR24TORBOS-TOR1: published depth 0 contract(s) at 1774393200 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "resolved",
+  "resolution": "Self-inflicted mislabel, resolved not deleted.  The first version of the shared-depth book reported every unfillable signal as 'an earlier wager took this level', including entry points that published no depth at all (a candle that traded nothing) -- so the row read 'published depth 0 contract(s) ... was already fully claimed (0) by earlier wagers', which contradicts itself and blames the strategies for a gap in the venue's data.  Fixed on 2026-09-22: a zero-depth entry point is now recorded as no_depth_evidence_at_entry and this kind is kept for levels that really were shared.  The correct flag is raised afresh on the next run for every entry point that still publishes nothing.",
+  "resolved_at": "2026-09-22T04:15:27Z"
+ },
+ {
+  "id": 600,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26MAR30TORANA-TOR2",
+  "detail": "KXNHLSPREAD-26MAR30TORANA-TOR2: published depth 0 contract(s) at 1774922400 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_ALT_25). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "resolved",
+  "resolution": "Self-inflicted mislabel, resolved not deleted.  The first version of the shared-depth book reported every unfillable signal as 'an earlier wager took this level', including entry points that published no depth at all (a candle that traded nothing) -- so the row read 'published depth 0 contract(s) ... was already fully claimed (0) by earlier wagers', which contradicts itself and blames the strategies for a gap in the venue's data.  Fixed on 2026-09-22: a zero-depth entry point is now recorded as no_depth_evidence_at_entry and this kind is kept for levels that really were shared.  The correct flag is raised afresh on the next run for every entry point that still publishes nothing.",
+  "resolved_at": "2026-09-22T04:15:27Z"
  },
  {
   "id": 327,
@@ -179,7 +305,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 328,
@@ -193,7 +319,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 341,
@@ -207,7 +333,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 342,
@@ -221,7 +347,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 343,
@@ -235,7 +361,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 344,
@@ -249,7 +375,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 345,
@@ -263,7 +389,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 346,
@@ -277,7 +403,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 347,
@@ -291,7 +417,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 348,
@@ -305,7 +431,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 349,
@@ -319,7 +445,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 391,
@@ -389,7 +515,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 221,
@@ -403,7 +529,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 222,
@@ -417,7 +543,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 223,
@@ -431,7 +557,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 224,
@@ -445,7 +571,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 225,
@@ -459,7 +585,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 226,
@@ -473,7 +599,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 227,
@@ -487,7 +613,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 228,
@@ -501,7 +627,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 229,
@@ -515,7 +641,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 206,
@@ -529,7 +655,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "Self-inflicted, resolved not deleted. The NHL API and ESPN's injury feed do not agree on abbreviation style: the NHL returns LAK/NJD/SJS/TBL and ESPN returns LA/NJ/SJ/TB. Every ESPN injury row for those four clubs failed to resolve, so four franchises had no injury context feeding the injury-gated strategies at all while this queue recorded 11-13 unmappable entries. Fixed on 2026-09-22 by the ABBREV_ALIASES table in store.py, applied only when the abbreviation is not already a team in its own right. Re-probe the flag by re-ingesting: if any entry still cannot be mapped, _injury_context raises a fresh flag with the count.",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 117,
@@ -543,7 +669,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 118,
@@ -557,7 +683,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 119,
@@ -571,7 +697,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 120,
@@ -585,7 +711,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 121,
@@ -599,7 +725,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 122,
@@ -613,7 +739,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 128,
@@ -627,7 +753,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 129,
@@ -641,7 +767,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 130,
@@ -655,7 +781,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 131,
@@ -669,7 +795,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 132,
@@ -683,7 +809,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 133,
@@ -697,7 +823,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 134,
@@ -711,7 +837,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 135,
@@ -725,7 +851,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 136,
@@ -739,7 +865,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 137,
@@ -753,7 +879,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 138,
@@ -767,7 +893,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 139,
@@ -781,7 +907,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 140,
@@ -795,7 +921,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 141,
@@ -809,7 +935,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 142,
@@ -823,7 +949,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 143,
@@ -837,7 +963,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 144,
@@ -851,7 +977,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 71,
@@ -865,7 +991,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 76,
@@ -879,7 +1005,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 77,
@@ -893,7 +1019,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 78,
@@ -907,7 +1033,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 79,
@@ -921,7 +1047,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 80,
@@ -935,7 +1061,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 81,
@@ -949,7 +1075,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 82,
@@ -963,7 +1089,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 83,
@@ -977,7 +1103,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 43,
@@ -991,7 +1117,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 44,
@@ -1005,7 +1131,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 45,
@@ -1019,7 +1145,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 46,
@@ -1033,7 +1159,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 47,
@@ -1047,7 +1173,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 48,
@@ -1061,7 +1187,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 49,
@@ -1075,7 +1201,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 50,
@@ -1089,7 +1215,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 51,
@@ -1103,7 +1229,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 52,
@@ -1117,7 +1243,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 53,
@@ -1131,7 +1257,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 34,
@@ -1159,7 +1285,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "Self-inflicted, resolved not deleted. The NHL API and ESPN's injury feed do not agree on abbreviation style: the NHL returns LAK/NJD/SJS/TBL and ESPN returns LA/NJ/SJ/TB. Every ESPN injury row for those four clubs failed to resolve, so four franchises had no injury context feeding the injury-gated strategies at all while this queue recorded 11-13 unmappable entries. Fixed on 2026-09-22 by the ABBREV_ALIASES table in store.py, applied only when the abbreviation is not already a team in its own right. Re-probe the flag by re-ingesting: if any entry still cannot be mapped, _injury_context raises a fresh flag with the count.",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 3,
@@ -1173,7 +1299,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 4,
@@ -1187,7 +1313,7 @@
   "auto_corrected": 0,
   "status": "resolved",
   "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
-  "resolved_at": "2026-09-22T06:46:40Z"
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 1,
