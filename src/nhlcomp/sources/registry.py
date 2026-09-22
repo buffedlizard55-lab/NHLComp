@@ -680,8 +680,79 @@ SOURCES: tuple[SourceSpec, ...] = (
         known_limits="Not ingested yet: files are large (per-season zips) and every derived feature "
                      "would be MODEL OUTPUT from a model this project cannot audit. Kept as a "
                      "candidate rather than rejected, because the published terms permit it.",
-        notes="Terms read 2026-09-20 from data.htm; data dictionaries are linked from that page.",
+        notes="Terms re-read 2026-09-22 from data.htm: the page stated 'last updated 2026-06-15', "
+              "so during the 2026 off-season there is no 2026-27 file yet and no point-in-time "
+              "update stream; data dictionaries are linked from that page.",
         probe_urls=("https://moneypuck.com/data.htm",),
+    ),
+
+    SourceSpec(
+        source_id="odds_snapshots.parlay",
+        name="sports-odds-datasets (ParlayAPI open snapshots)",
+        url="https://github.com/JacobiusMakes/sports-odds-datasets",
+        data_type="sample CSVs of sportsbook closing lines: Super Bowl LX, one MLB day "
+                  "(2026-08-23), and a 50,000-row player-prop sample across sports",
+        nhl_relevance="Would have been a second, sportsbook-side closing-line source to "
+                      "cross-check Kalshi closes; verified to contain NO NHL files",
+        historical_depth="Prop sample spans 2026-02-08..2026-08-25; game files are one-off "
+                         "samples; no NHL rows of any kind",
+        live_available=False,
+        update_frequency="Ad-hoc samples (3 commits since creation); not a feed",
+        api_available=False,
+        auth_required="none for the samples; the live API behind it is freemium "
+                      "(1,000 credits/month, no card)",
+        cost="free (samples, CC BY 4.0)",
+        genuinely_free="samples yes; the underlying archive is a commercial freemium product",
+        usage_limits="Samples only; completeness explicitly not offered",
+        licensing="CC BY 4.0 for the sample files",
+        provenance="Third party (ParlayAPI production archive export)",
+        reliability="n/a for NHL (no coverage)",
+        accuracy="sportsbook closes as captured by the vendor; methodology not published",
+        granularity="per game per book / per prop",
+        automated_access="yes (raw CSV on GitHub)",
+        known_limits="REJECTED for NHL use, verified 2026-09-22: the file list contains no "
+                     "hockey/NHL dataset at all (americanfootball_nfl, baseball_mlb and prop "
+                     "samples only). Recorded so the absence is a decision, not an oversight.",
+        notes="Discovered via the awesome-sports-betting-data index (link-checked 2026-08-27). "
+              "Re-check if the publisher adds an NHL file.",
+        status="rejected",
+    ),
+
+    SourceSpec(
+        source_id="dataset.kaggle_nhl_betting",
+        name="Kaggle: NHL Full Game & Betting Statistics (2004-today)",
+        url="https://www.kaggle.com/datasets/jonathanncoletti/nhl-historical-game-data",
+        data_type="third-party CSVs built from the ESPN API: game stats plus claimed betting "
+                  "odds (spread/moneyline/total), weekly through 2025-12",
+        nhl_relevance="A sportsbook price history would unlock priced sportsbook backtests; "
+                      "both provenance and access fail verification",
+        historical_depth="2004-01-01..2025-12-10 claimed, update cadence maintained by one "
+                         "volunteer",
+        live_available=False,
+        update_frequency="weekly (stated)",
+        api_available=False,
+        auth_required="Kaggle account/API key to download; none is available here and none "
+                      "may be invented",
+        cost="free with Kaggle account",
+        genuinely_free="freemium (account-gated)",
+        usage_limits="Kaggle terms apply; dataset licensing not stated by the uploader",
+        licensing="not stated",
+        provenance="Third party; odds columns are said to come from ESPN JSON responses, with "
+                   "no per-price timestamps published",
+        reliability="unknown",
+        accuracy="unverifiable: the uploader's extraction cannot be audited",
+        granularity="per team-game",
+        automated_access="requires a Kaggle API key (not available)",
+        known_limits="REJECTED for use, 2026-09-22: (a) download requires an account credential "
+                     "this project does not have and must not invent; (b) odds provenance is "
+                     "undocumented and timestamp-less, which this project cannot reconcile with "
+                     "its own verified probe that ESPN's public scoreboard carries NO odds block "
+                     "on completed games (2025-11-15 slate, fetched 2026-09-21). Never "
+                     "reconstructed from memory, so a memory-contradicting third party cannot "
+                     "be promoted without verification.",
+        notes="Revisit only with (1) an authenticated download path and (2) a spot-check that "
+              "ties several of its prices to an independent source at a stated timestamp.",
+        status="rejected",
     ),
 
     SourceSpec(

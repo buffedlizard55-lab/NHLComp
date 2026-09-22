@@ -1,62 +1,151 @@
-# NHLComp Final Report — PASS3 FULL RECHECK
-Generated 2026-09-21 UTC from data/nhlcomp.db (copy of data/ledger.db)
+# NHLComp Final Report — 2026-09-22 (fourth session)
 
-## Competition Summary
-- **78 strategies** (61 seed + 17 generated variants, per build_seed_strategies)
-- **BACKTEST**: 3091 settled wagers, PnL +1961.88, staked 101875.18, ROI 1.93%, win rate 48.75%
-- **FORWARD TEST**: 81 open paper bets, 0 settled yet, staked 2172.32, PnL 0.0
-- **Market baseline** (buy every side at close, net fees): home ROI -6.06% (n=1312, hit 52.21%), away ROI -1.8% (n=1312, hit 47.79%) — demonstrates vig.
-- **Open irregularities**: 3 (down from 74 pre-fix)
+Generated from the ledger (`data/nhlcomp.db`, the 2026-09-22 CI ledger plus this session's
+audit and research pass). Every number below is computed from the ledger and reproducible via
+`make report` / `make site`. **BACKTEST, FORWARD TEST and PAPER TRADE are never merged.**
 
-## Verified Facts (SOURCE DATA)
-- NHL schedule/results from api-web.nhle.com: 4410 games, 3968 regular-season feature rows, 0 leakage problems (assert_no_leakage)
-- Team per-game stats from api.nhle.com/stats/rest team/summary isGame=true: PP%/PK%, shots for/against, used for shot_share, PDO, special_teams edge — verified via captured payload nhl_stats_rest_team.json
-- Goalie per-game stats from same endpoint: starter save % last 10, b2b detection — verified
-- Kalshi markets: 16244 settlements (KXNHLGAME 3098 with close candle, KXNHLTOTAL 7904 total, 3562 with close, 446 games, 352 backtestable; KXNHLSPREAD 5182 settlements, 390 with close across 98 games, 4 backtestable; KXNHLOVERTIME 49 settlements, 48 with close across 48 games, 0 backtestable — playoff-only window 2026-04-28..2026-06-14)
-- Kalshi quotes: 916 latest quotes, 57038 price points (open/t24h/t6h/t1h/close candles)
-- Fee model: Kalshi general taker fee round up(0.07*C*P*(1-P)), M=1 for KXNHLGAME, from official fee schedule effective 2026-07-07 — stored on every bet row
-- Cross-validation: team_game_rows_compared 5248, score_conflicts 0, shootout_goal_definition_adjusted 392 (NHL stats REST excludes shootout goal), settlement_moneyline_compared 3098, settlement_conflicts 0, totals_conflicts 0, puck_line_conflicts 0, overtime cross_tab REG->no 36, OT->yes 13
-- Polymarket: 707 markets (futures 223, game 484), matched_to_games 160, 100 like-for-like comparisons (moneyline 20, total 80), 0 disagreements >0.05 within 30min, 100 stale — reference only, never execution
-- Source registry: 29 sources (was 21), including kalshi.period, period_total, team_total, regulation, player_props, goalie_props, futures, alternate, spread, overtime, etc., all probed via Ingestor.verify_sources()
-- Strategy lifecycle: candidate→active→retired, 78 total, 690 triggers tested, 0 promoted via discovery significance (Holm), 0 significant on accuracy/price — honest reporting of search size
+## 1. What was built (cumulative)
 
-## Assumptions & Limitations (explicitly recorded, never hidden)
-- **Starter identity for PAST games**: post-game goalie log identifies starter (ASSUMPTION: public at morning skate). For UPCOMING games, no verified pre-game starter source exists → goalie-gated strategies stay in WAITING FOR GOALIE forward, not assumed.
-- **No historical injury feed**: ESPN injuries current list only, no history → injury-sensitive rules FORWARD TEST only, BACKTEST rows annotated backtest_without_injury_context via stage_reconcile (audit row exists)
-- **No historical sportsbook odds**: DraftKings via NHL partner feed current slate only, de-vigged proportionally, reference only → book_vs_exchange FORWARD TEST only, no backtest claimed
-- **Kalshi closing candle hourly**: close = last candle ending at or before scheduled start, may include final minutes before puck drop; thin books outside playoffs
-- **Totals Under, puck-line +1.5, overtime NO**: NO-side has no historical offer in candle feed (YES bid/ask only), and no_ask = 1 - yes_bid contradicted by ledger (2 of 12 contracts) → FORWARD TEST only at live no_ask_dollars, no_history_reason recorded
-- **Arena lat/lon unavailable**: statsapi.web.nhl.com unreachable, venues.lat/lon NULL by design, travel from UTC offsets, outdoor games not identified without guessing — blocked
-- **EDGE**: api-web.nhle.com/v1/edge/team-comparison verified JSON, snapshots only, season-to-date aggregate, no per-game history → blocked until dated history accumulates
-- **Period markets**: KXNHL1P listed but 0 contracts open/historical on 2026-09-21 verified negative, game_period_scores ingests period goals for research but no period model → blocked
-- **Player props, goalie saves, team totals, regulation, futures**: KXNHLGOAL, KXNHLSAVES, KXNHLTEAMTOTAL etc. listed but empty on 2026-09-21 → blocked with explicit blocked_reason, no price history, no model
-- **Live/in-game**: ig60/ig120 candle points stored for research, but batch pipeline cannot execute intraday → research only
-- **Slippage**: stored as 0 because only one book level available — limitation recorded
-- **Shootout definition for overtime**: Kalshi settled history playoff-only (no shootout), so whether SO counts as overtime is UNVERIFIED — wagers on such game left OPEN and settled from exchange's own result, not inferred
+An autonomous NHL paper-betting research platform: verified data-source registry (31
+entries, HTTP-probed every run), ingesters for the NHL APIs, Kalshi market data (live tier,
+/historical tier, hourly candlesticks), Polymarket, ESPN and NHL partner feeds; point-in-time
+feature builders with leakage assertions; Elo / Poisson / logistic models with a held-out
+model comparison; an autonomous hypothesis generator (690 triggers tested per run with Holm
+multiple-testing correction); priced backtests from real timestamped Kalshi candles; a
+forward-test paper engine with depth caps, wide-book refusal, taker fees, partial fills and
+shared-book budgets; settlement cross-checked against exchange results; closing-line value;
+an append-only bet ledger with audit trail; an irregularity queue **with recovery**; a
+GitHub Pages site (dashboard, leaderboards per test mode, strategies, upcoming bets, live
+positions, trade history, performance, research lab, data sources, verification queue,
+methodology) with JSON mirrors under `docs/data/`; and a 3-hourly CI pipeline that trades,
+settles, verifies, rebuilds and deploys the site (284 unit tests, standard library only).
 
-## Adversarial Audit PASS2 Fixes
-- **Duplicate bets**: TotalsStrategy _backtest_totals previously looped per-contract, placing 2 bets per game (5.5 and 7.5) → 64 duplicate_bet irregularities. Fixed 2026-09-21: group by game_id, hand whole ladder to strategy once, _pick_strike chooses single rung (nearest target, lower on ties) — matches forward-test ladder logic. Result: duplicate_bet 0, totals_bets 96 (was 260)
-- **Duplicate games**: verify.check_games grouped by date+home+away only, flagged preseason split-squad doubleheaders (same date, same matchup, 4h apart, e.g. 2024-09-22 18:00 vs 22:00, 2025-09-21 19:00 vs 23:00) as duplicates → 2 duplicate_game flags. Fixed: group by date+home+away+start_time_utc, so only truly identical scheduled starts flagged. Result: duplicate 0
-- **Filtering UI**: site.py enhanced — leaderboard dual boards lb/lbb with controls lb_controls/lbb_controls, search setTextFilter, category/market/status selects, min ROI/PnL; _bets_table emits data-strategy/market/team/season/month/mode/pnl/roi/edge/price and sortable headers; upcoming has up_controls with market/status/team/season/month/min_edge; history has th_controls; strategies page has strat_list container, strat_controls with search, category, market selects, details data-category/market/strategy; JS applyFilters branches on TABLE vs details list, supports q, strategy/market/team/player/goalie/season/month/category/status/mode AND, min_roi/min_pnl/min_edge numeric
-- **Source registry expanded**: 29 sources (was 21) including kalshi.period, period_total, team_total, regulation, player_props, goalie_props, futures, alternate, spread, overtime — all verified via probe
-- **DB restore**: data/nhlcomp.db was wiped to 0 games after cli init; restored from data/ledger.db (4410 games, 16244 settlements) and re-ran full pipeline offline
+## 2. Competition standings (regular season + playoffs; preseason is excluded and labelled)
 
-## PASS3 Full Recheck
-- Tests: PYTHONPATH=src python -m pytest tests -q = 231 passed, 72 subtests
-- Verification: open_irregularities 3 (unmapped_injury 13 entries, overtime_price_coverage 48 contracts 0 backtestable, settlement_rule_unverified shootout) — all documented known limitations, not bugs
-- No strategy_leakage, no impossible_odds, no missing_timestamp, no bad_pnl, no duplicate_bet, no stake_exceeds_bankroll, no unmapped, no crossed_book, no impossible_price
-- Settlement cross-checks: 0 conflicts across moneyline, totals, puck_line, overtime (verified mapping)
-- Site: wrote 23 files to docs, 11 HTML pages with controls, methodology updated to 78 strategies / 81 forward bets
+| Mode | Bets | Settled | Open | P&L | Staked | ROI | Win rate |
+|---|---|---|---|---|---|---|---|
+| BACKTEST (Kalshi close candles) | 3,922 | 3,922 | 0 | +1,015.59 | 122,877.67 | +0.83% | 47.1% |
+| FORWARD TEST (live 2025-26 paper trading) | 127 | 44 | 0 | −879.61 | 2,932.05 | −30.0% | 31.8% |
+| Preseason (both modes, excluded from scoring) | 140 | 57 | 83 | −991.94 | 3,592.99 | −27.6% | 36.8% |
 
-## Remaining Open Irregularities (3) — why acceptable
-1. unmapped_injury 13 entries: ESPN feed includes players with abbrev SJ, TB, LA, NJ that cannot be mapped to active team_id via Store.team_id_for (triCode shared by two franchises or non-NHL). Counted, not dropped, severity warn, source espn.nhl_api — expected, not a data invention
-2. overtime_price_coverage: 48 contracts with pre-game offer, 0 backtestable because feature history (regular season) and price history (playoff) do not yet overlap — gap recorded as gap, not as empty result that looks like “rules found nothing”
-3. settlement_rule_unverified KXNHLOVERTIME: shootout treatment unverified because settled history playoff-only, no SO evidence — wagers left OPEN, settled from exchange's own result, nothing inferred
+**Calculations, clearly labelled as such:** net of Kalshi's published taker fee; ROI = P&L /
+staked; every win rate carries a Wilson 95% interval. The forward-test loss is a *preseason*
+result: 127 September wagers on thin books (median spreads far wider than the 2025-26
+regular-season book this project backtests against) traded by rules fitted on regular-season
+form. The season-scope gate now confines rules to regular season + playoffs; the 83 currently
+open preseason wagers are labelled and will settle but score nothing. **No strategy has a
+verified edge.** Discovery judged 157 candidates against a Holm threshold across 690 tests
+this run: 0 significant on accuracy, 0 on price — and the backtest book as a whole (+
+0.83% ROI on 3,922 flat-staked wagers) sits inside the range where fees and the candle-close
+entry could explain it. The honest conclusion is *no demonstrated edge yet, regular season
+2026-27 forward test is the live experiment*, and the market baseline (blindly buying home
+at the close: −6.1% ROI; away: −1.8%) shows the spread+fee hurdle any strategy must clear.
 
-## Deployment
-- GitHub Pages site built from ledger: docs/ with dashboard, leaderboard, strategies, upcoming, positions, history, performance, research, sources, verification, methodology, final_report
-- CI workflow .github/workflows/research.yml restores ledger from cache, seeds from data/ledger.db on cold start, ingests live data with budgets (kalshi 1500, totals 600, spread 400, overtime 250), runs full pipeline, verifies, builds site, commits snapshot back to branch
-- Data files committed: data/ledger.db (74M), data/captured/*.json (real payloads), docs/data/*.json (leaderboard, strategies, bets, etc.)
+## 3. Data sources discovered / verified / rejected
 
-## Conclusion
-PASS1 BUILD done, PASS2 adversarial audit fixed duplicate bets and duplicate game false positives and enhanced filtering, PASS3 full recheck confirms 0 leakage, 0 invented odds, fee model verified, bankroll discipline enforced, all blocked categories stay blocked with explicit reason, site filtering AND logic works, tests pass, open irregularities reduced from 74 to 3 documented limitations.
+- **Verified by HTTP probe this run (24):** `api-web.nhle.com/v1` (schedule, scoreboard,
+  standings, club schedules, partner-game DraftKings odds, EDGE JSON), `api.nhle.com/stats/rest`
+  (team/summary and goalie/summary per-game logs), Kalshi trade API (live markets, settled
+  markets, hourly candlesticks, series discovery, /historical tier), Kalshi NHL series
+  (moneyline, totals ladder, spread, overtime, futures, period, regulation, team totals,
+  goalie props, player props), Polymarket Gamma, ESPN injuries + scoreboard, Open-Meteo
+  archive. Full table with limitations on the site's Data Sources page.
+- **Verified but dormant (1):** MoneyPuck downloads — page live, terms permit non-commercial
+  use with credit, but the page stated "last updated 2026-06-15": no 2026-27 file during the
+  off-season, so no current-season point-in-time stream. Candidate, not ingested (shot-level
+  xG is a third-party MODEL OUTPUT).
+- **Newly rejected this session (2):**
+  - `sports-odds-datasets` (ParlayAPI): **no NHL files at all** (Super Bowl LX, one MLB day,
+    a 50k prop sample); samples CC BY 4.0 but the archive behind them is a freemium vendor.
+  - Kaggle "NHL Full Game & Betting Statistics": rejected on access (account/API key that
+    does not exist here and may not be invented) and on provenance (timestamp-less odds said
+    to come from ESPN JSONs, contradicting this project's verified probe that ESPN's
+    scoreboard carries no odds block on completed games).
+- **Still unavailable (verified negatives):** pre-game starting-goalie announcements (a
+  further `gamecenter/<id>/probable-goalies` probe returned 404 on 2026-09-22), historical
+  sportsbook prices, line combinations, player props with verified pre-game deployment,
+  arena coordinates. The Odds API remains rejected (paid key; none invented).
+
+## 4. Backtests and forward tests
+
+- **BACKTEST** rows are priced only from real, timestamped Kalshi data: the last hourly
+  candle ending at or before puck drop (or, for a few early rows, an undocumented
+  pre-settlement quote permanently stamped `single_source_timing_unverified`). 3,922 settled
+  priced wagers across moneyline (3,255), totals ladder (637) and puck line (46). Accuracy-only
+  backtests (no price → no P&L, `data_sufficient=0`) cover the rest.
+- **Priced totals went live this session's ledger:** the candle walk and the feature walk
+  reached the same games — 1,159 backtestable totals games (7,741 contracts with a pre-puck
+  drop offer), 691 puck-line games; the old `totals_price_coverage` gap is closed by the new
+  recovery pass. KXNHLOVERTIME remains a coverage gap (48 contracts, 0 backtestable) and its
+  settlement rule stays shootout-unverified — both stay flagged.
+- **FORWARD TEST** placed 127 regular-season wagers in the 2025-26 season against live
+  quotes and settles them from official results; none are open (the 2026-27 season starts
+  in October; the scope gate correctly keeps preseason out of the scored competition).
+- **Market-movement / CLV:** every priced bet records its close price; closing-line value is
+  computed against the candle close (NO-side purchases have no candle history, flagged
+  `clv_unavailable_no_side`).
+
+## 5. Paper-trading results (honest reading)
+
+- 2025-26 regular-season forward sample: 44 settled, −30.0% ROI — **small sample, wide
+  preseason-adjacent books, no conclusions drawn**; the Wilson intervals on the leaderboard
+  are correspondingly enormous (e.g. best strategy n=2: CI [34%, 100%]).
+- No strategy is promoted on this evidence. Discovery promotions require significance after
+  Holm correction **and** priced-ROI evidence; 0 of 690 triggers qualify so far.
+- Execution realism: fills capped by published offer size or traded candle volume (declared
+  100-contract cap where neither exists, stamped on each row), shared-book budgets prevent
+  several strategies over-claiming one book level, books wider than 0.50 are refused, and
+  taker fees are deducted everywhere.
+
+## 6. Open / upcoming bets
+
+2,199 upcoming signals are tracked (preseason slate + the opening 2026-27 stretch), each
+with its price, required price, model probability, edge and blocking reason. 83 forward
+wagers are open on preseason games and settle from official results without scoring. The
+competition's next live window is the 2026-27 opening slate, where regular-season scope
+rules will again paper-trade at live Kalshi offers.
+
+## 7. Important findings (all verifiable in the ledger's findings table)
+
+1. **No demonstrated edge yet** — 0/690 triggers significant after Holm correction; backtest
+   ROI +0.83% is within the spread+fee hurdle zone.
+2. **A queue that only grows is a broken queue** — this session added evidence-carrying
+   recovery so transient API failures, closed coverage gaps, verified settlement rules and
+   since-matched markets resolve with notes + audit rows (nothing deleted). First run cut
+   open irregularities 27 → 24, all of which are standing conditions.
+3. **The delisted `KXNHLSPREAD-26JAN26LACBJ`** listing anomaly was resolved with evidence
+   (Kalshi `not_found`; no NHL game existed for the ticker), superseding the flag.
+4. **The "unknown team" in game 2024010106** is EHC Red Bull München (`MUN`, id 7509), a
+   2024 Global Series exhibition opponent — identified from the schedule payload itself and
+   excluded by design, not guessed.
+5. **Under sides (totals Under, +1.5 puck line, OT No) have no price history** — the candle
+   feed publishes the YES side only — so those rules are forward-test only and say so.
+6. **Polymarket ↔ Kalshi cross-check:** 110 like-for-like comparisons so far, 0 disagreements
+   beyond $0.05, but 0 within the 30-minute freshness window yet — recorded stale, used for
+   research only.
+
+## 8. Limitations and unavailable data
+
+No historical sportsbook prices (partner feed is current-slate only, reference-only); no
+pre-game starter source (goalie rules gated); no line combinations; no period-level model;
+EDGE is a season-to-date snapshot (forward-only); in-game candles are research-only (the
+pipeline is batch); hourly closes can include trades up to puck drop; preseason Kalshi books
+are thin. Preseason scoring is excluded by a season-scope gate added 2026-09-22 after all
+102 then-open forward wagers turned out to be preseason games.
+
+## 9. Remaining work / recommended next research
+
+1. Let the 2026-27 regular season accumulate a real forward sample (the CI loop already
+   trades, settles and verifies every 3 hours).
+2. Grow the KXNHLOVERTIME overlap; settle the shootout question from the first regular-season
+   OT/SO contract the exchange finalizes.
+3. Re-check MoneyPuck when 2026-27 updates resume (labelled MODEL OUTPUT feature family).
+4. A starter-announcement source remains the single highest-value unlock (goalie rules are
+   seeded and waiting).
+5. Player props stay blocked until a verified pre-game deployment feed exists.
+
+---
+*Verification method: all source claims above carry a retrieval URL and date in the ledger
+(`findings`, `source_verification`, `raw_response` tables); every bet carries its price
+source, timestamp and verification status; corrections and resolutions are audited in
+`audit_log`. Nothing on this page is reconstructed from memory.*

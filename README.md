@@ -94,11 +94,13 @@ src/nhlcomp/
   paper.py         execution model (offer, depth cap, fee), settlement, open positions
   mastersite.py    the reviewed owner MasterSite directory: per-project verdicts and the one
                    reuse candidate that was tested and rejected
+  research.py      the autonomous research log: verified/rejected sources and status notes,
+                   written to the findings ledger with their evidence
   analysis.py      P&L, ROI, drawdown, CLV, Wilson intervals, per-mode leaderboards
   verify.py        irregularity queue and cross-source validation
   site.py          static GitHub Pages generator
   pipeline.py      end-to-end orchestration (ingest -> features -> models -> discovery ->
-                   backtest -> forward -> settle -> CLV -> analysis -> verify)
+                   backtest -> forward -> settle -> CLV -> analysis -> research log -> verify)
   cli.py           command-line interface
 ```
 
@@ -170,6 +172,10 @@ how many hypotheses it tested so a lucky survivor is visible as such.
 | Strategies never chase | bet only when `ask <= model_prob - min_edge` | `test_05b_strategy_refuses_a_price_that_is_not_value` |
 | Conflicts are recorded, not resolved | `Verifier.cross_validate_*` writes both values | `test_conflicting_sources_are_recorded_not_resolved` |
 | Small samples say so | Wilson interval beside every win rate | `test_wilson_interval_is_wide_for_small_n` |
+| A recovered condition leaves the queue | transient `broken_api`, `no_markets`, coverage gaps, the OT settlement rule and `unmatched_market` resolve with a note + audit row when the identical condition is later observed to hold no more (`Store.resolve_irregularities_where`, raiser-side) | `tests/test_queue_recovery.py` |
+| A non-NHL opponent is identified, not guessed | a preseason game naming a team the NHL teams endpoint does not list (2024 Global Series: EHC Red Bull München, id 7509, `MUN`) is recorded `non_nhl_opponent_excluded` from the schedule payload's own abbrev and supersedes the `unknown_team` error; a regular-season unknown team or an NHL-looking abbrev stays an error | `test_global_series_opponent_is_identified_and_unknown_team_superseded`, `test_regular_season_unknown_team_still_raises_the_error` |
+| Manual research resolutions carry evidence | `Verifier.MANUAL_RESEARCH_RESOLUTIONS` re-applies idempotently with evidence + `MANUAL_RESOLUTION` audit row; `Store.flag` re-opens if the condition ever recurs | `test_lacbj_resolution_applies_with_evidence_and_is_idempotent` |
+| Research is written to the ledger, not prose | `Pipeline.stage_research_log` records verified/rejected sources with evidence URLs and dates | `test_research_findings_are_recorded_idempotently_with_evidence` |
 
 ## Data sources
 
@@ -204,6 +210,23 @@ recorded as free.
 * **MoneyPuck's listed downloads are permitted** (free for non-commercial use with credit, per
   its data page); the registry keeps it as a candidate rather than rejected. Natural Stat Trick
   / Evolving-Hockey remain rejected for automated use (scraping conflicts with their terms).
+* **Fourth-session audit (2026-09-22).** (1) The verification queue now *recovers*: transient
+  `broken_api` timeouts, `no_markets`, price-coverage gaps, the overtime settlement rule and
+  `unmatched_market` flags close with a resolution note and an audit row once the identical
+  condition is observed to hold no more — a queue that only grows trains a reader to ignore
+  it. Nothing is deleted. (2) The delisted `KXNHLSPREAD-26JAN26LACBJ` listing anomaly was
+  resolved with recorded evidence (Kalshi now returns `not_found` for the ticker; the NHL
+  schedule has no LA@CBJ game on 2026-01-26 — CBJ played DAL/TBL/PHI around it and LAK was at
+  DET on the 27th). (3) The 2024 Global Series game 2024010106's unknown opponent was
+  identified from the schedule payload itself: EHC Red Bull München (`MUN`, team 7509), a
+  non-NHL exhibition club; the game is excluded by design. (4) Two more odds-history leads
+  were verified and **rejected**: ParlayAPI's `sports-odds-datasets` (no NHL files at all) and
+  the Kaggle ESPN-derived NHL betting dataset (account-gated access; timestamp-less odds
+  provenance that contradicts this project's verified probe of the ESPN feed). MoneyPuck was
+  re-verified live but is dormant for the off-season (page last updated 2026-06-15; no
+  2026-27 file yet), and a further NHL API probe for pre-game goalie announcements
+  (`gamecenter/<id>/probable-goalies`) returned 404 — starters remain without a verified
+  pre-game source. All of it is written to the findings ledger by `stage_research_log`.
 
 Still unavailable: `statsapi.web.nhl.com` and `api.nhl.com/api/v1` (arena coordinates), The
 Odds API (paid key; none invented), any pre-game starting-goalie feed, line combinations,
@@ -248,14 +271,14 @@ application-level error so a rejected request cannot be mistaken for "no markets
   games (verified 2026-09-21 on the 2025-11-15 slate), and the NHL partner feed covers the
   current slate only. Sportsbook lines are therefore a forward-only reference, never a backtest
   price.
-* **Totals price history and feature history do not overlap yet.** The Kalshi candle walk and
-  the NHL season-stats walk are budgeted separately and move in opposite directions. On the
-  2026-09-21 CI ledger the candle walk held 577 settled contracts with a pre-puck-drop offer
-  across 73 games (64 of them 2025-26 playoff games) while `team_game_stats` covered only
-  2024-25 — so **no** game had both a price and a point-in-time feature row, and the priced
-  totals backtest is empty. That is recorded as an open `totals_price_coverage` irregularity
-  with the counts, not left as an empty table that looks like "the rules found no value".
-  Totals are accuracy-only in BACKTEST and forward-test at live offers until the walks meet.
+* **KXNHLOVERTIME price history and feature history do not overlap yet.** The Kalshi candle walk
+  and the NHL season-stats walk are budgeted separately. Totals and puck lines have met (the
+  2026-09-22 run reports 1,159 backtestable totals games and 691 puck-line games, so those
+  priced backtests are live and the old coverage gaps are closed by the recovery pass);
+  KXNHLOVERTIME is the remaining gap — 48 contracts with a pre-puck-drop offer, 0
+  backtestable — and its settlement rule is still shootout-unverified. Both stay flagged
+  (`overtime_price_coverage`, `settlement_rule_unverified`) rather than being silently
+  traded or silently dropped.
 * **Starting goalies for upcoming games have no verified pre-game source.** Goalie-gated
   strategies forward-test only when a starter is known; their backtests rely on the post-game
   log (an explicit ASSUMPTION recorded on the strategy).

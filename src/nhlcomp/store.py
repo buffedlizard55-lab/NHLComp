@@ -1115,6 +1115,34 @@ class Store:
         )
         self.commit()
 
+    def resolve_irregularities_where(self, kind: str, detail_prefix: str, resolution: str, *,
+                                     entity_id: str | None = None, actor: str = "resolve") -> int:
+        """Close every OPEN irregularity of ``kind`` whose detail starts with ``detail_prefix``.
+
+        The complement of :meth:`flag` for conditions that *recovered*: a fetch that timed
+        out yesterday and succeeded today, a coverage gap the two ingest walks have since
+        closed, a market that was unmatchable until the schedule caught up.  Nothing is
+        deleted -- each row keeps its original detail and first-seen timestamp and gains a
+        resolution note -- and one ``audit_log`` entry records how many rows were closed and
+        why, so a reader of the queue history sees the recovery, not just its absence.
+
+        Returns the number of rows closed (0 is normal and means nothing was open).
+        """
+        rows = self.query(
+            """SELECT id FROM irregularities
+                WHERE kind=? AND status='open' AND detail LIKE ?
+                  AND (? = '' OR entity_id = ?)""",
+            (kind, detail_prefix + "%", entity_id or "", entity_id or ""))
+        for r in rows:
+            self.resolve_irregularity(int(r["id"]), resolution)
+        if rows:
+            self.audit(actor, "RESOLVE_RECOVERED", kind,
+                       json.dumps({"closed": len(rows), "detail_prefix": detail_prefix,
+                                   "entity_id": entity_id, "resolution": resolution[:300]}))
+            self.commit()
+        return len(rows)
+
+
     # ------------------------------------------------------------- strategies
     def upsert_strategy(self, s: dict[str, Any]) -> None:
         s = dict(s)

@@ -1369,7 +1369,7 @@
  },
  {
   "finding_id": "FIND_MODEL_COMPARE",
-  "created_at": "2026-09-22T15:50:50Z",
+  "created_at": "2026-09-22T18:05:46Z",
   "title": "Out-of-sample model comparison (held-out chronological window)",
   "body": "Poisson, Elo, a 4-feature logistic model and a home-ice constant were compared on the same held-out window. Lower log loss is better. A complex model is only kept if it beats the constant.",
   "evidence": "{\"poisson\": {\"n\": 525, \"log_loss\": 0.68403, \"brier\": 0.24547}, \"elo\": {\"n\": 525, \"log_loss\": 0.68961, \"brier\": 0.24705}, \"logistic\": {\"n\": 525, \"log_loss\": 0.68693, \"brier\": 0.24689}, \"home_ice_constant\": {\"n\": 525, \"log_loss\": 0.69219, \"brier\": 0.24952}}",
@@ -1378,7 +1378,7 @@
  },
  {
   "finding_id": "FIND_DISCOVERY_SEARCH",
-  "created_at": "2026-09-22T15:50:51Z",
+  "created_at": "2026-09-22T18:05:47Z",
   "title": "Discovery search completed",
   "body": "690 candidate triggers were evaluated (787 games had a recovered Kalshi closing price). With that many tests a per-test 5% threshold guarantees that some triggers clear it by chance alone, so every p-value is judged against Holm's step-down correction for a 5% family-wise error rate (the strongest survivor had to clear p <= 7.31e-05). 0 candidate(s) clear it on accuracy and 0 on price. Everything promoted is labelled CANDIDATE, carries its own corrected p-values, and only forward-test results can promote it; a candidate that does not clear the corrected threshold is forward-tested to collect evidence and NO EDGE IS CLAIMED for it.",
   "evidence": "{\"tested\": 690, \"survivors\": 0}",
@@ -1387,7 +1387,7 @@
  },
  {
   "finding_id": "FIND_MARKET_BASELINE",
-  "created_at": "2026-09-22T15:50:55Z",
+  "created_at": "2026-09-22T18:05:51Z",
   "title": "Market baseline: buying every home / away contract at the Kalshi close",
   "body": "Flat-stake ROI of buying one side of every game that has a recovered closing candle, net of the published taker fee. This is the cost of the spread plus fees; a strategy's priced ROI has to beat it, not zero.",
   "evidence": "{\"home\": {\"n\": 1312, \"roi\": -0.0606, \"pnl\": -79.5258, \"avg_price\": 0.5409, \"hit\": 0.5221, \"mdd\": 85.2756, \"sharpe\": -0.063}, \"away\": {\"n\": 1312, \"roi\": -0.018, \"pnl\": -23.5663, \"avg_price\": 0.4723, \"hit\": 0.4779, \"mdd\": 42.3855, \"sharpe\": -0.0162}}",
@@ -1396,20 +1396,74 @@
  },
  {
   "finding_id": "FIND_COMPETITION_STATE",
-  "created_at": "2026-09-22T15:51:09Z",
+  "created_at": "2026-09-22T18:06:04Z",
   "title": "Competition state snapshot",
   "body": "Aggregate paper-trading state. Win rate is always shown with a sample size and a Wilson interval.",
-  "evidence": "{\"FORWARD TEST\": {\"mode\": \"FORWARD TEST\", \"strategies\": 83, \"bets\": 0, \"settled\": 0, \"open\": 0, \"wins\": 0, \"losses\": 0, \"pnl\": 0.0, \"staked\": 0.0, \"roi\": null, \"win_rate\": null}, \"BACKTEST\": {\"mode\": \"BACKTEST\", \"strategies\": 83, \"bets\": 3921, \"settled\": 3921, \"open\": 0, \"wins\": 1846, \"losses\": 2075, \"pnl\": 1012.43, \"staked\": 122873.96, \"roi\": 0.0082, \"win_rate\": 0.4708}}",
+  "evidence": "{\"FORWARD TEST\": {\"mode\": \"FORWARD TEST\", \"strategies\": 83, \"bets\": 0, \"settled\": 0, \"open\": 0, \"wins\": 0, \"losses\": 0, \"pnl\": 0.0, \"staked\": 0.0, \"roi\": null, \"win_rate\": null}, \"BACKTEST\": {\"mode\": \"BACKTEST\", \"strategies\": 83, \"bets\": 3922, \"settled\": 3922, \"open\": 0, \"wins\": 1847, \"losses\": 2075, \"pnl\": 1015.59, \"staked\": 122877.67, \"roi\": 0.0083, \"win_rate\": 0.4709}}",
   "confidence": "high",
   "kind": "status"
  },
  {
   "finding_id": "FIND_MASTER_SITE_REVIEW",
-  "created_at": "2026-09-22T15:51:09Z",
+  "created_at": "2026-09-22T18:06:04Z",
   "title": "MasterSite directory reviewed 2026-09-21 (14 projects)",
   "body": "The owner's MasterSite index was fetched, every named project was checked against the GitHub API, candidate READMEs were read, and the one data claim that mattered was tested against the live endpoint before anything was reused. Repositories that do not exist: CEO, PinePilot. One reuse candidate (NHL prices from the ESPN scoreboard odds block) was tested and rejected for historical use; the feed itself was kept as a registered source for the results and post-game goalie identification it verifiably supplies.",
   "evidence": "{\n \"reviewed_at\": \"2026-09-21\",\n \"directory\": \"https://buffedlizard55-lab.github.io/MasterSite/\",\n \"sites_in_directory\": 49,\n \"projects_reviewed\": 14,\n \"missing_repositories\": [\n  \"CEO\",\n  \"PinePilot\"\n ],\n \"reused\": [\n  \"KalshiPaperSim\"\n ],\n \"rejected_after_test\": [\n  \"NHL betting prices can be read from ESPN's scoreboard odds block (as SportsPred's ice-hockey page describes).\"\n ],\n \"method\": \"MasterSite index fetched; repository existence checked against the GitHub API; READMEs fetched for every candidate; the one data claim that mattered was tested against the live endpoint.\"\n}",
   "confidence": "high",
   "kind": "source_review"
+ },
+ {
+  "finding_id": "FIND_ODDS_SNAPSHOTS_NO_NHL",
+  "created_at": "2026-09-22T18:06:04Z",
+  "title": "sports-odds-datasets (ParlayAPI) verified to contain no NHL data",
+  "body": "The 'open snapshots of sportsbook odds data' repository recommended by the awesome-sports-betting-data index was evaluated as a possible second (sportsbook) closing-line source to cross-check Kalshi closes. Its file list is Super Bowl LX closing lines (13 rows), one MLB day (2026-08-23, 1,151 rows) and a 50,000-row player-prop sample spanning 2026-02-08..2026-08-25 -- no hockey or NHL file of any kind. The underlying archive is a commercial freemium API (1,000 credits/month trial tier, which this project does not treat as permanently free). Registered as REJECTED; the registry entry records the evidence so the absence is a decision, not an oversight.",
+  "evidence": "{\n \"url\": \"https://github.com/JacobiusMakes/sports-odds-datasets\",\n \"fetched\": \"2026-09-22\",\n \"files_seen\": [\n  \"superbowl_lx_closing_lines.csv\",\n  \"mlb_2026-08-23_closing_lines.csv\",\n  \"prop_closing_lines_sample_50k.csv\"\n ],\n \"license\": \"CC BY 4.0 (samples)\"\n}",
+  "confidence": "high",
+  "kind": "source_review"
+ },
+ {
+  "finding_id": "FIND_KAGGLE_NHL_ODDS_REJECTED",
+  "created_at": "2026-09-22T18:06:04Z",
+  "title": "Kaggle 'NHL Full Game & Betting Statistics' rejected on access and provenance",
+  "body": "A third-party Kaggle dataset claiming NHL game data 2004-2025 including betting odds was evaluated as a historical sportsbook price source. Rejected for two independent reasons. (1) Access: downloading requires a Kaggle account/API key; none is available to this project and none may be invented. (2) Provenance: the odds columns are said to come from ESPN JSON responses with no per-price timestamps, and this project's own verified probe (2026-09-21, 2025-11-15 slate) found ESPN's public scoreboard carries NO odds block on completed games -- so the dataset's odds cannot be reconciled with anything this project can verify. Under the never-invent-odds rule, an unverifiable third party cannot be promoted into a backtest price. Revisit only with an authenticated download path and a spot-check tying several of its prices to an independent source at a stated time.",
+  "evidence": "{\n \"url\": \"https://www.kaggle.com/datasets/jonathanncoletti/nhl-historical-game-data\",\n \"fetched\": \"2026-09-22\",\n \"cross_reference\": \"espn.nhl_scoreboard registry entry (no odds block on completed games)\"\n}",
+  "confidence": "high",
+  "kind": "source_review"
+ },
+ {
+  "finding_id": "FIND_MONEYPUCK_OFFSEASON_STALE",
+  "created_at": "2026-09-22T18:06:04Z",
+  "title": "MoneyPuck downloads verified live but dormant for the 2026 off-season",
+  "body": "The MoneyPuck data page was re-verified live: the published terms permit non-commercial use with credit, and only the listed downloads are offered (scraping other pages requires approval). The page stated 'last updated 2026-06-15 Eastern Time' and the newest season file is 2025-2026 -- i.e. during the 2026 off-season there is no 2026-27 file and no update stream, so MoneyPuck cannot supply current-season point-in-time features until updates resume. It remains a candidate (not ingested): shot-level xG is a third-party MODEL OUTPUT and would be labelled as such, never as source data.",
+  "evidence": "{\n \"url\": \"https://moneypuck.com/data.htm\",\n \"fetched\": \"2026-09-22\",\n \"page_last_updated\": \"2026-06-15 (stated on page)\",\n \"terms\": \"free for non-commercial use with credit; scraping other pages requires approval\"\n}",
+  "confidence": "high",
+  "kind": "source_review"
+ },
+ {
+  "finding_id": "FIND_NO_NHL_PROBABLE_GOALIE_ENDPOINT",
+  "created_at": "2026-09-22T18:06:04Z",
+  "title": "No verified pre-game starting-goalie source; NHL gamecenter probe 404s",
+  "body": "Starting-goalie confirmation remains the largest blocked input. A further probe of api-web.nhle.com for a probable/announced goalies endpoint on an upcoming game (gamecenter 2026010051, NYR@NYI 2026-09-25) returned HTTP 404, consistent with the documented API surface: the stats REST goalie log identifies the starter only AFTER a game is final. Goalie-gated strategies therefore stay in WAITING FOR STARTER for forward tests and carry the recorded post-game-log ASSUMPTION in backtests. The block lifts only when a verified pre-game announcement source is found and registered.",
+  "evidence": "{\n \"url\": \"https://api-web.nhle.com/v1/gamecenter/2026010051/probable-goalies\",\n \"fetched\": \"2026-09-22\",\n \"result\": \"HTTP 404 Not Found\"\n}",
+  "confidence": "high",
+  "kind": "source_review"
+ },
+ {
+  "finding_id": "FIND_QUEUE_RECOVERY_PASS",
+  "created_at": "2026-09-22T18:06:04Z",
+  "title": "Fourth-session audit: the verification queue now closes recovered conditions",
+  "body": "A queue that only grows trains a reader to ignore it. This pass added evidence-carrying recovery for every raiser whose condition can later be observed to have gone away: transient stats-REST timeouts resolve when the identical fetch succeeds; no_markets resolves when the same query returns contracts; non-NHL exhibition opponents (e.g. EHC Red Bull Muenchen, team 7509, 2024 Global Series) are identified from the schedule payload's own abbrev and supersede the unknown_team error; totals/strike coverage gaps resolve when the candle and feature walks meet; the overtime settlement rule resolves when settled shootout evidence exists; unmatched_market flags resolve when a later ingest matches the event; and evidence-carrying manual research resolutions are applied idempotently with an audit row. Nothing is deleted: resolution notes, original details and audit_log entries are kept. First application on the 2026-09-22 ledger closed the KXNHLSPREAD-26JAN26LACBJ listing anomaly (the exchange now returns not_found for it and no NHL game exists for the ticker) and left 24 open irregularities, all standing conditions rather than stale history.",
+  "evidence": "{\n \"resolved_example\": \"irregularity 319 (unmatched_market KXNHLSPREAD-26JAN26LACBJ)\",\n \"kalshi_probe\": \"GET /trade-api/v2/markets/KXNHLSPREAD-26JAN26LACBJ -> not_found, 2026-09-22\",\n \"fetched\": \"2026-09-22\",\n \"nhl_schedule_check\": \"club-schedule CBJ 2026-01 has no game on the 26th; LAK@DET was game 2025020833 on the 27th\"\n}",
+  "confidence": "high",
+  "kind": "audit"
+ },
+ {
+  "finding_id": "FIND_TOTALS_PRICED_BACKTESTS_LIVE",
+  "created_at": "2026-09-22T18:06:04Z",
+  "title": "Totals and puck-line priced backtests are now populated (walks met)",
+  "body": "The Kalshi historical candle walk and the NHL per-game stats walk have reached the same games: the 2026-09-22 run reports 7,741 settled totals contracts with a pre-puck-drop offer across 1,261 games, of which 1,159 have point-in-time features (KXNHLSPREAD: 3,169 contracts / 793 games / 691 backtestable). Totals backtests are therefore priced, not accuracy-only; the former totals_price_coverage gap is closed by the recovery pass. KXNHLOVERTIME is the remaining gap (48 contracts with an offer, 0 backtestable), and its settlement rule is still shootout-unverified -- both stay flagged.",
+  "evidence": "{\n \"report_keys\": [\n  \"totals_price_coverage\",\n  \"puck_line_price_coverage\",\n  \"overtime_price_coverage\"\n ],\n \"fetched\": \"2026-09-22\",\n \"run_date\": \"2026-09-22\"\n}",
+  "confidence": "high",
+  "kind": "status"
  }
 ]

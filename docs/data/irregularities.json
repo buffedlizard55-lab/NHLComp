@@ -471,9 +471,9 @@
   "detail": "kalshi KXNHLSPREAD-26JAN26LACBJ could not be matched to an NHL game (2026-01-26 ('LAK', 'CBJ'))",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "Investigated 2026-09-22 and closed as an exchange listing anomaly. (1) The NHL's own schedule has no Los Angeles @ Columbus game on 2026-01-26: CBJ hosted DAL Jan 22, TBL Jan 24 and PHI Jan 28 and visited CHI Jan 30 (api-web.nhle.com/v1/club-schedule/CBJ/month/2026-01, cross-checked against this ledger's games table), while LAK was at DET on Jan 27 (game 2025020833). (2) The exchange no longer lists the market: GET https://api.elections.kalshi.com/trade-api/v2/markets/KXNHLSPREAD-26JAN26LACBJ returned {\"error\":{\"code\":\"not_found\"}} on 2026-09-22. The ingest behaved correctly: the contract was never attached to a guessed game. There is nothing to attach and no wager can be derived from it. [manual research resolution by arena session 2026-09-22, verified 2026-09-22]",
+  "resolved_at": "2026-09-22T18:01:27Z"
  },
  {
   "id": 318,
@@ -1255,9 +1255,9 @@
   "detail": "Totals price history and feature history do not overlap yet, so no totals entry can be priced honestly. {\n \"settled_totals_contracts\": 7896,\n \"contracts_with_a_pregame_offer\": 577,\n \"games_with_a_pregame_offer\": 73,\n \"of_those_games_decided_in_the_ledger\": 73,\n \"of_those_games_with_point_in_time_features\": 0,\n \"backtestable_games\": 0,\n \"reason\": \"The Kalshi totals candle walk and the NHL season-stats walk have not reached the same games yet: every contract with a pre-puck-drop offer belongs to a game with no point-in-time feature row, so no totals entry can be priced honestly. Totals are therefore accuracy-only (BACKTEST) and forward-test at live offers until the two walks overlap. Nothing was inferred to fill the gap.\"\n}",
   "sources": "kalshi.candles,nhl.stats_rest",
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the walks now overlap: 1159 totals game(s) have both a pre-puck-drop exchange offer and a point-in-time feature row, so priced totals backtests exist",
+  "resolved_at": "2026-09-22T18:01:15Z"
  },
  {
   "id": 2,
