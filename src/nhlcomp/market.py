@@ -220,9 +220,125 @@ def kalshi_taker_fee(price: float, contracts: float, *, multiplier: float = KALS
     return math.ceil(raw * 100 - 1e-9) / 100
 
 
+def team_total_side_and_strike(strike_type: str | None, floor_strike: float | None
+                                 ) -> tuple[str, float] | None:
+    """(direction, strike) for a Kalshi team-total contract.
+
+    Same shape as full-game totals: greater + k.5 = Over k.5 for that team.
+    The team itself is encoded in the contract's selection / label, not here,
+    so this function only returns the line direction and number.
+    """
+    return total_side_and_strike(strike_type, floor_strike)
+
+
+def period_total_side_and_strike(strike_type: str | None, floor_strike: float | None
+                                 ) -> tuple[str, float] | None:
+    """(direction, strike) for a Kalshi period-total contract.
+
+    Verified shape expected: same as totals, but for one period only.
+    """
+    return total_side_and_strike(strike_type, floor_strike)
+
+
+def regulation_settlement(winner: str | None, last_period_type: str | None,
+                          team: str) -> bool | None:
+    """Did ``team`` (home/away) win in regulation?
+
+    Returns True/False when winner and lastPeriodType are known, else None.
+    Settlement: winner == team and lastPeriodType == REG.
+    """
+    if winner is None or last_period_type is None:
+        return None
+    if str(last_period_type).upper() != "REG":
+        return False
+    return str(winner).lower() == team.lower()
+
+
+def period_moneyline_settlement(period_home_goals: int | None,
+                                period_away_goals: int | None,
+                                team: str) -> bool | None:
+    """Did ``team`` win the period?  Tie -> False for both sides? Returns None if unknown.
+
+    For period moneyline contracts Kalshi settles YES when team has more goals in that
+    period, NO otherwise (including ties).  Some books push ties; we leave tie handling
+    to caller by returning None for tie? But to keep conservative, we return False for tie
+    on win contracts and let settlement layer decide VOID if needed.  Here we implement:
+    win = team goals > opponent goals.  Tie = False for win contracts (so NO side wins).
+    Caller may translate tie to OPEN if exchange rule says PUSH.
+    """
+    if period_home_goals is None or period_away_goals is None:
+        return None
+    if team == "home":
+        return int(period_home_goals) > int(period_away_goals)
+    if team == "away":
+        return int(period_away_goals) > int(period_home_goals)
+    return None
+
+
+def period_total_over_settlement(period_home_goals: int | None,
+                                 period_away_goals: int | None,
+                                 strike: float) -> bool | None:
+    """Did period total go over strike?  Returns None if unknown."""
+    if period_home_goals is None or period_away_goals is None:
+        return None
+    try:
+        total = int(period_home_goals) + int(period_away_goals)
+        return float(total) > float(strike)
+    except (TypeError, ValueError):
+        return None
+
+
+def team_total_over_settlement(team_goals: int | None, strike: float) -> bool | None:
+    """Did team total go over strike?"""
+    if team_goals is None:
+        return None
+    try:
+        return float(team_goals) > float(strike)
+    except (TypeError, ValueError):
+        return None
+
+
 def kalshi_fee_per_unit_staked(price: float, *, multiplier: float = KALSHI_TAKER_MULTIPLIER_KXNHLGAME) -> float:
     """Fee per $1 staked (contracts = 1/price): 0.07 x (1 - P), unrounded -- used by the
     flat-stake backtests where the contract count is fractional by construction."""
     if not (0 < price < 1):
         return 0.0
     return round(multiplier * KALSHI_TAKER_RATE * (1.0 - price), 6)
+
+
+# --------------------------------------------------------------------------- market type helpers
+MARKET_TYPES = (
+    "moneyline", "total", "puck_line", "overtime",
+    "regulation", "team_total", "period", "period_total",
+    "first_period", "second_period", "third_period",
+    "first_period_total", "second_period_total", "third_period_total",
+    "period_spread", "player_goal", "goalie_saves", "futures"
+)
+
+def normalize_market_type(raw: str | None) -> str:
+    """Normalize Kalshi series / market type strings to this project's vocabulary.
+
+    Never guesses: unknown maps to lowercased raw or empty string, but known series
+    are mapped deterministically.
+    """
+    if not raw:
+        return ""
+    s = str(raw).strip().lower()
+    mapping = {
+        "kxnhlgame": "moneyline",
+        "kxnhltotal": "total",
+        "kxnhlspread": "puck_line",
+        "kxnhlovertime": "overtime",
+        "kxnhlreg": "regulation",
+        "kxnhl60min": "regulation",
+        "kxnhlteamtotal": "team_total",
+        "kxnhl1p": "first_period",
+        "kxnhl2p": "second_period",
+        "kxnhl3p": "third_period",
+        "kxnhl1ptotal": "first_period_total",
+        "kxnhl2ptotal": "second_period_total",
+        "kxnhl3ptotal": "third_period_total",
+        "kxnhlperiod": "period",
+        "kxnhlperiodtotal": "period_total",
+    }
+    return mapping.get(s, s)

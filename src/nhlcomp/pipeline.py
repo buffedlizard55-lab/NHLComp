@@ -20,7 +20,9 @@ from .features_ext import load_extended
 from .http import HttpClient, NetworkUnavailable
 from .ingest import Ingestor
 from .market import (american_to_prob, devig_pair, margin_side_and_strike,
-                     total_side_and_strike, total_side_from_text)
+                     team_total_side_and_strike, period_total_side_and_strike,
+                     total_side_and_strike, total_side_from_text,
+                     normalize_market_type)
 from .models import (EloModel, HomeIceOnly, LogisticRest, OtCalibration, PoissonModel,
                      brier, log_loss)
 from .paper import PaperEngine
@@ -1182,22 +1184,31 @@ class Pipeline:
                                      flag_kind="overtime_price_coverage")
         live = self._live_quotes(refs, names)
         # Kalshi lists one "Over k.5" contract per strike, so a totals rule is handed the
-        # whole ladder for a game and chooses the rung it declares.  Evaluating one rung at a
-        # time would leave the rule staring at whichever strike sorted first -- 1.5 on the
-        # 2026-09-24 slate -- and refusing every game, which is what the 2026-09-21 CI run
-        # recorded on all 84 totals opportunities.
+        # whole ladder for a game and chooses the rung it declares.
         ladder: dict[tuple, list[Quote]] = {}
         puck_ladder: dict[tuple, list[Quote]] = {}
+        team_total_ladder: dict[tuple, list[Quote]] = {}
+        period_ladder: dict[tuple, list[Quote]] = {}
+        period_total_ladder: dict[tuple, list[Quote]] = {}
+        regulation_ladder: dict[tuple, list[Quote]] = {}
         for q in live:
             mtype = q.market_type or "moneyline"
             if mtype == "total":
                 ladder.setdefault((q.game_id, mtype, q.selection, q.side), []).append(q)
             elif mtype == "puck_line":
-                # every rung of every team for this game and side travels together: which
-                # team's contract a rule trades comes out of its own margin model, so the
-                # engine must not pre-choose a team by handing the rule one quote at a time.
                 puck_ladder.setdefault((q.game_id, q.side), []).append(q)
-        for rungs in list(ladder.values()) + list(puck_ladder.values()):
+            elif mtype == "team_total":
+                team_total_ladder.setdefault((q.game_id, q.selection, q.side), []).append(q)
+            elif "period_total" in mtype:
+                # first/second/third period total or generic period_total
+                period_total_ladder.setdefault((q.game_id, mtype, q.selection, q.side), []).append(q)
+            elif mtype in ("period", "first_period", "second_period", "third_period"):
+                period_ladder.setdefault((q.game_id, mtype, q.side), []).append(q)
+            elif mtype == "regulation":
+                regulation_ladder.setdefault((q.game_id, q.selection, q.side), []).append(q)
+        for rungs in (list(ladder.values()) + list(puck_ladder.values()) +
+                      list(team_total_ladder.values()) + list(period_total_ladder.values()) +
+                      list(period_ladder.values()) + list(regulation_ladder.values())):
             rungs.sort(key=lambda z: float(z.strike) if z.strike is not None else 0.0)
         for s in self.store.latest_versions():
             if s["status"] == "rejected":
@@ -1330,41 +1341,124 @@ class Pipeline:
                     continue
                 if not self._in_scope(strat, g):
                     out_of_scope += 1
-                    continue   # this rule was not built for that phase of the season
+                    continue
                 if not self._pregame(g, as_of):
-                    continue   # the game has started: a pre-game rule may not enter now
+                    continue
                 qtype = q.market_type or "moneyline"
-                if getattr(strat, "market", "moneyline") != qtype:
+                strat_mkt = getattr(strat, "market", "moneyline")
+                # allow period variants to match generic period / period_total markets
+                market_match = (strat_mkt == qtype)
+                if not market_match:
+                    if strat_mkt == "period" and qtype in ("period", "first_period", "second_period", "third_period"):
+                        market_match = True
+                    elif strat_mkt == "period_total" and "period_total" in qtype:
+                        market_match = True
+                if not market_match:
                     continue
                 if q.side != getattr(strat, "quote_side", "YES"):
-                    # this rule buys the other side of the book.  Filtering here is what
-                    # keeps one game from being evaluated twice by the same rule: a second
-                    # pass over the side it does not trade would overwrite the recorded
-                    # status of the wager the first pass already placed.
                     continue
                 if qtype == "total":
-                    sel = q.selection            # 'over' | 'under', from the exchange's line
+                    sel = q.selection
                     if sel != getattr(strat, "direction", None):
                         continue
                     key = (gid, qtype, sel, q.side)
                     if key in seen_ladders:
-                        continue   # the ladder for this game is decided once, as a whole
+                        continue
                     seen_ladders.add(key)
                     rungs = ladder.get(key, [q])
                 elif qtype == "puck_line":
                     sel = "puck_line"
                     key = (gid, qtype, "*", q.side)
                     if key in seen_ladders:
-                        continue   # the whole ladder for this game and side is decided once
+                        continue
                     seen_ladders.add(key)
                     rungs = puck_ladder.get((gid, q.side), [q])
+                elif qtype == "team_total":
+                    # team totals: selection is team home/away
+                    sel = q.selection
+                    if sel != getattr(strat, "team", None):
+                        # also allow bet_side matching for legacy
+                        if sel != getattr(strat, "bet_side", None):
+                            continue
+                    key = (gid, sel, q.side)
+                    if key in seen_ladders:
+                        continue
+                    seen_ladders.add(key)
+                    rungs = team_total_ladder.get(key, [q])
+                elif "period_total" in qtype:
+                    sel = q.selection  # over/under
+                    if sel != getattr(strat, "direction", None):
+                        continue
+                    # period number check for period_total strategies
+                    strat_period = getattr(strat, "period", None)
+                    if strat_period is not None:
+                        # map qtype to period number
+                        q_period = None
+                        if "first" in qtype:
+                            q_period = 1
+                        elif "second" in qtype:
+                            q_period = 2
+                        elif "third" in qtype:
+                            q_period = 3
+                        if q_period is not None and q_period != strat_period:
+                            continue
+                    key = (gid, qtype, sel, q.side)
+                    if key in seen_ladders:
+                        continue
+                    seen_ladders.add(key)
+                    rungs = period_total_ladder.get(key, [q])
+                elif qtype in ("period", "first_period", "second_period", "third_period"):
+                    # period moneyline: selection is team
+                    sel = q.selection
+                    strat_team = getattr(strat, "team", None) or getattr(strat, "bet_side", None)
+                    if sel != strat_team:
+                        # need to map via _side_for_selection if selection is not home/away token
+                        mapped = _side_for_selection(q.selection, g, names)
+                        if mapped is None or mapped != strat_team:
+                            # allow if q.selection already equals team token
+                            if q.selection != strat_team:
+                                continue
+                            sel = q.selection
+                        else:
+                            sel = mapped
+                    strat_period = getattr(strat, "period", None)
+                    if strat_period is not None:
+                        q_period = None
+                        if "first" in qtype:
+                            q_period = 1
+                        elif "second" in qtype:
+                            q_period = 2
+                        elif "third" in qtype:
+                            q_period = 3
+                        if q_period is not None and q_period != strat_period:
+                            continue
+                    key = (gid, qtype, q.side)
+                    if key in seen_ladders:
+                        continue
+                    seen_ladders.add(key)
+                    rungs = period_ladder.get(key, [q])
                 elif qtype == "overtime":
                     sel = "ot"
                     key = (gid, qtype, q.side)
                     if key in seen_ladders:
                         continue
                     seen_ladders.add(key)
-                    rungs = [q]      # one strike-less contract per game
+                    rungs = [q]
+                elif qtype == "regulation":
+                    sel = q.selection
+                    strat_team = getattr(strat, "team", None) or getattr(strat, "bet_side", None)
+                    if sel != strat_team:
+                        mapped = _side_for_selection(q.selection, g, names)
+                        if mapped is None or mapped != strat_team:
+                            if q.selection != strat_team:
+                                continue
+                        else:
+                            sel = mapped
+                    key = (gid, sel, q.side)
+                    if key in seen_ladders:
+                        continue
+                    seen_ladders.add(key)
+                    rungs = regulation_ladder.get(key, [q])
                 else:
                     sel = _side_for_selection(q.selection, g, names)
                     if sel is None or sel != strat.bet_side:
@@ -1473,21 +1567,9 @@ class Pipeline:
                      names: dict[int, list[str]] | None = None) -> list[Quote]:
         """Latest quote per contract *and side*, normalized into this project's vocabulary.
 
-        A stored quote's ``selection`` is the exchange's own wording ("Anaheim wins",
-        "Full Game: Over 8.5 goals scored"), while a rule asks for a side ("home", "away",
-        "over", "under").  Mapping one to the other here -- and keeping the wording in
-        ``Quote.label`` -- is what lets a strategy actually match the quote it was handed.
-        Before this normalization existed, ``find_quote`` compared "home" against
-        "Anaheim wins", never matched, and every forward opportunity was recorded as
-        "no quote published for this market yet" (183 rows in the 2026-09-20 ledger).
-
-        Moneyline: the contract title is resolved to home/away through the games table; a
-        title that cannot be resolved unambiguously is dropped, never guessed.
-        Totals: Kalshi quotes both sides of an "Over k.5" contract directly
-        (``yes_ask_dollars`` and ``no_ask_dollars``), so the YES row is the Over price and
-        the NO row is the Under price.  Both are observed offers; nothing is derived from
-        the other side, because ``no_ask = 1 - yes_bid`` does not hold on this ledger's
-        quotes (2 of 12 contracts on 2026-09-20).
+        Extended to support regulation, team_total, period and period_total markets.
+        Each market reuses the same strike parsing as totals/puck_line where applicable,
+        never inventing a line.  Unknown lines are skipped, not assumed.
         """
         if refs is None:
             refs = {g.game_id: g for g in self.game_refs(game_types=(1, 2, 3))}
@@ -1500,28 +1582,105 @@ class Pipeline:
                       AND mq.ask > 0 AND mq.ask < 1
                       AND mq.ts_utc = (SELECT MAX(q2.ts_utc) FROM market_quotes q2
                                         WHERE q2.contract = mq.contract AND q2.side = mq.side)"""):
-            mtype = q["market_type"] or "moneyline"
+            raw_mtype = q["market_type"] or "moneyline"
+            mtype = normalize_market_type(raw_mtype)
+            # keep original raw for display but normalized for matching
+            # if normalize returns empty, fallback to raw lower
+            if not mtype:
+                mtype = (raw_mtype or "moneyline").lower()
             gid = int(q["game_id"]) if q["game_id"] is not None else None
             g = refs.get(gid) if gid else None
-            if mtype == "total":
-                line = total_side_and_strike(q["strike_type"], q["strike"])
+
+            # ---- totals and team_totals and period_totals share same shape ----
+            if mtype in ("total", "team_total", "first_period_total", "second_period_total",
+                         "third_period_total", "period_total"):
+                # normalize to canonical types
+                if mtype.startswith("first"):
+                    canon = "period_total"
+                    period_num = 1
+                elif mtype.startswith("second"):
+                    canon = "period_total"
+                    period_num = 2
+                elif mtype.startswith("third"):
+                    canon = "period_total"
+                    period_num = 3
+                else:
+                    canon = mtype if mtype in ("total", "team_total", "period_total") else "total"
+                    period_num = None
+
+                if canon == "team_total":
+                    line = team_total_side_and_strike(q["strike_type"], q["strike"])
+                elif canon == "period_total":
+                    line = period_total_side_and_strike(q["strike_type"], q["strike"])
+                else:
+                    line = total_side_and_strike(q["strike_type"], q["strike"])
+
                 if line is None:
-                    continue        # line unknown: not traded, never assumed
+                    # try text fallback for totals only (source re-read)
+                    if canon == "total":
+                        line = total_side_from_text(q["selection"])
+                    if line is None:
+                        continue
                 yes_dir, strike = line
-                direction = yes_dir if q["side"] == "YES" else ("under" if yes_dir == "over"
-                                                               else "over")
-                out.append(Quote(provider=q["provider"], market_key=q["market_key"],
-                                 contract=q["contract"], game_id=gid, game_date=q["game_date"],
-                                 market_type="total", selection=direction, side=q["side"],
-                                 bid=q["bid"], ask=q["ask"], bid_size=q["bid_size"],
-                                 ask_size=q["ask_size"], volume=q["volume"],
-                                 liquidity=q["liquidity"], ts_utc=q["ts_utc"],
-                                 label=q["selection"], strike=strike))
+                direction = yes_dir if q["side"] == "YES" else ("under" if yes_dir == "over" else "over")
+
+                if canon == "team_total":
+                    team = None
+                    if g is not None and q["team_abbrev"]:
+                        tid = self.store.team_id_for(q["team_abbrev"])
+                        if tid == g.home_id:
+                            team = "home"
+                        elif tid == g.away_id:
+                            team = "away"
+                    if team is None and g is not None:
+                        team = _side_for_selection(q["selection"], g, names)
+                    sel = team or q["selection"] or direction
+                    # normalize selection to home/away token for strategy matching
+                    if sel not in ("home", "away"):
+                        # if selection contains team name, try to resolve again via lower
+                        low = str(sel).lower()
+                        if "home" in low:
+                            sel = "home"
+                        elif "away" in low:
+                            sel = "away"
+                    out.append(Quote(provider=q["provider"], market_key=q["market_key"],
+                                     contract=q["contract"], game_id=gid, game_date=q["game_date"],
+                                     market_type="team_total", selection=sel, side=q["side"],
+                                     bid=q["bid"], ask=q["ask"], bid_size=q["bid_size"],
+                                     ask_size=q["ask_size"], volume=q["volume"],
+                                     liquidity=q["liquidity"], ts_utc=q["ts_utc"],
+                                     label=q["selection"], strike=strike,
+                                     strike_type=q["strike_type"]))
+                elif canon == "period_total":
+                    # preserve period distinction in market_type when known
+                    if period_num == 1:
+                        pt_mtype = "first_period_total"
+                    elif period_num == 2:
+                        pt_mtype = "second_period_total"
+                    elif period_num == 3:
+                        pt_mtype = "third_period_total"
+                    else:
+                        pt_mtype = "period_total"
+                    out.append(Quote(provider=q["provider"], market_key=q["market_key"],
+                                     contract=q["contract"], game_id=gid, game_date=q["game_date"],
+                                     market_type=pt_mtype, selection=direction,
+                                     side=q["side"], bid=q["bid"], ask=q["ask"],
+                                     bid_size=q["bid_size"], ask_size=q["ask_size"],
+                                     volume=q["volume"], liquidity=q["liquidity"],
+                                     ts_utc=q["ts_utc"], label=q["selection"],
+                                     strike=strike, strike_type=q["strike_type"]))
+                else:
+                    out.append(Quote(provider=q["provider"], market_key=q["market_key"],
+                                     contract=q["contract"], game_id=gid, game_date=q["game_date"],
+                                     market_type="total", selection=direction, side=q["side"],
+                                     bid=q["bid"], ask=q["ask"], bid_size=q["bid_size"],
+                                     ask_size=q["ask_size"], volume=q["volume"],
+                                     liquidity=q["liquidity"], ts_utc=q["ts_utc"],
+                                     label=q["selection"], strike=strike,
+                                     strike_type=q["strike_type"]))
                 continue
+
             if mtype == "puck_line":
-                # which team the contract names comes from the exchange's own ticker suffix
-                # (rung index stripped) with the game's team list as a text fallback; if
-                # neither resolves the row is skipped rather than guessed.
                 team = None
                 if g is not None and q["team_abbrev"]:
                     tid = self.store.team_id_for(q["team_abbrev"])
@@ -1554,9 +1713,8 @@ class Pipeline:
                     liquidity=q["liquidity"], ts_utc=q["ts_utc"], label=q["selection"],
                     strike=strike, strike_type=comparison))
                 continue
+
             if mtype == "overtime":
-                # one strike-less contract per game; both the YES and the NO row are real
-                # offers the exchange publishes, and a rule may buy either.
                 out.append(Quote(
                     provider=q["provider"], market_key=q["market_key"], contract=q["contract"],
                     game_id=gid, game_date=q["game_date"], market_type="overtime",
@@ -1565,8 +1723,66 @@ class Pipeline:
                     liquidity=q["liquidity"], ts_utc=q["ts_utc"], label=q["selection"],
                     strike=None, strike_type=None))
                 continue
+
+            if mtype in ("regulation",):
+                # regulation win: team from selection
+                team = None
+                if g is not None and q["team_abbrev"]:
+                    tid = self.store.team_id_for(q["team_abbrev"])
+                    if tid == g.home_id:
+                        team = "home"
+                    elif tid == g.away_id:
+                        team = "away"
+                if team is None and g is not None:
+                    team = _side_for_selection(q["selection"], g, names)
+                if team is None:
+                    team = (q["selection"] or "").lower()
+                out.append(Quote(
+                    provider=q["provider"], market_key=q["market_key"], contract=q["contract"],
+                    game_id=gid, game_date=q["game_date"], market_type="regulation",
+                    selection=team or "home", side=q["side"], bid=q["bid"], ask=q["ask"],
+                    bid_size=q["bid_size"], ask_size=q["ask_size"], volume=q["volume"],
+                    liquidity=q["liquidity"], ts_utc=q["ts_utc"], label=q["selection"],
+                    strike=None, strike_type=None))
+                continue
+
+            if mtype in ("first_period", "second_period", "third_period", "period"):
+                # period moneyline
+                if mtype == "first_period":
+                    period_num = 1
+                elif mtype == "second_period":
+                    period_num = 2
+                elif mtype == "third_period":
+                    period_num = 3
+                else:
+                    period_num = None
+                team = None
+                if g is not None and q["team_abbrev"]:
+                    tid = self.store.team_id_for(q["team_abbrev"])
+                    if tid == g.home_id:
+                        team = "home"
+                    elif tid == g.away_id:
+                        team = "away"
+                if team is None and g is not None:
+                    team = _side_for_selection(q["selection"], g, names)
+                if team is None:
+                    team = (q["selection"] or "").lower()
+                # encode period in market_type if known, else generic period
+                mt = f"period" if period_num is None else (
+                    "first_period" if period_num == 1 else (
+                        "second_period" if period_num == 2 else "third_period"))
+                out.append(Quote(
+                    provider=q["provider"], market_key=q["market_key"], contract=q["contract"],
+                    game_id=gid, game_date=q["game_date"], market_type=mt,
+                    selection=team or "home", side=q["side"], bid=q["bid"], ask=q["ask"],
+                    bid_size=q["bid_size"], ask_size=q["ask_size"], volume=q["volume"],
+                    liquidity=q["liquidity"], ts_utc=q["ts_utc"], label=q["selection"],
+                    strike=None, strike_type=None))
+                continue
+
+            # default: moneyline or unknown - require YES side
             if q["side"] != "YES":
-                continue            # a moneyline is quoted once; both teams are separate contracts
+                continue
             sel = _side_for_selection(q["selection"], g, names) if g is not None else None
             if sel is None:
                 continue
@@ -1767,8 +1983,9 @@ def _hydrate(row: Any):
     silently dropped on reload -- gating flags such as requires_goalie simply evaporated
     and the strategy started betting as though it had never been gated.
     """
-    from .strategies import (OvertimeStrategy, PuckLineStrategy, ThresholdStrategy,
-                             TotalsStrategy)
+    from .strategies import (OvertimeStrategy, PeriodStrategy, PeriodTotalStrategy,
+                             PuckLineStrategy, RegulationStrategy, TeamTotalStrategy,
+                             ThresholdStrategy, TotalsStrategy)
     params = json.loads(row["params_json"] or "{}")
     # Fall back to the stored column for the season scope: params_json may predate it (and a
     # hand-built legacy row in a test has no column at all, hence the guard).
@@ -1780,8 +1997,16 @@ def _hydrate(row: Any):
             pass
     # the class is part of the stored parameter set: reloading a totals rule as a
     # threshold rule would silently drop its strike logic and let it bet a moneyline
-    cls = {"totals": TotalsStrategy, "puck_line": PuckLineStrategy,
-           "overtime": OvertimeStrategy}.get(params.get("kind"), ThresholdStrategy)
+    cls_map = {
+        "totals": TotalsStrategy,
+        "puck_line": PuckLineStrategy,
+        "overtime": OvertimeStrategy,
+        "regulation": RegulationStrategy,
+        "team_total": TeamTotalStrategy,
+        "period": PeriodStrategy,
+        "period_total": PeriodTotalStrategy,
+    }
+    cls = cls_map.get(params.get("kind"), ThresholdStrategy)
     kw = dict(params)
     kw.pop("min_edge", None)
     kw.pop("stake_fraction", None)
@@ -1815,6 +2040,55 @@ def _hydrate(row: Any):
             stake_fraction=params.get("stake_fraction", 0.25), **kw)
     if cls is TotalsStrategy:
         kw.setdefault("direction", "over")
+        return cls(
+            strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
+            name=row["name"], category=row["category"],
+            hypothesis=row["hypothesis"], data_used=row["data_used"], entry_rule=row["entry_rule"],
+            price_rule=row["price_rule"], settlement_rule=row["settlement_rule"],
+            markets=row["markets"], origin=row["origin"], origin_ref=row["origin_ref"],
+            starting_bankroll=float(row["starting_bankroll"]),
+            min_edge=params.get("min_edge", 0.04),
+            stake_fraction=params.get("stake_fraction", 0.25), **kw)
+    if cls is RegulationStrategy:
+        kw.setdefault("team", "home")
+        return cls(
+            strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
+            name=row["name"], category=row["category"],
+            hypothesis=row["hypothesis"], data_used=row["data_used"], entry_rule=row["entry_rule"],
+            price_rule=row["price_rule"], settlement_rule=row["settlement_rule"],
+            markets=row["markets"], origin=row["origin"], origin_ref=row["origin_ref"],
+            starting_bankroll=float(row["starting_bankroll"]),
+            min_edge=params.get("min_edge", 0.04),
+            stake_fraction=params.get("stake_fraction", 0.25), **kw)
+    if cls is TeamTotalStrategy:
+        kw.setdefault("team", "home")
+        kw.setdefault("direction", "over")
+        kw.setdefault("target_strike", 2.5)
+        return cls(
+            strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
+            name=row["name"], category=row["category"],
+            hypothesis=row["hypothesis"], data_used=row["data_used"], entry_rule=row["entry_rule"],
+            price_rule=row["price_rule"], settlement_rule=row["settlement_rule"],
+            markets=row["markets"], origin=row["origin"], origin_ref=row["origin_ref"],
+            starting_bankroll=float(row["starting_bankroll"]),
+            min_edge=params.get("min_edge", 0.04),
+            stake_fraction=params.get("stake_fraction", 0.25), **kw)
+    if cls is PeriodStrategy:
+        kw.setdefault("period", 1)
+        kw.setdefault("team", "home")
+        return cls(
+            strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
+            name=row["name"], category=row["category"],
+            hypothesis=row["hypothesis"], data_used=row["data_used"], entry_rule=row["entry_rule"],
+            price_rule=row["price_rule"], settlement_rule=row["settlement_rule"],
+            markets=row["markets"], origin=row["origin"], origin_ref=row["origin_ref"],
+            starting_bankroll=float(row["starting_bankroll"]),
+            min_edge=params.get("min_edge", 0.04),
+            stake_fraction=params.get("stake_fraction", 0.25), **kw)
+    if cls is PeriodTotalStrategy:
+        kw.setdefault("period", 1)
+        kw.setdefault("direction", "over")
+        kw.setdefault("target_strike", 1.5)
         return cls(
             strategy_id=row["strategy_id"], version=int(row["version"]), username=row["username"],
             name=row["name"], category=row["category"],
