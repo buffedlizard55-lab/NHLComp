@@ -251,6 +251,106 @@ def p_total_over(lam_home: float, lam_away: float, strike: float, *, max_goals: 
     return round(over / total, 6)
 
 
+def p_team_total_over(lam_team: float, strike: float, *, max_goals: int = 12) -> float:
+    """P(team goals > ``strike``) under Poisson scoring for a single team.
+
+    Kalshi's KXNHLTEAMTOTAL contracts (if listed) are team-specific over/under.
+    This is the one-team marginal of the independent Poisson model, renormalised
+    over 0..max_goals so the over/under split is a proper partition.  SOURCE DATA
+    for lam_team is the expected goals from prior games only; MODEL OUTPUT is the
+    probability.
+    """
+    if strike is None or lam_team is None:
+        return float("nan")
+    total = 0.0
+    over = 0.0
+    for k in range(max_goals + 1):
+        w = poisson_pmf(float(lam_team), k)
+        total += w
+        if k > float(strike):
+            over += w
+    if total <= 0:
+        return float("nan")
+    return round(over / total, 6)
+
+
+def p_period_total_over(lam_home: float, lam_away: float, strike: float, *,
+                        period: int = 1, max_goals: int = 8) -> float:
+    """P(period total > ``strike``) assuming goals are uniformly distributed across periods.
+
+    DERIVED ASSUMPTION: expected goals per period = total expected / 3, because the NHL
+    does not publish period-level expected goals and this project has no verified
+    period-level scoring-rate model yet.  The assumption is stated on every strategy that
+    uses it, and the period score table (game_period_scores) exists to test it later.
+    When a real period model exists this uniform split must be replaced.
+    """
+    if strike is None:
+        return float("nan")
+    # uniform split across 3 periods; period arg kept for future non-uniform models
+    lam_h_p = float(lam_home) / 3.0
+    lam_a_p = float(lam_away) / 3.0
+    return p_total_over(lam_h_p, lam_a_p, float(strike), max_goals=max_goals)
+
+
+def p_period_moneyline(lam_home: float, lam_away: float, side: str, *,
+                       period: int = 1, max_goals: int = 8) -> float:
+    """P(``side`` wins a single period) under independent Poisson per-period scoring.
+
+    Same uniform-split assumption as :func:`p_period_total_over`.  Ties in a period are
+    split 50/50 because no OT exists within a period.  Returns the probability the
+    named side (home/away) scores more goals than the opponent in that period.
+    """
+    if lam_home is None or lam_away is None:
+        return float("nan")
+    lam_h_p = float(lam_home) / 3.0
+    lam_a_p = float(lam_away) / 3.0
+    total = 0.0
+    win = 0.0
+    tie = 0.0
+    for i in range(max_goals + 1):
+        ph = poisson_pmf(lam_h_p, i)
+        for j in range(max_goals + 1):
+            w = ph * poisson_pmf(lam_a_p, j)
+            total += w
+            margin = (i - j) if side == "home" else (j - i)
+            if margin > 0:
+                win += w
+            elif margin == 0:
+                tie += w
+    if total <= 0:
+        return float("nan")
+    win /= total
+    tie /= total
+    # period tie = no winner for that period; split evenly for moneyline
+    win += tie * 0.5
+    return round(min(max(win, 0.0), 1.0), 6)
+
+
+def p_regulation_win(lam_home: float, lam_away: float, side: str, *,
+                     max_goals: int = 12) -> float:
+    """P(``side`` wins in regulation) from the Poisson regulation distribution.
+
+    This is P(regulation margin > 0) for the named side, i.e. the payoff of a
+    KXNHLREG / KXNHL60MIN contract.  It excludes OT/SO wins: a regulation tie
+    (including games that later go to OT) loses the contract.
+    """
+    if lam_home is None or lam_away is None:
+        return float("nan")
+    total = 0.0
+    win = 0.0
+    for i in range(max_goals + 1):
+        ph = poisson_pmf(float(lam_home), i)
+        for j in range(max_goals + 1):
+            w = ph * poisson_pmf(float(lam_away), j)
+            total += w
+            margin = (i - j) if side == "home" else (j - i)
+            if margin > 0:
+                win += w
+    if total <= 0:
+        return float("nan")
+    return round(min(max(win / total, 0.0), 1.0), 6)
+
+
 @dataclass
 class PoissonModel:
     """Independent-Poisson goal model with an explicit OT/shootout mass.
@@ -298,8 +398,22 @@ class PoissonModel:
         if tot > 0:
             p_total = {t: v / tot for t, v in p_total.items()}
         mean_total = lh + la
+        # --- expanded markets: team totals, regulation, period-level (uniform split assumption) ---
+        # team totals use one-team Poisson marginals
+        p_home_team_over15 = p_team_total_over(lh, 1.5)
+        p_away_team_over15 = p_team_total_over(la, 1.5)
+        p_home_team_over25 = p_team_total_over(lh, 2.5)
+        p_away_team_over25 = p_team_total_over(la, 2.5)
+        # regulation win is already p_home_reg / p_away_reg
+        # period-level: uniform split assumption stated in p_period_* docstrings
+        lam_h_p = lh / 3.0
+        lam_a_p = la / 3.0
+        p_home_1p = p_period_moneyline(lh, la, "home", period=1)
+        p_away_1p = p_period_moneyline(lh, la, "away", period=1)
+        p_over15_1p = p_period_total_over(lh, la, 1.5, period=1)
         return {
             "lam_home": lh, "lam_away": la,
+            "lam_home_p1": lam_h_p, "lam_away_p1": lam_a_p,
             "p_home_reg": p_home_reg, "p_away_reg": p_away_reg, "p_tie_reg": p_tie,
             "p_home_ml": p_home_reg + p_home_ot,
             "p_away_ml": p_away_reg + (p_tie - p_home_ot),
@@ -309,12 +423,38 @@ class PoissonModel:
             "p_over65": sum(v for t, v in p_total.items() if t >= 7),
             "exp_total": mean_total,
             "mean_total": mean_total,
+            # team totals
+            "p_home_team_over15": p_home_team_over15,
+            "p_away_team_over15": p_away_team_over15,
+            "p_home_team_over25": p_home_team_over25,
+            "p_away_team_over25": p_away_team_over25,
+            "p_home_team_over05": p_team_total_over(lh, 0.5),
+            "p_away_team_over05": p_team_total_over(la, 0.5),
+            # period
+            "p_home_1p": p_home_1p, "p_away_1p": p_away_1p,
+            "p_over15_1p": p_over15_1p,
+            "p_over05_1p": p_period_total_over(lh, la, 0.5, period=1),
+            # regulation is p_home_reg / p_away_reg already
         }
 
     def p_over(self, f: dict[str, Any], strike: float) -> float:
         """P(total > strike) for the model's own expected goals (see :func:`p_total_over`)."""
         lh, la = self.expected_goals(f)
         return p_total_over(lh, la, strike)
+
+    def p_team_over(self, f: dict[str, Any], team: str, strike: float) -> float:
+        """P(team goals > strike) for home/away."""
+        lh, la = self.expected_goals(f)
+        lam = lh if team == "home" else la
+        return p_team_total_over(lam, strike)
+
+    def p_reg_win(self, f: dict[str, Any], team: str) -> float:
+        lh, la = self.expected_goals(f)
+        return p_regulation_win(lh, la, team)
+
+    def p_period_win(self, f: dict[str, Any], team: str, period: int = 1) -> float:
+        lh, la = self.expected_goals(f)
+        return p_period_moneyline(lh, la, team, period=period)
 
 
 # --------------------------------------------------------------------- baselines

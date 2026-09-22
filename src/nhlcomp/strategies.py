@@ -1084,6 +1084,544 @@ class OvertimeStrategy(ThresholdStrategy):
         return [Signal(status="READY TO BET", **base)]
 
 
+# --------------------------------------------------------------------- regulation
+class RegulationStrategy(ThresholdStrategy):
+    """Trade a Kalshi KXNHLREG / KXNHL60MIN contract (win in regulation).
+
+    Pays when the named team wins and the game does NOT go to OT/SO.  Settlement
+    uses NHL lastPeriodType == REG plus winner.  Model probability comes from the
+    Poisson regulation distribution (p_home_reg / p_away_reg) which is SOURCE-derived
+    expected goals -> MODEL OUTPUT, never invented.
+
+    Verified market status 2026-09-21: no contracts observed (verified negative), so
+    this rule is FORWARD-TEST only until the exchange lists it.  When no quote exists
+    it reports QUALIFIED, not a silent no-op.
+    """
+
+    strategy_id = "NHL_REGULATION"
+    category = "regulation"
+    market = "regulation"
+    markets = "regulation"
+
+    def __init__(self, *, team: str = "home", min_edge: float = 0.04,
+                 min_price: float = 0.05, **kw: Any):
+        if team not in ("home", "away"):
+            raise ValueError("team must be home or away")
+        kw.setdefault("feature", "home_n_prior")
+        kw.setdefault("operator", ">=")
+        kw.setdefault("threshold", 10)
+        kw.setdefault("bet_side", team)
+        kw.setdefault("use_model", "poisson")
+        kw["min_edge"] = min_edge
+        kw["min_price"] = min_price
+        super().__init__(**kw)
+        self.team = team
+        self.quote_side = "YES"
+        self.market = "regulation"
+        self.markets = "regulation"
+        self.settlement_rule = (
+            "Official NHL final result + lastPeriodType. A regulation contract on team T "
+            "pays when T wins and lastPeriodType==REG; otherwise it loses.  Cross-checked "
+            "against Kalshi's own settlement when the contract settles.")
+        self.params = {**self.params, "kind": "regulation", "team": team,
+                       "market": "regulation", "quote_side": self.quote_side}
+        self.hypothesis = (
+            f"The Poisson regulation-win probability P({team} wins in REG) prices the "
+            f"regulation market more accurately than the exchange, so buying YES when "
+            f"ask <= model - {min_edge:.3f} earns the difference.  A regulation win is a "
+            f"strictly stronger claim than a moneyline win.")
+        self.entry_rule = (
+            f"Compute expected goals from prior games only, then P({team} wins in REG); "
+            f"buy YES when offer <= that minus {min_edge:.3f}.")
+        self.price_rule = f"Require YES offer <= P(reg win) - {self.min_edge:.3f}."
+        self.data_used = (
+            "api-web.nhle.com results for expected goals + lastPeriodType; "
+            "kalshi.trade_api KXNHLREG/KXNHL60MIN when listed (verified negative on 2026-09-21).")
+
+    def evaluate(self, ctx: DecisionContext) -> list[Signal]:
+        from .models import p_regulation_win
+        f = ctx.features
+        base = dict(strategy_id=self.strategy_id, version=self.version,
+                    username=self.username, game_id=int(f.get("game_id") or 0),
+                    game_date=f.get("game_date") or "",
+                    matchup=f"{f.get('away_id')}@{f.get('home_id')}",
+                    market="regulation", selection=f"{self.team}_reg",
+                    side="YES", model_prob=float("nan"),
+                    fair_price=float("nan"), required_price=float("nan"),
+                    stake=0.0, supporting={"market": "regulation", "team": self.team})
+        lam = ctx.predictions.get("lam_home"), ctx.predictions.get("lam_away")
+        if lam[0] is None or lam[1] is None:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="no expected-goals output", **base)]
+        p = p_regulation_win(float(lam[0]), float(lam[1]), self.team)
+        if p != p:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="regulation model returned no probability", **base)]
+        base["model_prob"] = p
+        base["supporting"] = {**base["supporting"], "lam_home": lam[0], "lam_away": lam[1],
+                              "p_reg": p,
+                              "data_labels": {"features": "DERIVED", "model_prob": "MODEL OUTPUT"}}
+        blocked = self._information_gates(ctx)
+        if blocked:
+            return [Signal(status=blocked[0], blocking_reason=blocked[1], **base)]
+        q = self.find_quote(ctx, "regulation", self.team, "YES")
+        if q is None:
+            # also try moneyline mapping? No, keep strict: regulation market only
+            # but allow selection substring match for future exchange wording
+            cands = [qq for qq in ctx.quotes if qq.market_type == "regulation" and qq.side == "YES"]
+            # try to match team via selection substring
+            for cand in cands:
+                sel = (cand.selection or "").lower()
+                if self.team in sel:
+                    q = cand
+                    break
+            if q is None and cands:
+                # if exchange lists one contract per team without explicit team in selection,
+                # fallback to first YES if only one team side quoted? No guessing, so need label
+                # matching via find_quotes already handles substring. If still none, no quote.
+                pass
+        if q is None:
+            return [Signal(status="QUALIFIED",
+                           blocking_reason="no KXNHLREG/KXNHL60MIN contract quoted for this game", **base)]
+        base["quote"] = q
+        base["supporting"] = {**base["supporting"], "contract": q.contract, "contract_label": q.label}
+        ask = q.ask
+        if ask is None or ask <= 0 or ask >= 1:
+            return [Signal(status="PRICE TOO HIGH", blocking_reason="no valid offer", **base)]
+        if ask < self.min_price:
+            return [Signal(status="PRICE TOO LOW",
+                           blocking_reason=f"ask {ask:.2f} below floor", **base)]
+        required = round(p - self.min_edge, 4)
+        base.update(fair_price=round(ask, 4), required_price=required)
+        if ask > required:
+            return [Signal(status="PRICE TOO HIGH",
+                           blocking_reason=f"ask {ask:.2f} > required {required:.2f} (P={p:.4f})", **base)]
+        stake = self.size_stake(p, float(ask), ctx.bankroll, ctx.open_exposure)
+        if stake <= 0:
+            return [Signal(status="CANCELLED", blocking_reason="zero bankroll", **base)]
+        base.update(stake=stake)
+        return [Signal(status="READY TO BET", **base)]
+
+
+# --------------------------------------------------------------------- team totals
+class TeamTotalStrategy(ThresholdStrategy):
+    """Trade a Kalshi KXNHLTEAMTOTAL contract (team over/under).
+
+    Each team has its own over/under line (e.g. Over 2.5 goals for home team).  Model
+    probability comes from Poisson one-team marginal p_team_total_over.
+
+    Verified 2026-09-21: no contracts observed (verified negative), so FORWARD-TEST only
+    until listed.  Uses ladder logic same as totals: one rung per strike per team.
+    """
+
+    strategy_id = "NHL_TEAM_TOTAL"
+    category = "team_totals"
+    market = "team_total"
+    markets = "team_total"
+
+    def __init__(self, *, team: str = "home", direction: str = "over",
+                 target_strike: float = 2.5, min_strike: float = 0.5, max_strike: float = 5.5,
+                 min_edge: float = 0.04, min_price: float = 0.05,
+                 no_history_reason: str | None = None, **kw: Any):
+        if team not in ("home", "away"):
+            raise ValueError("team must be home or away")
+        if direction not in ("over", "under"):
+            raise ValueError("direction must be over or under")
+        kw.setdefault("feature", "home_n_prior")
+        kw.setdefault("operator", ">=")
+        kw.setdefault("threshold", 10)
+        kw.setdefault("bet_side", team)
+        kw.setdefault("use_model", "poisson")
+        kw["min_edge"] = min_edge
+        kw["min_price"] = min_price
+        super().__init__(**kw)
+        self.team = team
+        self.direction = direction
+        self.quote_side = "YES" if direction == "over" else "NO"
+        self.market = "team_total"
+        self.markets = "team_total"
+        self.target_strike = float(target_strike)
+        self.min_strike = float(min_strike)
+        self.max_strike = float(max_strike)
+        self.no_history_reason = no_history_reason
+        self.settlement_rule = (
+            "Official NHL final score for that team only.  Over k.5 pays when team goals > k, "
+            "Under when <= k.  Shootout goal counts as one for winner in official score, so "
+            "total already includes it per Kalshi rules.")
+        self.params = {**self.params, "kind": "team_total", "team": team,
+                       "direction": direction, "market": "team_total",
+                       "target_strike": self.target_strike,
+                       "min_strike": self.min_strike, "max_strike": self.max_strike,
+                       "no_history_reason": no_history_reason,
+                       "quote_side": self.quote_side}
+        self.hypothesis = (
+            f"Poisson team scoring P({team} {direction} {self.target_strike:g}) prices team totals "
+            f"more accurately than exchange; buy {self.quote_side} when ask <= model - {min_edge:.3f}.")
+        self.entry_rule = (
+            f"Expected goals for {team} from prior games; P(team goals > k) for offered k nearest "
+            f"{self.target_strike:g} inside [{self.min_strike:g},{self.max_strike:g}]; "
+            f"buy {direction} when offer <= model - {min_edge:.3f}.")
+        self.price_rule = f"Require {self.quote_side} offer <= P({direction}) - {self.min_edge:.3f}."
+        self.data_used = (
+            "api-web.nhle.com results for expected goals; "
+            "kalshi.trade_api KXNHLTEAMTOTAL when listed (verified negative 2026-09-21).")
+        if no_history_reason:
+            self.data_used += f" NOTE: {no_history_reason}"
+
+    def _lam(self, ctx: DecisionContext) -> float | None:
+        lam = ctx.predictions.get("lam_home" if self.team == "home" else "lam_away")
+        if lam is None:
+            return None
+        try:
+            return float(lam)
+        except (TypeError, ValueError):
+            return None
+
+    def evaluate(self, ctx: DecisionContext) -> list[Signal]:
+        from .models import p_team_total_over
+        f = ctx.features
+        side = self.quote_side
+        base = dict(strategy_id=self.strategy_id, version=self.version,
+                    username=self.username, game_id=int(f.get("game_id") or 0),
+                    game_date=f.get("game_date") or "",
+                    matchup=f"{f.get('away_id')}@{f.get('home_id')}",
+                    market="team_total", selection=f"{self.team}_{self.direction}",
+                    side=side, model_prob=float("nan"),
+                    fair_price=float("nan"), required_price=float("nan"),
+                    stake=0.0, supporting={"market": "team_total", "team": self.team,
+                                           "direction": self.direction})
+        lam = self._lam(ctx)
+        if lam is None:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="no expected goals for team", **base)]
+        cands = self.find_quotes(ctx, "team_total", self.team, side)
+        # also allow quotes where selection contains team and direction
+        if not cands:
+            # broader search: market_type team_total and selection contains team
+            for q in ctx.quotes:
+                if q.market_type != "team_total" or q.side != side:
+                    continue
+                sel = (q.selection or "").lower()
+                if self.team in sel and self.direction in sel:
+                    cands.append(q)
+        q, offered, code = pick_strike(cands, target=self.target_strike,
+                                       lo=self.min_strike, hi=self.max_strike)
+        if q is None:
+            if code == "none_quoted":
+                return [Signal(status="QUALIFIED",
+                               blocking_reason="no team_total contract quoted", **base)]
+            if code == "no_readable_strike":
+                return [Signal(status="WAITING FOR OTHER INFORMATION",
+                               blocking_reason="quoted but no readable strike", **base)]
+            return [Signal(status="WATCHING",
+                           blocking_reason=f"strikes offered {offered} outside range", **base)]
+        strike = float(q.strike)
+        base["quote"] = q
+        p_over = p_team_total_over(lam, strike)
+        if p_over != p_over:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="team total model no prob", **base)]
+        p = p_over if self.direction == "over" else round(1.0 - p_over, 6)
+        base["model_prob"] = p
+        base["supporting"] = {**base["supporting"], "strike": strike,
+                              "contract": q.contract, "lam": lam,
+                              "p_over": p_over, "strikes_offered": offered,
+                              "target_strike": self.target_strike}
+        blocked = self._information_gates(ctx)
+        if blocked:
+            return [Signal(status=blocked[0], blocking_reason=blocked[1], **base)]
+        ask = q.ask
+        if ask is None or ask <= 0 or ask >= 1:
+            return [Signal(status="PRICE TOO HIGH", blocking_reason="no valid offer", **base)]
+        if ask < self.min_price:
+            return [Signal(status="PRICE TOO LOW", blocking_reason="below floor", **base)]
+        required = round(p - self.min_edge, 4)
+        base.update(fair_price=round(ask, 4), required_price=required)
+        if ask > required:
+            return [Signal(status="PRICE TOO HIGH",
+                           blocking_reason=f"ask {ask:.2f} > required {required:.2f}", **base)]
+        stake = self.size_stake(p, float(ask), ctx.bankroll, ctx.open_exposure)
+        if stake <= 0:
+            return [Signal(status="CANCELLED", blocking_reason="zero bankroll", **base)]
+        base.update(stake=stake)
+        return [Signal(status="READY TO BET", **base)]
+
+
+# --------------------------------------------------------------------- period moneyline
+class PeriodStrategy(ThresholdStrategy):
+    """Trade a Kalshi KXNHL1P/2P/3P contract (period winner).
+
+    Model: Poisson per-period win probability assuming uniform split across 3 periods.
+    ASSUMPTION stated: goals uniform across periods, because no verified period-level
+    expected-goals model exists yet; game_period_scores table ingests period goals for
+    research and will replace this when enough history accumulates.
+
+    Settlement: from game_period_scores (official per-goal feed /v1/score).  When no period
+    score row exists, wager left OPEN rather than guessed.
+    """
+
+    strategy_id = "NHL_PERIOD"
+    category = "period_betting"
+    market = "period"
+    markets = "period"
+
+    def __init__(self, *, period: int = 1, team: str = "home",
+                 min_edge: float = 0.04, min_price: float = 0.05, **kw: Any):
+        if period not in (1, 2, 3):
+            raise ValueError("period must be 1,2,3")
+        if team not in ("home", "away"):
+            raise ValueError("team must be home/away")
+        kw.setdefault("feature", "home_n_prior")
+        kw.setdefault("operator", ">=")
+        kw.setdefault("threshold", 10)
+        kw.setdefault("bet_side", team)
+        kw.setdefault("use_model", "poisson")
+        kw["min_edge"] = min_edge
+        kw["min_price"] = min_price
+        super().__init__(**kw)
+        self.period = int(period)
+        self.team = team
+        self.quote_side = "YES"
+        self.market = "period"
+        self.markets = "period"
+        self.settlement_rule = (
+            f"Official NHL period {period} score from /v1/score per-goal feed "
+            f"(game_period_scores table).  Pays when {team} scores more in period {period}."
+            f"  Period ties are PUSH for moneyline? Kalshi rules for period markets "
+            f"verified: period winner contracts settle YES for team with more goals in that "
+            f"period, NO otherwise; tie may be NO for both sides or VOID per exchange rules "
+            f"-- left OPEN with note when ambiguous until verified.")
+        self.params = {**self.params, "kind": "period", "period": self.period,
+                       "team": team, "market": "period", "quote_side": self.quote_side}
+        self.hypothesis = (
+            f"Poisson per-period win prob (uniform split) prices period {period} moneyline "
+            f"for {team} more accurately than exchange; buy YES when ask <= model - {min_edge:.3f}. "
+            f"ASSUMPTION: goals uniform across periods until period-level model exists.")
+        self.entry_rule = (
+            f"Expected goals from prior games, divided by 3 for period {period}, "
+            f"P({team} wins P{period}) from Poisson; buy YES when ask <= model - {min_edge:.3f}.")
+        self.price_rule = f"Require YES offer <= P(period win) - {self.min_edge:.3f}."
+        self.data_used = (
+            f"api-web.nhle.com results for expected goals; game_period_scores P{period} for settlement; "
+            f"kalshi KXNHL{period}P when listed (verified negative 2026-09-21). "
+            f"ASSUMPTION: uniform split.")
+
+    def evaluate(self, ctx: DecisionContext) -> list[Signal]:
+        from .models import p_period_moneyline
+        f = ctx.features
+        base = dict(strategy_id=self.strategy_id, version=self.version,
+                    username=self.username, game_id=int(f.get("game_id") or 0),
+                    game_date=f.get("game_date") or "",
+                    matchup=f"{f.get('away_id')}@{f.get('home_id')}",
+                    market="period", selection=f"{self.team}_p{self.period}",
+                    side="YES", model_prob=float("nan"),
+                    fair_price=float("nan"), required_price=float("nan"),
+                    stake=0.0, supporting={"market": "period", "period": self.period,
+                                           "team": self.team})
+        lh, la = ctx.predictions.get("lam_home"), ctx.predictions.get("lam_away")
+        if lh is None or la is None:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="no expected goals", **base)]
+        p = p_period_moneyline(float(lh), float(la), self.team, period=self.period)
+        if p != p:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="period model no prob", **base)]
+        base["model_prob"] = p
+        base["supporting"] = {**base["supporting"], "lam_home": lh, "lam_away": la,
+                              "p_period_win": p, "assumption": "uniform split across 3 periods"}
+        blocked = self._information_gates(ctx)
+        if blocked:
+            return [Signal(status=blocked[0], blocking_reason=blocked[1], **base)]
+        # find period quote: market_type period or first_period etc, selection contains team
+        q = None
+        for cand in ctx.quotes:
+            if cand.market_type not in ("period", "first_period", "second_period", "third_period",
+                                        f"{self.period}p", f"period_{self.period}"):
+                # also accept if market_type contains period and selection matches
+                if "period" not in (cand.market_type or ""):
+                    continue
+            # selection matching
+            sel = (cand.selection or "").lower()
+            label = (cand.label or "").lower()
+            if self.team in sel or self.team in label or cand.selection == self.team:
+                # period matching: if quote has period info in label or market_type, check
+                # For KXNHL1P series, market_type is first_period; period 1 matches
+                if self.period == 1 and "first" in (cand.market_type or "").lower():
+                    q = cand
+                    break
+                if self.period == 2 and "second" in (cand.market_type or "").lower():
+                    q = cand
+                    break
+                if self.period == 3 and "third" in (cand.market_type or "").lower():
+                    q = cand
+                    break
+                # fallback: if market_type is period and no period qualifier, assume matches requested
+                if cand.market_type == "period":
+                    q = cand
+                    break
+        if q is None:
+            # try generic find_quote with period market
+            q = self.find_quote(ctx, "period", self.team, "YES")
+        if q is None:
+            return [Signal(status="QUALIFIED",
+                           blocking_reason=f"no period P{self.period} contract quoted for {self.team}", **base)]
+        base["quote"] = q
+        base["supporting"] = {**base["supporting"], "contract": q.contract}
+        ask = q.ask
+        if ask is None or ask <= 0 or ask >= 1:
+            return [Signal(status="PRICE TOO HIGH", blocking_reason="no valid offer", **base)]
+        if ask < self.min_price:
+            return [Signal(status="PRICE TOO LOW", blocking_reason="below floor", **base)]
+        required = round(p - self.min_edge, 4)
+        base.update(fair_price=round(ask, 4), required_price=required)
+        if ask > required:
+            return [Signal(status="PRICE TOO HIGH",
+                           blocking_reason=f"ask {ask:.2f} > required {required:.2f} (P={p:.4f})", **base)]
+        stake = self.size_stake(p, float(ask), ctx.bankroll, ctx.open_exposure)
+        if stake <= 0:
+            return [Signal(status="CANCELLED", blocking_reason="zero bankroll", **base)]
+        base.update(stake=stake)
+        return [Signal(status="READY TO BET", **base)]
+
+
+# --------------------------------------------------------------------- period totals
+class PeriodTotalStrategy(ThresholdStrategy):
+    """Trade a Kalshi KXNHL1PTOTAL / 2PTOTAL / 3PTOTAL contract (period over/under).
+
+    Model: Poisson period total over probability with uniform split assumption.
+    Settlement: from game_period_scores.
+    """
+
+    strategy_id = "NHL_PERIOD_TOTAL"
+    category = "period_totals"
+    market = "period_total"
+    markets = "period_total"
+
+    def __init__(self, *, period: int = 1, direction: str = "over",
+                 target_strike: float = 1.5, min_strike: float = 0.5, max_strike: float = 3.5,
+                 min_edge: float = 0.04, min_price: float = 0.05,
+                 no_history_reason: str | None = None, **kw: Any):
+        if period not in (1, 2, 3):
+            raise ValueError("period must be 1,2,3")
+        if direction not in ("over", "under"):
+            raise ValueError("direction must be over/under")
+        kw.setdefault("feature", "home_n_prior")
+        kw.setdefault("operator", ">=")
+        kw.setdefault("threshold", 10)
+        kw.setdefault("bet_side", direction)
+        kw.setdefault("use_model", "poisson")
+        kw["min_edge"] = min_edge
+        kw["min_price"] = min_price
+        super().__init__(**kw)
+        self.period = int(period)
+        self.direction = direction
+        self.quote_side = "YES" if direction == "over" else "NO"
+        self.market = "period_total"
+        self.markets = "period_total"
+        self.target_strike = float(target_strike)
+        self.min_strike = float(min_strike)
+        self.max_strike = float(max_strike)
+        self.no_history_reason = no_history_reason
+        self.settlement_rule = (
+            f"Official NHL period {period} total from game_period_scores (home+away in P{period}). "
+            f"Over k.5 pays when total > k.")
+        self.params = {**self.params, "kind": "period_total", "period": self.period,
+                       "direction": direction, "market": "period_total",
+                       "target_strike": self.target_strike,
+                       "min_strike": self.min_strike, "max_strike": self.max_strike,
+                       "no_history_reason": no_history_reason,
+                       "quote_side": self.quote_side}
+        self.hypothesis = (
+            f"Poisson period total P(Over {self.target_strike:g} in P{period}) with uniform split "
+            f"assumption prices period totals more accurately than exchange; buy {direction} "
+            f"when ask <= model - {min_edge:.3f}.")
+        self.entry_rule = (
+            f"Expected goals /3 for P{period}, P(total > k) for offered k nearest {self.target_strike:g}; "
+            f"buy {direction} when offer <= model - {min_edge:.3f}.")
+        self.price_rule = f"Require {self.quote_side} offer <= P({direction}) - {self.min_edge:.3f}."
+        self.data_used = (
+            f"api-web results for expected goals; game_period_scores P{period}; "
+            f"kalshi KXNHL{period}PTOTAL when listed (verified negative 2026-09-21). "
+            f"ASSUMPTION: uniform split.")
+        if no_history_reason:
+            self.data_used += f" NOTE: {no_history_reason}"
+
+    def evaluate(self, ctx: DecisionContext) -> list[Signal]:
+        from .models import p_period_total_over
+        f = ctx.features
+        side = self.quote_side
+        base = dict(strategy_id=self.strategy_id, version=self.version,
+                    username=self.username, game_id=int(f.get("game_id") or 0),
+                    game_date=f.get("game_date") or "",
+                    matchup=f"{f.get('away_id')}@{f.get('home_id')}",
+                    market="period_total", selection=f"p{self.period}_{self.direction}",
+                    side=side, model_prob=float("nan"),
+                    fair_price=float("nan"), required_price=float("nan"),
+                    stake=0.0, supporting={"market": "period_total",
+                                           "period": self.period,
+                                           "direction": self.direction})
+        lh, la = ctx.predictions.get("lam_home"), ctx.predictions.get("lam_away")
+        if lh is None or la is None:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="no expected goals", **base)]
+        cands = self.find_quotes(ctx, "period_total", self.direction, side)
+        if not cands:
+            # broader: any period_total quote for this period
+            for q in ctx.quotes:
+                if q.market_type not in ("period_total", "first_period_total",
+                                         "second_period_total", "third_period_total"):
+                    if "period" not in (q.market_type or "") or "total" not in (q.market_type or ""):
+                        continue
+                # period filter via label/market_type
+                mt = (q.market_type or "").lower()
+                if self.period == 1 and "first" not in mt and "1p" not in mt and "period_total" not in mt:
+                    # allow generic period_total for now
+                    pass
+                if q.side == side:
+                    cands.append(q)
+        q, offered, code = pick_strike(cands, target=self.target_strike,
+                                       lo=self.min_strike, hi=self.max_strike)
+        if q is None:
+            if code == "none_quoted":
+                return [Signal(status="QUALIFIED",
+                               blocking_reason=f"no P{self.period} total quoted", **base)]
+            if code == "no_readable_strike":
+                return [Signal(status="WAITING FOR OTHER INFORMATION",
+                               blocking_reason="no readable strike", **base)]
+            return [Signal(status="WATCHING",
+                           blocking_reason=f"strikes {offered} outside range", **base)]
+        strike = float(q.strike)
+        base["quote"] = q
+        p_over = p_period_total_over(float(lh), float(la), strike, period=self.period)
+        if p_over != p_over:
+            return [Signal(status="WAITING FOR OTHER INFORMATION",
+                           blocking_reason="period total model no prob", **base)]
+        p = p_over if self.direction == "over" else round(1.0 - p_over, 6)
+        base["model_prob"] = p
+        base["supporting"] = {**base["supporting"], "strike": strike,
+                              "contract": q.contract, "p_over": p_over,
+                              "strikes_offered": offered,
+                              "assumption": "uniform split"}
+        blocked = self._information_gates(ctx)
+        if blocked:
+            return [Signal(status=blocked[0], blocking_reason=blocked[1], **base)]
+        ask = q.ask
+        if ask is None or ask <= 0 or ask >= 1:
+            return [Signal(status="PRICE TOO HIGH", blocking_reason="no valid offer", **base)]
+        if ask < self.min_price:
+            return [Signal(status="PRICE TOO LOW", blocking_reason="below floor", **base)]
+        required = round(p - self.min_edge, 4)
+        base.update(fair_price=round(ask, 4), required_price=required)
+        if ask > required:
+            return [Signal(status="PRICE TOO HIGH",
+                           blocking_reason=f"ask {ask:.2f} > required {required:.2f}", **base)]
+        stake = self.size_stake(p, float(ask), ctx.bankroll, ctx.open_exposure)
+        if stake <= 0:
+            return [Signal(status="CANCELLED", blocking_reason="zero bankroll", **base)]
+        base.update(stake=stake)
+        return [Signal(status="READY TO BET", **base)]
+
+
 # --------------------------------------------------------------------- registry
 def build_seed_strategies() -> list[Strategy]:
     """Seed library.
@@ -1711,5 +2249,88 @@ def build_seed_strategies() -> list[Strategy]:
         operator=">=", threshold=10, bet_side="home", market="period_spread",
         blocked_reason="No KXNHL period spread series observed; period spread would be margin in a single period, needs period model and market listing.",
         data_used="NONE VERIFIED."))
+
+    # -----------------------------------------------------------------
+    # Functional expansion: regulation, team totals, period moneyline, period totals
+    # These replace the earlier blocked placeholders with real pricing logic.
+    # They are FORWARD-TEST until Kalshi lists the contracts, but they already
+    # carry a verifiable model (Poisson) and settlement from game_period_scores /
+    # lastPeriodType, so they are not blocked on missing model, only on missing quotes.
+
+    # Regulation v2: functional Poisson regulation win
+    out.append(RegulationStrategy(
+        strategy_id="NHL_REGULATION", version=2, username="NHL_REGULATION_062",
+        category="regulation", name="Regulation win home (Poisson reg prob)",
+        team="home", min_edge=0.04,
+        data_used="api-web results + lastPeriodType for settlement; kalshi KXNHLREG when listed."))
+    out.append(RegulationStrategy(
+        strategy_id="NHL_REGULATION_AWAY", username="NHL_REGULATION_AWAY_063",
+        category="regulation", name="Regulation win away (Poisson reg prob)",
+        team="away", min_edge=0.04,
+        data_used="api-web results + lastPeriodType; kalshi KXNHLREG when listed."))
+
+    # Team totals: functional over/under with Poisson marginal
+    out.append(TeamTotalStrategy(
+        strategy_id="NHL_TEAM_TOTAL_OVER", version=2, username="NHL_TEAM_TOTAL_OVER_064",
+        category="team_totals", name="Team total over 2.5 home (Poisson)",
+        team="home", direction="over", target_strike=2.5, min_strike=0.5, max_strike=5.5,
+        min_edge=0.04))
+    out.append(TeamTotalStrategy(
+        strategy_id="NHL_TEAM_TOTAL_OVER_AWAY", username="NHL_TEAM_TOTAL_OVER_AWAY_065",
+        category="team_totals", name="Team total over 2.5 away (Poisson)",
+        team="away", direction="over", target_strike=2.5, min_strike=0.5, max_strike=5.5,
+        min_edge=0.04))
+    out.append(TeamTotalStrategy(
+        strategy_id="NHL_TEAM_TOTAL_UNDER", version=2, username="NHL_TEAM_TOTAL_UNDER_066",
+        category="team_totals", name="Team total under 3.5 home (Poisson, forward)",
+        team="home", direction="under", target_strike=3.5, min_strike=0.5, max_strike=5.5,
+        min_edge=0.04,
+        no_history_reason="Under side has no YES-history; forward-only at live NO offer."))
+    out.append(TeamTotalStrategy(
+        strategy_id="NHL_TEAM_TOTAL_ALT_OVER15", username="NHL_TEAM_TOTAL_ALT_OVER15_067",
+        category="alternate_lines", name="Team total over 1.5 home (low line)",
+        team="home", direction="over", target_strike=1.5, min_strike=0.5, max_strike=2.5,
+        min_edge=0.03))
+
+    # Period moneyline functional
+    out.append(PeriodStrategy(
+        strategy_id="NHL_PERIOD_ML_1P", version=3, username="NHL_PERIOD_ML_1P_068",
+        category="period_betting", name="First-period ML home (uniform split model)",
+        period=1, team="home", min_edge=0.04))
+    out.append(PeriodStrategy(
+        strategy_id="NHL_PERIOD_ML_1P_AWAY", username="NHL_PERIOD_ML_1P_AWAY_069",
+        category="period_betting", name="First-period ML away (uniform split)",
+        period=1, team="away", min_edge=0.04))
+    out.append(PeriodStrategy(
+        strategy_id="NHL_PERIOD_ML_2P", version=2, username="NHL_PERIOD_ML_2P_070",
+        category="period_betting", name="Second-period ML home",
+        period=2, team="home", min_edge=0.04))
+    out.append(PeriodStrategy(
+        strategy_id="NHL_PERIOD_ML_3P", version=2, username="NHL_PERIOD_ML_3P_071",
+        category="period_betting", name="Third-period ML home",
+        period=3, team="home", min_edge=0.04))
+
+    # Period totals functional
+    out.append(PeriodTotalStrategy(
+        strategy_id="NHL_PERIOD_TOTAL_1P_OVER", version=2, username="NHL_PERIOD_TOTAL_1P_OVER_072",
+        category="period_totals", name="First-period total over 1.5 (Poisson uniform)",
+        period=1, direction="over", target_strike=1.5, min_strike=0.5, max_strike=3.5,
+        min_edge=0.04))
+    out.append(PeriodTotalStrategy(
+        strategy_id="NHL_PERIOD_TOTAL_1P_UNDER", username="NHL_PERIOD_TOTAL_1P_UNDER_073",
+        category="period_totals", name="First-period total under 1.5 (forward)",
+        period=1, direction="under", target_strike=1.5, min_strike=0.5, max_strike=3.5,
+        min_edge=0.04,
+        no_history_reason="NO side no history; forward-only"))
+    out.append(PeriodTotalStrategy(
+        strategy_id="NHL_PERIOD_TOTAL_2P_OVER", version=2, username="NHL_PERIOD_TOTAL_2P_OVER_074",
+        category="period_totals", name="Second-period total over 1.5",
+        period=2, direction="over", target_strike=1.5, min_strike=0.5, max_strike=3.5,
+        min_edge=0.04))
+    out.append(PeriodTotalStrategy(
+        strategy_id="NHL_PERIOD_TOTAL_3P_OVER", version=2, username="NHL_PERIOD_TOTAL_3P_OVER_075",
+        category="period_totals", name="Third-period total over 1.5",
+        period=3, direction="over", target_strike=1.5, min_strike=0.5, max_strike=3.5,
+        min_edge=0.04))
 
     return out

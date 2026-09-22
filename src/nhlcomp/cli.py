@@ -187,10 +187,6 @@ def cmd_report(args: argparse.Namespace) -> int:
         if not shown:
             print("  (none settled yet)")
         print()
-    # Season phase.  The totals above are the SCORED competition only (regular season +
-    # playoffs).  Every wager carries the game_type of the game it was on, so wagers placed
-    # on preseason games -- a phase no rule here is fitted for -- are shown on their own line
-    # instead of being folded into a headline number they do not belong to.
     print("season phase split (the headline totals above are regular season + playoffs only)")
     for p in perf.phase_breakdown():
         phase = p["phase"]
@@ -207,6 +203,26 @@ def cmd_report(args: argparse.Namespace) -> int:
     print(f"kalshi settled contracts: {cov['c']}  with pre-game candle: {cov['ok'] or 0}")
     irr = store.one("SELECT COUNT(*) c FROM irregularities WHERE status='open'")["c"]
     print(f"\nopen irregularities: {irr}")
+    return 0
+
+
+def cmd_list_strategies(args: argparse.Namespace) -> int:
+    store, _ = _ctx(args)
+    rows = store.latest_versions()
+    # group by market
+    by_market: dict[str, list] = {}
+    for r in rows:
+        m = (r["markets"] or r["category"] or "?")
+        by_market.setdefault(m, []).append(r)
+    print(f"{len(rows)} latest strategy versions:")
+    for mkt in sorted(by_market):
+        print(f"\n[{mkt}] {len(by_market[mkt])} strategies")
+        for r in sorted(by_market[mkt], key=lambda x: x["strategy_id"]):
+            print(f"  {r['strategy_id']} v{r['version']} {r['username']} status={r['status']} "
+                  f"cat={r['category']} bankroll={r['bankroll']}")
+    if args.json:
+        out = [dict(r) for r in rows]
+        print(json.dumps(out, indent=1, default=str))
     return 0
 
 
@@ -247,6 +263,9 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("build-site", parents=[sub_common]).set_defaults(fn=cmd_build_site)
     sub.add_parser("verify", parents=[sub_common]).set_defaults(fn=cmd_verify)
     sub.add_parser("report", parents=[sub_common]).set_defaults(fn=cmd_report)
+    sp_ls = sub.add_parser("list-strategies", parents=[sub_common])
+    sp_ls.add_argument("--json", action="store_true", help="also dump JSON")
+    sp_ls.set_defaults(fn=cmd_list_strategies)
 
     args = p.parse_args(argv)
     return args.fn(args)

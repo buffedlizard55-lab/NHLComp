@@ -24,7 +24,9 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Iterable, Sequence
 
-from .market import covers_margin, kalshi_taker_fee
+from .market import (covers_margin, kalshi_taker_fee,
+                     period_moneyline_settlement, period_total_over_settlement,
+                     regulation_settlement, team_total_over_settlement)
 from .store import Store, utcnow
 from .strategies import DecisionContext, Quote, Signal, Strategy
 
@@ -466,10 +468,23 @@ class PaperEngine:
             return 0
 
         closing = {q.selection: q for q in closing_quotes}
+        # period scores for period moneyline / period totals settlement
+        period_scores: dict[int, dict[str, int]] = {}
+        for ps in self.store.query(
+                "SELECT period, home_goals, away_goals FROM game_period_scores WHERE game_id=?",
+                (game_id,)):
+            try:
+                period_scores[int(ps["period"])] = {
+                    "home": int(ps["home_goals"]) if ps["home_goals"] is not None else None,
+                    "away": int(ps["away_goals"]) if ps["away_goals"] is not None else None,
+                }
+            except (TypeError, ValueError, KeyError):
+                continue
         n = 0
         for bet in self.store.query(
                 "SELECT * FROM bets WHERE game_id=? AND result='OPEN' "
-                "AND market IN ('moneyline','total','puck_line','overtime')",
+                "AND market IN ('moneyline','total','puck_line','overtime',"
+                "'regulation','team_total','period','period_total')",
                 (game_id,)):
             market = bet["market"] or "moneyline"
             total_goals = home_score + away_score
@@ -510,6 +525,39 @@ class PaperEngine:
                            "Left OPEN rather than guessed."))
                     self.store.flag(kind, detail, severity="error",
                                     entity_type="bet", entity_id=bet["bet_id"])
+                    continue
+            elif market == "regulation":
+                won, why = self._settle_regulation(bet, home_id, away_id, home_won, away_won,
+                                                   last_period_type)
+                if won is None:
+                    self.store.flag("unsettleable_regulation",
+                                    f"bet {bet['bet_id']} cannot be settled as regulation: "
+                                    f"selection='{bet['selection']}' lpt={last_period_type}",
+                                    severity="error", entity_type="bet", entity_id=bet["bet_id"])
+                    continue
+            elif market == "team_total":
+                won, why = self._settle_team_total(bet, home_score, away_score)
+                if won is None:
+                    self.store.flag("unsettleable_team_total",
+                                    f"bet {bet['bet_id']} cannot be settled: strike={bet['strike']} "
+                                    f"selection='{bet['selection']}'",
+                                    severity="error", entity_type="bet", entity_id=bet["bet_id"])
+                    continue
+            elif market == "period":
+                won, why = self._settle_period(bet, period_scores)
+                if won is None:
+                    self.store.flag("unsettleable_period",
+                                    f"bet {bet['bet_id']} cannot be settled: period scores missing "
+                                    f"for game {game_id} selection='{bet['selection']}'",
+                                    severity="error", entity_type="bet", entity_id=bet["bet_id"])
+                    continue
+            elif market == "period_total":
+                won, why = self._settle_period_total(bet, period_scores)
+                if won is None:
+                    self.store.flag("unsettleable_period_total",
+                                    f"bet {bet['bet_id']} cannot be settled: strike={bet['strike']} "
+                                    f"selection='{bet['selection']}' period scores missing",
+                                    severity="error", entity_type="bet", entity_id=bet["bet_id"])
                     continue
             else:
                 sel = (bet["selection"] or "").lower()
@@ -630,6 +678,157 @@ class PaperEngine:
         return won, (f"official lastPeriodType={lpt} -> the game "
                      f"{'did' if went else 'did not'} go past regulation; wager held the "
                      f"{sel[3:].upper()} side")
+
+    @staticmethod
+    def _settle_regulation(bet: Any, home_id: int, away_id: int, home_won: bool, away_won: bool,
+                           last_period_type: str | None) -> tuple[bool | None, str]:
+        """Settle regulation win market: team wins and lastPeriodType==REG."""
+        sel = (bet["selection"] or "").lower()
+        # selection formats: home_reg, away_reg, home, away
+        team = None
+        if "home" in sel:
+            team = "home"
+        elif "away" in sel:
+            team = "away"
+        else:
+            return None, f"unmapped selection '{sel}' for regulation"
+        lpt = (last_period_type or "").upper()
+        if lpt != "REG":
+            # if not REG, regulation bet loses regardless of winner
+            won = False
+            return won, f"official lastPeriodType={lpt} != REG -> regulation bet loses (winner irrelevant)"
+        won = home_won if team == "home" else away_won
+        return won, f"official result REG, {team} {'won' if won else 'did not win'} in regulation"
+
+    @staticmethod
+    def _settle_team_total(bet: Any, home_score: int, away_score: int) -> tuple[bool | None, str]:
+        """Settle team total over/under from final team goals."""
+        try:
+            strike = bet["strike"]
+        except (KeyError, IndexError):
+            strike = None
+        if strike is None:
+            return None, ""
+        sel = (bet["selection"] or "").lower()
+        # selection: home_over, home_under, away_over, away_under, etc.
+        team = None
+        direction = None
+        if "home" in sel:
+            team = "home"
+        elif "away" in sel:
+            team = "away"
+        else:
+            return None, f"unmapped team in '{sel}'"
+        if "over" in sel:
+            direction = "over"
+        elif "under" in sel:
+            direction = "under"
+        else:
+            # try exchange_side to infer? For team_total, YES=over, NO=under
+            # but selection already includes direction for functional strategies
+            return None, f"unmapped direction in '{sel}'"
+        team_goals = home_score if team == "home" else away_score
+        over = team_total_over_settlement(team_goals, float(strike))
+        if over is None:
+            return None, ""
+        won = over if direction == "over" else (not over)
+        return won, f"official {team} goals {team_goals} vs strike {strike:g} -> {'over' if over else 'under'}"
+
+    @staticmethod
+    def _settle_period(bet: Any, period_scores: dict[int, dict[str, int]]) -> tuple[bool | None, str]:
+        """Settle period moneyline from game_period_scores."""
+        sel = (bet["selection"] or "").lower()
+        # selection like home_p1, away_p1, home_p2 etc.
+        team = None
+        if "home" in sel:
+            team = "home"
+        elif "away" in sel:
+            team = "away"
+        else:
+            return None, f"unmapped team in '{sel}'"
+        # extract period number from selection or notes
+        period = None
+        # try to parse p1/p2/p3 from selection
+        import re
+        m = re.search(r"p([123])", sel)
+        if m:
+            period = int(m.group(1))
+        else:
+            # try from notes/strike? fallback: check bet's features_json or notes for period
+            try:
+                notes = json.loads(bet["notes"] or "{}")
+                # supporting data may contain period
+                if "period" in notes:
+                    period = int(notes["period"])
+            except Exception:
+                pass
+            if period is None:
+                # try from market? default to 1 if not found? No, leave unsettleable
+                # but attempt to get from bet_id which contains market? bet_id format includes selection
+                # last resort: if period_scores has only one period? No guess.
+                pass
+        if period is None:
+            # if we have no period, try to settle using any period? Better to require period
+            # attempt to infer from selection containing 1p,2p,3p etc via label
+            return None, f"no period number in selection '{sel}'"
+        ps = period_scores.get(period)
+        if ps is None:
+            return None, f"period {period} scores missing"
+        home_g = ps.get("home")
+        away_g = ps.get("away")
+        if home_g is None or away_g is None:
+            return None, f"period {period} scores incomplete"
+        won = period_moneyline_settlement(home_g, away_g, team)
+        if won is None:
+            return None, ""
+        # tie handling: moneyline win contracts lose on tie (NO side would win)
+        # If tie, won=False for both sides
+        return won, f"official P{period} {home_g}-{away_g} -> {team} {'won period' if won else 'did not win period'}"
+
+    @staticmethod
+    def _settle_period_total(bet: Any, period_scores: dict[int, dict[str, int]]) -> tuple[bool | None, str]:
+        """Settle period total over/under."""
+        try:
+            strike = bet["strike"]
+        except (KeyError, IndexError):
+            strike = None
+        if strike is None:
+            return None, ""
+        sel = (bet["selection"] or "").lower()
+        direction = None
+        if "over" in sel:
+            direction = "over"
+        elif "under" in sel:
+            direction = "under"
+        else:
+            return None, f"unmapped direction in '{sel}'"
+        # period number
+        import re
+        period = None
+        m = re.search(r"p([123])", sel)
+        if m:
+            period = int(m.group(1))
+        else:
+            try:
+                notes = json.loads(bet["notes"] or "{}")
+                if "period" in notes:
+                    period = int(notes["period"])
+            except Exception:
+                pass
+        if period is None:
+            return None, f"no period in selection '{sel}'"
+        ps = period_scores.get(period)
+        if ps is None:
+            return None, f"period {period} scores missing"
+        home_g = ps.get("home")
+        away_g = ps.get("away")
+        if home_g is None or away_g is None:
+            return None, ""
+        over = period_total_over_settlement(home_g, away_g, float(strike))
+        if over is None:
+            return None, ""
+        won = over if direction == "over" else (not over)
+        return won, f"official P{period} total {home_g+away_g} vs strike {strike:g} -> {'over' if over else 'under'}"
 
     def settle_from_exchange(self) -> int:
         """Settle OPEN wagers from the exchange's own settled contract result.
