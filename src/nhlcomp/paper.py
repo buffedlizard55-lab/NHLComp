@@ -176,10 +176,12 @@ class PaperEngine:
         self.store = store
         self.actor = actor
         self._depth_used: dict[tuple[str, str, str], float] | None = None
-        #: contracts whose book level was already exhausted when a rule asked for it.  The
-        #: pipeline turns these into one irregularity per contract, so a blocked wager is
+        #: book levels a rule asked for and could not get, keyed by ``(contract, entry ts)``:
+        #: one contract can be blocked at two entry points, and collapsing them would
+        #: under-report the blocked opportunity set.  The pipeline turns each into one
+        #: irregularity naming which of the two causes it was, so a blocked wager is
         #: visible rather than merely absent.
-        self.depth_blocked: dict[str, dict[str, Any]] = {}
+        self.depth_blocked: dict[tuple[str, str], dict[str, Any]] = {}
         #: book levels refused because the two sides were quoted implausibly far apart
         self.wide_book_skipped: dict[str, dict[str, Any]] = {}
 
@@ -289,12 +291,25 @@ class PaperEngine:
             # Nothing left at this book level.  This is not "no signal": it is a signal the
             # venue could not have filled, and it is recorded as such so a reader can see
             # how much of a strategy's opportunity set is blocked by real, finite depth.
+            #
+            # *Why* it could not fill is recorded too, because the two causes are not the
+            # same finding and blaming the wrong one would be a lie about the data:
+            #
+            #   ``no_depth_published``  the entry point carries no depth evidence at all
+            #                           (a candle whose volume is zero, say) -- a limitation
+            #                           of what the venue published, not of the strategies;
+            #   ``already_claimed``     the level did publish depth and earlier wagers in the
+            #                           same run took it -- the shared-book effect.
+            #
+            # Keyed by (contract, timestamp): one contract can be blocked at two entry
+            # points, and collapsing them would under-report the blocked opportunity set.
             contract = sig.quote.contract or sig.quote.market_key
-            entry = self.depth_blocked.setdefault(contract, {
+            reason = "already_claimed" if capacity > 0 else "no_depth_published"
+            entry = self.depth_blocked.setdefault((contract, decision_ts), {
                 "contract": contract, "side": sig.quote.side,
                 "ts": decision_ts, "capacity": capacity,
                 "already_claimed": round(capacity - remaining, 4),
-                "ask": ask, "strategies": []})
+                "reason": reason, "ask": ask, "strategies": []})
             if sig.strategy_id not in entry["strategies"]:
                 entry["strategies"].append(sig.strategy_id)
             return None
@@ -437,7 +452,9 @@ class PaperEngine:
         if state not in ("FINAL", "OFF"):
             return 0
         if home_score is None or away_score is None:
-            self.store.flag("missing_result", f"game {game_id} is {state} with no score",
+            # The wording is deliberate and shared with Verifier.check_games: the same
+            # condition must produce one queue row, not two rows saying it two ways.
+            self.store.flag("missing_result", f"game {game_id} {state} without scores",
                             severity="error", entity_type="game", entity_id=str(game_id))
             return 0
         home_won = home_score > away_score

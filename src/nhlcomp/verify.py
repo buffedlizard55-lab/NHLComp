@@ -58,7 +58,7 @@ class Verifier:
             if g["state"] in ("FINAL", "OFF"):
                 if g["home_score"] is None or g["away_score"] is None:
                     counts["missing_result"] += 1
-                    self.store.flag("missing_result", f"game {gid} FINAL without scores",
+                    self.store.flag("missing_result", f"game {gid} {g['state']} without scores",
                                     entity_type="game", entity_id=gid, severity="error")
                 elif g["home_score"] == g["away_score"]:
                     counts["tied_final"] += 1
@@ -855,6 +855,18 @@ class Verifier:
                         "cross_validate_puck_line_settlements, cross_validate_totals_settlements, "
                         "cross_validate_overtime_settlements -- which found 0 conflicts on the "
                         "same ledger.")},
+        {"kind": "depth_exhausted_by_earlier_wagers",
+         "where": "detail LIKE '%published depth 0 contract(s)%'",
+         "resolution": ("Self-inflicted mislabel, resolved not deleted.  The first version of the "
+                        "shared-depth book reported every unfillable signal as 'an earlier wager "
+                        "took this level', including entry points that published no depth at all "
+                        "(a candle that traded nothing) -- so the row read 'published depth 0 "
+                        "contract(s) ... was already fully claimed (0) by earlier wagers', which "
+                        "contradicts itself and blames the strategies for a gap in the venue's "
+                        "data.  Fixed on 2026-09-22: a zero-depth entry point is now recorded as "
+                        "no_depth_evidence_at_entry and this kind is kept for levels that really "
+                        "were shared.  The correct flag is raised afresh on the next run for every "
+                        "entry point that still publishes nothing.")},
         {"kind": "source_disagreement",
          "where": ("sources='polymarket.gamma,kalshi.trade_api' AND "
                    "detail LIKE '%while kalshi asks%'"),

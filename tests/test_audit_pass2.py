@@ -127,8 +127,31 @@ class TestSharedBookDepth(Base):
         rows = self.store.query("SELECT filled_size FROM bets")
         self.assertEqual(len(rows), 1)
         self.assertAlmostEqual(float(rows[0]["filled_size"]), 10.0)
-        self.assertIn("K-A", eng.depth_blocked)
-        self.assertEqual(eng.depth_blocked["K-A"]["strategies"], ["BBB"])
+        self.assertIn(("K-A", ts), eng.depth_blocked)
+        blocked = eng.depth_blocked[("K-A", ts)]
+        self.assertEqual(blocked["strategies"], ["BBB"])
+        self.assertEqual(blocked["reason"], "already_claimed")
+
+    def test_a_zero_depth_entry_point_is_not_blamed_on_earlier_wagers(self):
+        # a candle that published no traded volume has no depth to claim, and saying
+        # "an earlier wager took it" would be a false explanation of the same non-event
+        f = simulate_fill(50.0, 0.50, None, traded_volume=0.0, remaining=0.0)
+        self.assertEqual(f.contracts_filled, 0.0)
+        self.assertEqual(f.depth_remaining_after, 0.0)
+        self.assertEqual(evidence_depth(None, 0.0)[0], 0.0)
+
+    def test_two_entry_points_on_one_contract_are_two_blocked_levels(self):
+        self.add_game(1, game_type=REGULAR_SEASON)
+        eng = PaperEngine(self.store)
+        # one strategy may only hold one bet per (game, market, selection), so each entry
+        # point is worked by its own pair of rules
+        for ts, (first, second) in (("2026-01-01T00:00:00Z", ("AAA", "BBB")),
+                                    ("2026-01-01T06:00:00Z", ("CCC", "DDD"))):
+            self.assertIsNotNone(eng.place(self._sig(strategy_id=first), decision_ts=ts,
+                                           test_mode="FORWARD TEST"))
+            self.assertIsNone(eng.place(self._sig(strategy_id=second), decision_ts=ts,
+                                        test_mode="FORWARD TEST"))
+        self.assertEqual(len(eng.depth_blocked), 2)   # two levels, not one merged contract
 
     def test_a_later_quote_at_a_new_timestamp_is_a_fresh_book_level(self):
         self.add_game(1, game_type=REGULAR_SEASON)
@@ -338,6 +361,77 @@ class TestNicknameMapping(unittest.TestCase):
         self.assertIsNone(self.verifier._polymarket_team_abbrev("Mammoths"))
         self.assertIsNone(self.verifier._polymarket_team_abbrev(""))
         self.assertIsNone(self.verifier._polymarket_team_abbrev(None))
+
+
+# ------------------------------------------------------- 3b. flag lifecycle
+class TestFlagLifecycle(Base):
+    """A closed flag must come back if the condition behind it returns.
+
+    ``INSERT OR IGNORE`` on ``(kind, entity_type, entity_id, detail)`` is what keeps a
+    recurring check from writing a row per run, but it also means a resolved row would
+    swallow the identical recurrence: the queue would show "resolved" while the problem was
+    happening again.  Re-opening touches only the status, so the first-seen timestamp and the
+    original detail survive as the record of when it was first seen.
+    """
+
+    def test_a_resolved_flag_reopens_when_the_same_condition_returns(self):
+        self.assertTrue(self.store.flag("crossed_book", "bid 0.6 above ask 0.4",
+                                        entity_type="quote", entity_id="K-A"))
+        row = self.store.one("SELECT id, status FROM irregularities WHERE kind='crossed_book'")
+        self.assertEqual(row["status"], "open")
+        self.store.resolve_irregularity(int(row["id"]), "fixed by re-ingest")
+        self.assertEqual(self.store.one(
+            "SELECT status FROM irregularities WHERE kind='crossed_book'")["status"], "resolved")
+
+        self.assertTrue(self.store.flag("crossed_book", "bid 0.6 above ask 0.4",
+                                        entity_type="quote", entity_id="K-A"),
+                        "the recurrence must be reported, not swallowed")
+        after = self.store.one("SELECT status, resolution FROM irregularities"
+                               " WHERE kind='crossed_book'")
+        self.assertEqual(after["status"], "open")
+        self.assertIsNone(after["resolution"])
+        self.assertEqual(len(self.store.query("SELECT 1 FROM irregularities")), 1,
+                         "re-opening must not add a second row for the same finding")
+
+    def test_reopening_is_recorded_in_the_audit_log(self):
+        self.store.flag("duplicate_bet", "strategy X holds two Over 5.5 wagers")
+        rid = self.store.one("SELECT id FROM irregularities WHERE kind='duplicate_bet'")["id"]
+        self.store.resolve_irregularity(int(rid), "false positive: the strike was not in the key")
+        self.store.flag("duplicate_bet", "strategy X holds two Over 5.5 wagers")
+        acts = [r["action"] for r in self.store.query("SELECT action FROM audit_log")]
+        self.assertIn("REOPEN_IRREGULARITY", acts)
+
+    def test_a_still_open_flag_is_not_rewritten(self):
+        self.store.flag("missing_result", "game 99 is FINAL with no score", entity_id="99")
+        first = self.store.one("SELECT ts_utc FROM irregularities WHERE kind='missing_result'")
+        self.assertFalse(self.store.flag("missing_result", "game 99 is FINAL with no score",
+                                         entity_id="99"),
+                         "a second run of the same check is not a new finding")
+        again = self.store.one("SELECT ts_utc, status FROM irregularities"
+                               " WHERE kind='missing_result'")
+        self.assertEqual(again["ts_utc"], first["ts_utc"], "first-sighted timestamp is kept")
+        self.assertEqual(again["status"], "open")
+
+
+class TestOneFindingOneRow(Base):
+    """A condition seen by two components must be one queue row, not two wordings.
+
+    ``settle_game`` (the paper engine, at settlement time) and ``check_games`` (the verifier)
+    both notice a final game with no score.  Their unique key includes the detail text, so a
+    different sentence is a *different row* -- two rows for one fact, and only the verifier's
+    would be re-derived on the next check.  The wording is therefore shared.
+    """
+
+    def test_a_scoreless_final_game_is_one_finding_whichever_check_saw_it(self):
+        self.add_game(1, game_type=REGULAR_SEASON, state="FINAL")   # no scores at all
+        engine = PaperEngine(self.store)
+        Verifier(self.store).check_games()
+        engine.settle_game(1, home_id=10, away_id=24, home_score=None, away_score=None,
+                           state="FINAL", last_period_type=None)
+        rows = self.store.query(
+            "SELECT kind, detail FROM irregularities WHERE kind='missing_result'")
+        self.assertEqual(len(rows), 1, [dict(r) for r in rows])
+        self.assertIn("FINAL without scores", rows[0]["detail"])
 
 
 # ------------------------------------------------------------------------- 5. season scope

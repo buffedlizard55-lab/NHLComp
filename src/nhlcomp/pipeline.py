@@ -1415,17 +1415,34 @@ class Pipeline:
         # The published depth of a book level is shared by every rule that trades it, so a
         # rule that asks for more contracts than are left is *blocked by finite liquidity*,
         # and that is recorded once per contract with the size that was already claimed.
-        for contract, info in sorted(self.paper.depth_blocked.items()):
-            self.store.flag(
-                "depth_exhausted_by_earlier_wagers",
-                f"{contract}: published depth {info['capacity']:g} contract(s) at {info['ts']} "
-                f"was already fully claimed ({info['already_claimed']:g}) by earlier wagers, so "
-                f"{len(info['strategies'])} further signal(s) could not be filled "
-                f"({', '.join(info['strategies'][:6])}"
-                + (", …" if len(info["strategies"]) > 6 else "") + "). No wager is recorded for "
-                "them; the price was real, the size was not there.",
-                severity="warn", entity_type="market", entity_id=contract,
-                sources="kalshi.trade_api")
+        for (contract, ts), info in sorted(self.paper.depth_blocked.items()):
+            # Two different findings wear the same "no wager" shape and must not be reported
+            # as one: an entry point that published no depth at all is a gap in what the
+            # venue publishes, while a level that earlier wagers took is the shared-book
+            # effect this engine exists to model.  The flag kind names which one it is.
+            blocked_by = ", ".join(info["strategies"][:6]) + (
+                ", …" if len(info["strategies"]) > 6 else "")
+            if info.get("reason") == "no_depth_published":
+                self.store.flag(
+                    "no_depth_evidence_at_entry",
+                    f"{contract}: the entry point at {ts} publishes no depth at all (capacity "
+                    f"{info['capacity']:g} contract(s): no offer size and no traded volume), so "
+                    f"{len(info['strategies'])} signal(s) could not be filled ({blocked_by}). "
+                    "No wager is recorded for them, and nothing was assumed in its place: with "
+                    "no published size and no traded volume there is no evidence any contract "
+                    "could have been bought at that price.",
+                    severity="warn", entity_type="market", entity_id=f"{contract}@{ts}",
+                    sources="kalshi.candles")
+            else:
+                self.store.flag(
+                    "depth_exhausted_by_earlier_wagers",
+                    f"{contract}: published depth {info['capacity']:g} contract(s) at {ts} was "
+                    f"already fully claimed ({info['already_claimed']:g}) by earlier wagers, so "
+                    f"{len(info['strategies'])} further signal(s) could not be filled "
+                    f"({blocked_by}). No wager is recorded for them; the price was real, the "
+                    "size was not there.",
+                    severity="warn", entity_type="market", entity_id=f"{contract}@{ts}",
+                    sources="kalshi.trade_api")
         for contract, info in sorted(self.paper.wide_book_skipped.items()):
             self.store.flag(
                 "wide_book_no_entry",
@@ -1439,7 +1456,12 @@ class Pipeline:
         self.store.commit()
         self.report["placed"] = placed
         self.report["non_executable_signals"] = skipped
-        self.report["depth_blocked_contracts"] = len(self.paper.depth_blocked)
+        levels = list(self.paper.depth_blocked.values())
+        self.report["depth_blocked_levels"] = len(levels)
+        self.report["depth_blocked_no_evidence_levels"] = sum(
+            1 for v in levels if v.get("reason") == "no_depth_published")
+        self.report["depth_blocked_shared_levels"] = sum(
+            1 for v in levels if v.get("reason") == "already_claimed")
         self.report["wide_book_refusals"] = len(self.paper.wide_book_skipped)
         self.report["forward_quotes_out_of_season_scope"] = out_of_scope
         self.log(f"forward: {placed}"

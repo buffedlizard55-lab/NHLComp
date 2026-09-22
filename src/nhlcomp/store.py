@@ -1060,7 +1060,7 @@ class Store:
     # ------------------------------------------------------------- irregularities
     def flag(self, kind: str, detail: str, *, severity: str = "warn", entity_type: str | None = None,
              entity_id: str | None = None, sources: str | None = None,
-             auto_corrected: int = 0) -> bool:
+             auto_corrected: int = 0, actor: str = "flag") -> bool:
         """Record an irregularity.  Never auto-correct silently: auto_corrected must be
         accompanied by a resolution note in the caller's own audit entry.
 
@@ -1071,19 +1071,42 @@ class Store:
         forever, which is exactly what happened to the two ``duplicate_game`` rows left over
         from the split-squad matching bug.  See ``Verifier.reconcile_stale_flags``, which acts
         on this and closes such rows with a resolution note rather than deleting them.
+
+        If that row was *closed* and the identical condition is seen again, the row is
+        re-opened (audited as ``REOPEN_IRREGULARITY`` under ``actor``) instead of being
+        swallowed: a recurring problem is not a resolved one.
         """
+        et, eid = entity_type or "", entity_id or ""
         cur = self.execute(
             """INSERT OR IGNORE INTO irregularities
                (ts_utc, kind, severity, entity_type, entity_id, detail, sources, auto_corrected)
                VALUES(?,?,?,?,?,?,?,?)""",
             # empty string rather than NULL: SQLite treats NULLs as distinct in UNIQUE
             # constraints, which would let the same irregularity be recorded repeatedly.
-            (utcnow(), kind, severity, entity_type or "", entity_id or "", detail, sources,
-             auto_corrected),
+            (utcnow(), kind, severity, et, eid, detail, sources, auto_corrected),
         )
+        reopened = 0
+        if cur.rowcount == 0:
+            # The identical row is already there.  If it was closed -- reconciled as stale
+            # when the condition went away, or retired as a false positive -- it has to come
+            # back when the condition does, or the queue would quietly forget a problem it
+            # had already reported once.  Only the status is touched: the original detail and
+            # first-seen timestamp stay as the record of when it was first observed.
+            prev = self.one(
+                """SELECT id, status FROM irregularities
+                    WHERE kind=? AND entity_type=? AND entity_id=? AND detail=?""",
+                (kind, et, eid, detail))
+            if prev and prev["status"] != "open":
+                self.execute(
+                    "UPDATE irregularities SET status='open', resolution=NULL, resolved_at=NULL"
+                    " WHERE id=?", (prev["id"],))
+                self.audit(actor, "REOPEN_IRREGULARITY", kind,
+                           json.dumps({"id": prev["id"], "entity_id": eid, "was": prev["status"],
+                                       "detail": detail[:300]}))
+                reopened = 1
         self.commit()
-        self.flag_seen.add((kind, entity_id or ""))
-        return cur.rowcount > 0
+        self.flag_seen.add((kind, eid))
+        return cur.rowcount > 0 or bool(reopened)
 
     def resolve_irregularity(self, irr_id: int, resolution: str, status: str = "resolved") -> None:
         self.execute(
