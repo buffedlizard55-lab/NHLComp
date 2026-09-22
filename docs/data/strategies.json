@@ -22,7 +22,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_REST_DAYS",
@@ -47,7 +48,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_STREAK_LOSSES",
@@ -72,7 +74,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_G4_IN_6",
@@ -97,7 +100,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_G3_IN_4",
@@ -122,7 +126,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_STREAK_LOSSES",
@@ -147,7 +152,8 @@
   "bankroll": 954.9375,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_STREAK_WINS",
@@ -169,10 +175,11 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 973.43,
+  "bankroll": 1024.608,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_GAMES_LAST_7",
@@ -194,10 +201,11 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 736.5,
+  "bankroll": 729.92,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_STREAK_LOSSES",
@@ -219,10 +227,11 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 855.25,
+  "bankroll": 850.4599999999999,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_ROAD_TRIP_LEN",
@@ -247,7 +256,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_EXP_GOALS",
@@ -269,10 +279,11 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 762.37,
+  "bankroll": 756.75,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_ROAD_TRIP_LEN",
@@ -297,7 +308,8 @@
   "bankroll": 916.7775,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_B2B_FADE",
@@ -322,7 +334,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_B2B_HOME_FADE",
@@ -347,7 +360,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_G3IN4",
@@ -372,7 +386,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_ROADTRIP_END",
@@ -394,10 +409,11 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 912.1800000000001,
+  "bankroll": 907.56,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PACE_MISMATCH",
@@ -422,7 +438,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_REST_EDGE",
@@ -447,7 +464,8 @@
   "bankroll": 963.28,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_OT_HANGOVER",
@@ -472,7 +490,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_POISSON_ML",
@@ -494,10 +513,11 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 840.1875,
+  "bankroll": 881.3126,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_ELO_ML",
@@ -519,10 +539,11 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 716.78,
+  "bankroll": 803.9283999999999,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_HOMEICE_STRONG",
@@ -544,10 +565,11 @@
   "created_at": "2026-09-20T20:38:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 919.1800000000001,
+  "bankroll": 966.5849,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GOALIE_EDGE",
@@ -572,7 +594,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GOALIE_NEWS",
@@ -597,7 +620,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_LINE_COMBO",
@@ -622,7 +646,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PROP_EDGE",
@@ -647,7 +672,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_SPECIAL_TEAMS",
@@ -672,7 +698,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_EDGE_TRACKING",
@@ -697,7 +724,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_WEATHER_OUTDOOR",
@@ -722,7 +750,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_LIVE_INGAME",
@@ -747,7 +776,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_BET",
@@ -772,7 +802,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_OT_SURVIVAL",
@@ -797,7 +828,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_INJURY_IMPACT",
@@ -822,7 +854,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_PK_PCT_L10",
@@ -844,10 +877,11 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 741.02,
+  "bankroll": 734.5,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_MKT_CLOSE_HOME_MID",
@@ -872,7 +906,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_MKT_CLOSE_HOME_MID",
@@ -894,10 +929,11 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 922.4938,
+  "bankroll": 992.0119,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_G3_IN_4_AND_AWAY_G4_IN_",
@@ -922,7 +958,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_REST_DAYS",
@@ -944,10 +981,11 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "candidate",
   "starting_bankroll": 1000.0,
-  "bankroll": 736.5,
+  "bankroll": 729.92,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_G3_IN_4_AND_AWAY_G4_IN_",
@@ -972,7 +1010,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_AWAY_G4_IN_6_AND_AWAY_PREV_O",
@@ -997,7 +1036,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_G4_IN_6_AND_AWAY_PREV_O",
@@ -1022,7 +1062,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_G3_IN_4_AND_HOME_PREV_S",
@@ -1047,7 +1088,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GEN_HOME_G4_IN_6_AND_AWAY_G5_IN_",
@@ -1072,7 +1114,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GOALIE_EDGE",
@@ -1097,7 +1140,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GOALIE_FATIGUE",
@@ -1122,7 +1166,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_SPECIAL_TEAMS",
@@ -1147,7 +1192,8 @@
   "bankroll": 963.28,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_SHOT_SHARE",
@@ -1172,7 +1218,8 @@
   "bankroll": 942.6,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PDO_REGRESSION",
@@ -1194,10 +1241,11 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 912.1800000000001,
+  "bankroll": 907.56,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_EDGE_TRACKING",
@@ -1222,7 +1270,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_LIVE_INGAME",
@@ -1247,7 +1296,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_BET",
@@ -1272,7 +1322,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_STEAM_FOLLOW",
@@ -1297,7 +1348,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_STEAM_FADE",
@@ -1322,7 +1374,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_HOME_FAV",
@@ -1344,10 +1397,11 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 921.73,
+  "bankroll": 978.1886000000001,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_HOME_DOG",
@@ -1369,10 +1423,11 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 932.04,
+  "bankroll": 1002.4667000000001,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_BOOK_VS_EXCHANGE",
@@ -1394,10 +1449,11 @@
   "created_at": "2026-09-20T23:29:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 980.0,
+  "bankroll": 978.95,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GOALIE_NEWS",
@@ -1422,7 +1478,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_INJURY_IMPACT",
@@ -1444,10 +1501,11 @@
   "created_at": "2026-09-20T23:37:07Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 840.1875,
+  "bankroll": 881.3126,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_TOTALS_OVER",
@@ -1472,7 +1530,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_TOTALS_UNDER",
@@ -1494,10 +1553,11 @@
   "created_at": "2026-09-21T03:00:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 977.54,
+  "bankroll": 976.8,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_TOTALS_OVER_TIGHT",
@@ -1519,10 +1579,11 @@
   "created_at": "2026-09-21T03:00:09Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 934.45,
+  "bankroll": 932.3199999999999,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PUCK_LINE_MODEL_COVER",
@@ -1544,10 +1605,11 @@
   "created_at": "2026-09-21T20:38:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 997.8674,
+  "bankroll": 997.7374,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PUCK_LINE_DOG_PLUS",
@@ -1569,10 +1631,11 @@
   "created_at": "2026-09-21T20:38:42Z",
   "status": "active",
   "starting_bankroll": 1000.0,
-  "bankroll": 955.0,
+  "bankroll": 1053.26,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PUCK_LINE_HOME_25",
@@ -1597,7 +1660,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_OT_MODEL_YES",
@@ -1622,7 +1686,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_OT_MODEL_NO",
@@ -1647,7 +1712,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_TEAM_TOTAL_OVER",
@@ -1672,7 +1738,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_TEAM_TOTAL_UNDER",
@@ -1697,7 +1764,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_REGULATION",
@@ -1722,7 +1790,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_ML_1P",
@@ -1747,7 +1816,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_ML_2P",
@@ -1772,7 +1842,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_ML_3P",
@@ -1797,7 +1868,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_TOTAL_1P_OVER",
@@ -1822,7 +1894,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_TOTAL_2P_OVER",
@@ -1847,7 +1920,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_TOTAL_3P_OVER",
@@ -1872,7 +1946,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_TOTALS_ALT_55_OVER",
@@ -1897,7 +1972,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_TOTALS_ALT_75_UNDER",
@@ -1922,7 +1998,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PUCK_ALT_25",
@@ -1947,7 +2024,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PLAYER_GOAL",
@@ -1972,7 +2050,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PLAYER_ANYGOAL",
@@ -1997,7 +2076,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PLAYER_ASSIST",
@@ -2022,7 +2102,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PLAYER_POINTS",
@@ -2047,7 +2128,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PLAYER_FIRSTGOAL",
@@ -2072,7 +2154,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GOALIE_SAVES_OVER",
@@ -2097,7 +2180,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_GOALIE_SAVES_UNDER",
@@ -2122,7 +2206,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_FUTURES_CUP",
@@ -2147,7 +2232,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_FUTURES_DIVISION",
@@ -2172,7 +2258,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_LIVE_MONEYLINE",
@@ -2197,7 +2284,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_LIVE_TOTALS",
@@ -2222,7 +2310,8 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  },
  {
   "strategy_id": "NHL_PERIOD_SPREAD",
@@ -2247,6 +2336,7 @@
   "bankroll": 1000.0,
   "test_mode": "FORWARD TEST",
   "leakage_checked": 1,
-  "provenance": "MODEL"
+  "provenance": "MODEL",
+  "game_types": "[2, 3]"
  }
 ]

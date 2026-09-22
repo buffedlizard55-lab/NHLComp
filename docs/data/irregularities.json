@@ -1,5 +1,103 @@
 [
  {
+  "id": 601,
+  "ts_utc": "2026-09-22T04:00:32Z",
+  "kind": "clv_unavailable_no_side",
+  "severity": "info",
+  "entity_type": "bet",
+  "entity_id": "NHL_TOTALS_UNDER-v1-2026010022-total-under-6.5",
+  "detail": "bet NHL_TOTALS_UNDER-v1-2026010022-total-under-6.5 bought the NO side of its contract; kalshi's candlestick history publishes the YES bid/ask only, so there is no timestamped closing price for the side that was bought and no CLV is reported for it (1 - yes_close is not assumed)",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 602,
+  "ts_utc": "2026-09-22T04:00:32Z",
+  "kind": "clv_unavailable_no_side",
+  "severity": "info",
+  "entity_type": "bet",
+  "entity_id": "NHL_PUCK_LINE_DOG_PLUS-v1-2026010019-puck_line-home_no_cover-1.5",
+  "detail": "bet NHL_PUCK_LINE_DOG_PLUS-v1-2026010019-puck_line-home_no_cover-1.5 bought the NO side of its contract; kalshi's candlestick history publishes the YES bid/ask only, so there is no timestamped closing price for the side that was bought and no CLV is reported for it (1 - yes_close is not assumed)",
+  "sources": null,
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 596,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR02TORSJ-TOR1",
+  "detail": "KXNHLSPREAD-26APR02TORSJ-TOR1: published depth 0 contract(s) at 1775181600 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 597,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR04WPGCBJ-WPG1",
+  "detail": "KXNHLSPREAD-26APR04WPGCBJ-WPG1: published depth 0 contract(s) at 1775343600 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 598,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26APR05FLAPIT-FLA2",
+  "detail": "KXNHLSPREAD-26APR05FLAPIT-FLA2: published depth 0 contract(s) at 1775415600 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_ALT_25). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 599,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26MAR24TORBOS-TOR1",
+  "detail": "KXNHLSPREAD-26MAR24TORBOS-TOR1: published depth 0 contract(s) at 1774393200 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_LINE_MODEL_COVER). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
+  "id": 600,
+  "ts_utc": "2026-09-22T04:00:28Z",
+  "kind": "depth_exhausted_by_earlier_wagers",
+  "severity": "warn",
+  "entity_type": "market",
+  "entity_id": "KXNHLSPREAD-26MAR30TORANA-TOR2",
+  "detail": "KXNHLSPREAD-26MAR30TORANA-TOR2: published depth 0 contract(s) at 1774922400 was already fully claimed (0) by earlier wagers, so 1 further signal(s) could not be filled (NHL_PUCK_ALT_25). No wager is recorded for them; the price was real, the size was not there.",
+  "sources": "kalshi.trade_api",
+  "auto_corrected": 0,
+  "status": "open",
+  "resolution": null,
+  "resolved_at": null
+ },
+ {
   "id": 327,
   "ts_utc": "2026-09-21T20:38:56Z",
   "kind": "duplicate_bet",
@@ -9,9 +107,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025020993",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 328,
@@ -23,9 +121,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 3 bets on total/over for game 2025021008",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 341,
@@ -37,9 +135,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025020964",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 342,
@@ -51,9 +149,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025020965",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 343,
@@ -65,9 +163,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025020975",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 344,
@@ -79,9 +177,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025020976",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 345,
@@ -93,9 +191,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025020984",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 346,
@@ -107,9 +205,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025020993",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 347,
@@ -121,9 +219,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 4 bets on total/over for game 2025021008",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 348,
@@ -135,9 +233,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021019",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 349,
@@ -149,9 +247,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 3 bets on total/over for game 2025021026",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 391,
@@ -219,9 +317,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021052",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 221,
@@ -233,9 +331,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021044",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 222,
@@ -247,9 +345,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 4 bets on total/over for game 2025021052",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 223,
@@ -261,9 +359,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021053",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 224,
@@ -275,9 +373,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021070",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 225,
@@ -289,9 +387,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021071",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 226,
@@ -303,9 +401,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021079",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 227,
@@ -317,9 +415,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021086",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 228,
@@ -331,9 +429,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021101",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 229,
@@ -345,9 +443,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021103",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 206,
@@ -359,9 +457,9 @@
   "detail": "13 injury entr(ies) could not be mapped to a team id: Adam Gaudette (SJ), Cam Lund (SJ), Corey Perry (LA), Dominic James (TB), Jan Jenik (LA), Johnathan Kovacevic (NJ), Kevin Fiala (LA), Kyle Keyser (SJ) ...",
   "sources": "espn.nhl_api",
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "Self-inflicted, resolved not deleted. The NHL API and ESPN's injury feed do not agree on abbreviation style: the NHL returns LAK/NJD/SJS/TBL and ESPN returns LA/NJ/SJ/TB. Every ESPN injury row for those four clubs failed to resolve, so four franchises had no injury context feeding the injury-gated strategies at all while this queue recorded 11-13 unmappable entries. Fixed on 2026-09-22 by the ABBREV_ALIASES table in store.py, applied only when the abbreviation is not already a team in its own right. Re-probe the flag by re-ingesting: if any entry still cannot be mapped, _injury_context raises a fresh flag with the count.",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 117,
@@ -373,9 +471,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021125",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 118,
@@ -387,9 +485,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021142",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 119,
@@ -401,9 +499,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021163",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 120,
@@ -415,9 +513,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021172",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 121,
@@ -429,9 +527,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021177",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 122,
@@ -443,9 +541,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021184",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 128,
@@ -457,9 +555,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021115",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 129,
@@ -471,9 +569,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021119",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 130,
@@ -485,9 +583,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021122",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 131,
@@ -499,9 +597,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 4 bets on total/over for game 2025021125",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 132,
@@ -513,9 +611,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021128",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 133,
@@ -527,9 +625,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021131",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 134,
@@ -541,9 +639,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021141",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 135,
@@ -555,9 +653,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 3 bets on total/over for game 2025021142",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 136,
@@ -569,9 +667,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021143",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 137,
@@ -583,9 +681,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021153",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 138,
@@ -597,9 +695,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021158",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 139,
@@ -611,9 +709,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021160",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 140,
@@ -625,9 +723,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021163",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 141,
@@ -639,9 +737,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021170",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 142,
@@ -653,9 +751,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 3 bets on total/over for game 2025021172",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 143,
@@ -667,9 +765,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021177",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 144,
@@ -681,9 +779,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 3 bets on total/over for game 2025021184",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 71,
@@ -695,9 +793,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021205",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 76,
@@ -709,9 +807,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021196",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 77,
@@ -723,9 +821,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021205",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 78,
@@ -737,9 +835,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021215",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 79,
@@ -751,9 +849,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021224",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 80,
@@ -765,9 +863,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021235",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 81,
@@ -779,9 +877,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021244",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 82,
@@ -793,9 +891,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021247",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 83,
@@ -807,9 +905,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021250",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 43,
@@ -821,9 +919,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021271",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 44,
@@ -835,9 +933,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021272",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 45,
@@ -849,9 +947,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021284",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 46,
@@ -863,9 +961,9 @@
   "detail": "NHL_TOTALS_OVER v1 has 2 bets on total/over for game 2025021301",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 47,
@@ -877,9 +975,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021261",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 48,
@@ -891,9 +989,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021268",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 49,
@@ -905,9 +1003,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021271",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 50,
@@ -919,9 +1017,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021272",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 51,
@@ -933,9 +1031,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 4 bets on total/over for game 2025021284",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 52,
@@ -947,9 +1045,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021286",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 53,
@@ -961,9 +1059,9 @@
   "detail": "NHL_TOTALS_OVER_TIGHT v1 has 2 bets on total/over for game 2025021301",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 34,
@@ -989,9 +1087,9 @@
   "detail": "11 injury entr(ies) could not be mapped to a team id: Adam Gaudette (SJ), Cam Lund (SJ), Dominic James (TB), Jan Jenik (LA), Johnathan Kovacevic (NJ), Kevin Fiala (LA), Kyle Keyser (SJ), Mats Zuccarello (LA) ...",
   "sources": "espn.nhl_api",
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "Self-inflicted, resolved not deleted. The NHL API and ESPN's injury feed do not agree on abbreviation style: the NHL returns LAK/NJD/SJS/TBL and ESPN returns LA/NJ/SJ/TB. Every ESPN injury row for those four clubs failed to resolve, so four franchises had no injury context feeding the injury-gated strategies at all while this queue recorded 11-13 unmappable entries. Fixed on 2026-09-22 by the ABBREV_ALIASES table in store.py, applied only when the abbreviation is not already a team in its own right. Re-probe the flag by re-ingesting: if any entry still cannot be mapped, _injury_context raises a fresh flag with the count.",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 3,
@@ -1003,9 +1101,9 @@
   "detail": "2024-09-22 18@13 appears 2 times",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 4,
@@ -1017,9 +1115,9 @@
   "detail": "2025-09-21 13@18 appears 2 times",
   "sources": null,
   "auto_corrected": 0,
-  "status": "open",
-  "resolution": null,
-  "resolved_at": null
+  "status": "resolved",
+  "resolution": "the check that raises this kind re-ran on every row of its table in this pass and did not reproduce this entity, so the condition no longer holds; closed rather than deleted, original detail retained",
+  "resolved_at": "2026-09-22T04:00:33Z"
  },
  {
   "id": 1,
