@@ -1,9 +1,9 @@
 [ingest] nhl.api_web: reachable (200) https://api-web.nhle.com/v1/scoreboard/now
-[ingest] nhl.stats_rest: unreachable (None) https://api.nhle.com/stats/rest/en/team
+[ingest] nhl.stats_rest: reachable (200) https://api.nhle.com/stats/rest/en/team
 [ingest] nhl.api_v1: unreachable (None) https://api.nhl.com/api/v1/teams
 [ingest] nhl.legacy_statsapi: unreachable (None) https://statsapi.web.nhl.com/api/v1/teams
 [ingest] nhl.edge: reachable (200) https://api-web.nhle.com/v1/edge/skater-speed-top-10/F/max/20252026/2
-[ingest] nhl.stats_rest_game: unreachable (None) https://api.nhle.com/stats/rest/en/goalie/summary?isAggregate=false&isGame=true&limit=1&cayenneExp=seasonId=20252026%20and%20gameTypeId=2
+[ingest] nhl.stats_rest_game: reachable (200) https://api.nhle.com/stats/rest/en/goalie/summary?isAggregate=false&isGame=true&limit=1&cayenneExp=seasonId=20252026%20and%20gameTypeId=2
 [ingest] nhl.partner_odds: reachable (200) https://api-web.nhle.com/v1/partner-game/US/now
 [ingest] kalshi.trade_api: reachable (200) https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXNHLGAME&limit=5
 [ingest] kalshi.candles: reachable (200) https://api.elections.kalshi.com/trade-api/v2/series/KXNHLGAME/markets/KXNHLGAME-26SEP19VGKLA-VGK/candlesticks?start_ts=1789603200&end_ts=1789905600&period_interval=60
@@ -31,8 +31,8 @@
   "url": "https://api-web.nhle.com/v1/scoreboard/now"
  },
  "nhl.stats_rest": {
-  "status_code": null,
-  "verdict": "unreachable",
+  "status_code": 200,
+  "verdict": "reachable",
   "url": "https://api.nhle.com/stats/rest/en/team"
  },
  "nhl.api_v1": {
@@ -51,8 +51,8 @@
   "url": "https://api-web.nhle.com/v1/edge/skater-speed-top-10/F/max/20252026/2"
  },
  "nhl.stats_rest_game": {
-  "status_code": null,
-  "verdict": "unreachable",
+  "status_code": 200,
+  "verdict": "reachable",
   "url": "https://api.nhle.com/stats/rest/en/goalie/summary?isAggregate=false&isGame=true&limit=1&cayenneExp=seasonId=20252026%20and%20gameTypeId=2"
  },
  "nhl.partner_odds": {

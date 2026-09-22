@@ -1770,9 +1770,9 @@
   },
   {
    "strategy_id": "NHL_PERIOD_ML_1P",
-   "version": 1,
-   "username": "NHL_PERIOD_ML_1P_041",
-   "name": "First-period moneyline (blocked: market empty)",
+   "version": 3,
+   "username": "NHL_PERIOD_ML_1P_068",
+   "name": "First-period ML home (uniform split model)",
    "category": "period_betting",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -1806,10 +1806,10 @@
    "rank": 38
   },
   {
-   "strategy_id": "NHL_PERIOD_ML_2P",
+   "strategy_id": "NHL_PERIOD_ML_1P_AWAY",
    "version": 1,
-   "username": "NHL_PERIOD_ML_2P_042",
-   "name": "Second-period moneyline (blocked)",
+   "username": "NHL_PERIOD_ML_1P_AWAY_069",
+   "name": "First-period ML away (uniform split)",
    "category": "period_betting",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -1843,10 +1843,10 @@
    "rank": 39
   },
   {
-   "strategy_id": "NHL_PERIOD_ML_3P",
-   "version": 1,
-   "username": "NHL_PERIOD_ML_3P_043",
-   "name": "Third-period moneyline (blocked)",
+   "strategy_id": "NHL_PERIOD_ML_2P",
+   "version": 2,
+   "username": "NHL_PERIOD_ML_2P_070",
+   "name": "Second-period ML home",
    "category": "period_betting",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -1878,6 +1878,43 @@
    "n_clv": 0,
    "starting_bankroll": 1000.0,
    "rank": 40
+  },
+  {
+   "strategy_id": "NHL_PERIOD_ML_3P",
+   "version": 2,
+   "username": "NHL_PERIOD_ML_3P_071",
+   "name": "Third-period ML home",
+   "category": "period_betting",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 41
   },
   {
    "strategy_id": "NHL_PERIOD_SPREAD",
@@ -1914,50 +1951,13 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 41
-  },
-  {
-   "strategy_id": "NHL_PERIOD_TOTAL_1P_OVER",
-   "version": 1,
-   "username": "NHL_PERIOD_TOTAL_1P_OVER_044",
-   "name": "First-period total over (blocked)",
-   "category": "period_totals",
-   "status": "active",
-   "test_mode": "FORWARD TEST",
-   "preseason_bets": 0,
-   "phases": {},
-   "n_bets": 0,
-   "n_settled": 0,
-   "wins": 0,
-   "losses": 0,
-   "pushes": 0,
-   "open": 0,
-   "win_rate": null,
-   "win_rate_ci": [
-    0.0,
-    0.0
-   ],
-   "pnl": 0,
-   "staked": 0,
-   "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
-   "max_drawdown": 0.0,
-   "volatility": null,
-   "longest_losing_streak": 0,
-   "avg_price": null,
-   "avg_edge": null,
-   "clv_beat_close": null,
-   "clv_avg": null,
-   "n_clv": 0,
-   "starting_bankroll": 1000.0,
    "rank": 42
   },
   {
-   "strategy_id": "NHL_PERIOD_TOTAL_2P_OVER",
-   "version": 1,
-   "username": "NHL_PERIOD_TOTAL_2P_OVER_045",
-   "name": "Second-period total over (blocked)",
+   "strategy_id": "NHL_PERIOD_TOTAL_1P_OVER",
+   "version": 2,
+   "username": "NHL_PERIOD_TOTAL_1P_OVER_072",
+   "name": "First-period total over 1.5 (Poisson uniform)",
    "category": "period_totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -1991,10 +1991,10 @@
    "rank": 43
   },
   {
-   "strategy_id": "NHL_PERIOD_TOTAL_3P_OVER",
+   "strategy_id": "NHL_PERIOD_TOTAL_1P_UNDER",
    "version": 1,
-   "username": "NHL_PERIOD_TOTAL_3P_OVER_046",
-   "name": "Third-period total over (blocked)",
+   "username": "NHL_PERIOD_TOTAL_1P_UNDER_073",
+   "name": "First-period total under 1.5 (forward)",
    "category": "period_totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -2026,6 +2026,80 @@
    "n_clv": 0,
    "starting_bankroll": 1000.0,
    "rank": 44
+  },
+  {
+   "strategy_id": "NHL_PERIOD_TOTAL_2P_OVER",
+   "version": 2,
+   "username": "NHL_PERIOD_TOTAL_2P_OVER_074",
+   "name": "Second-period total over 1.5",
+   "category": "period_totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 45
+  },
+  {
+   "strategy_id": "NHL_PERIOD_TOTAL_3P_OVER",
+   "version": 2,
+   "username": "NHL_PERIOD_TOTAL_3P_OVER_075",
+   "name": "Third-period total over 1.5",
+   "category": "period_totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 46
   },
   {
    "strategy_id": "NHL_PLAYER_ANYGOAL",
@@ -2062,7 +2136,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 45
+   "rank": 47
   },
   {
    "strategy_id": "NHL_PLAYER_ASSIST",
@@ -2099,7 +2173,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 46
+   "rank": 48
   },
   {
    "strategy_id": "NHL_PLAYER_FIRSTGOAL",
@@ -2136,7 +2210,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 47
+   "rank": 49
   },
   {
    "strategy_id": "NHL_PLAYER_GOAL",
@@ -2173,7 +2247,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 48
+   "rank": 50
   },
   {
    "strategy_id": "NHL_PLAYER_POINTS",
@@ -2210,7 +2284,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 49
+   "rank": 51
   },
   {
    "strategy_id": "NHL_PROP_EDGE",
@@ -2247,7 +2321,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 50
+   "rank": 52
   },
   {
    "strategy_id": "NHL_PUCK_ALT_25",
@@ -2298,7 +2372,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 51
+   "rank": 53
   },
   {
    "strategy_id": "NHL_PUCK_LINE_HOME_25",
@@ -2335,13 +2409,13 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 52
+   "rank": 54
   },
   {
    "strategy_id": "NHL_REGULATION",
-   "version": 1,
-   "username": "NHL_REGULATION_040",
-   "name": "Regulation win (blocked: no verified contracts)",
+   "version": 2,
+   "username": "NHL_REGULATION_062",
+   "name": "Regulation win home (Poisson reg prob)",
    "category": "regulation",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -2372,7 +2446,44 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 53
+   "rank": 55
+  },
+  {
+   "strategy_id": "NHL_REGULATION_AWAY",
+   "version": 1,
+   "username": "NHL_REGULATION_AWAY_063",
+   "name": "Regulation win away (Poisson reg prob)",
+   "category": "regulation",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 56
   },
   {
    "strategy_id": "NHL_REST_EDGE",
@@ -2436,7 +2547,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 54
+   "rank": 57
   },
   {
    "strategy_id": "NHL_SHOT_SHARE",
@@ -2500,7 +2611,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 55
+   "rank": 58
   },
   {
    "strategy_id": "NHL_SPECIAL_TEAMS",
@@ -2564,7 +2675,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 56
+   "rank": 59
   },
   {
    "strategy_id": "NHL_STEAM_FADE",
@@ -2615,7 +2726,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 57
+   "rank": 60
   },
   {
    "strategy_id": "NHL_STEAM_FOLLOW",
@@ -2666,13 +2777,50 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 58
+   "rank": 61
+  },
+  {
+   "strategy_id": "NHL_TEAM_TOTAL_ALT_OVER15",
+   "version": 1,
+   "username": "NHL_TEAM_TOTAL_ALT_OVER15_067",
+   "name": "Team total over 1.5 home (low line)",
+   "category": "alternate_lines",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 62
   },
   {
    "strategy_id": "NHL_TEAM_TOTAL_OVER",
-   "version": 1,
-   "username": "NHL_TEAM_TOTAL_OVER_038",
-   "name": "Team totals over (blocked: no verified market shape yet)",
+   "version": 2,
+   "username": "NHL_TEAM_TOTAL_OVER_064",
+   "name": "Team total over 2.5 home (Poisson)",
    "category": "team_totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -2703,13 +2851,50 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 59
+   "rank": 63
+  },
+  {
+   "strategy_id": "NHL_TEAM_TOTAL_OVER_AWAY",
+   "version": 1,
+   "username": "NHL_TEAM_TOTAL_OVER_AWAY_065",
+   "name": "Team total over 2.5 away (Poisson)",
+   "category": "team_totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 64
   },
   {
    "strategy_id": "NHL_TEAM_TOTAL_UNDER",
-   "version": 1,
-   "username": "NHL_TEAM_TOTAL_UNDER_039",
-   "name": "Team totals under (blocked)",
+   "version": 2,
+   "username": "NHL_TEAM_TOTAL_UNDER_066",
+   "name": "Team total under 3.5 home (Poisson, forward)",
    "category": "team_totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -2740,7 +2925,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 60
+   "rank": 65
   },
   {
    "strategy_id": "NHL_TOTALS_ALT_55_OVER",
@@ -2754,15 +2939,15 @@
    "phases": {
     "regular season": {
      "game_type": 2,
-     "bets": 102,
-     "settled": 102,
+     "bets": 133,
+     "settled": 133,
      "open": 0,
-     "wins": 50,
-     "losses": 52,
-     "pnl": -235.55,
-     "staked": 2693.98,
-     "roi": -0.0874,
-     "win_rate": 0.4902,
+     "wins": 65,
+     "losses": 68,
+     "pnl": -321.5,
+     "staked": 3478.44,
+     "roi": -0.0924,
+     "win_rate": 0.4887,
      "scored_in_competition": true
     }
    },
@@ -2791,7 +2976,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 61
+   "rank": 66
   },
   {
    "strategy_id": "NHL_TOTALS_ALT_75_UNDER",
@@ -2828,7 +3013,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 62
+   "rank": 67
   },
   {
    "strategy_id": "NHL_TOTALS_OVER",
@@ -2879,7 +3064,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 63
+   "rank": 68
   },
   {
    "strategy_id": "NHL_WEATHER_OUTDOOR",
@@ -2916,7 +3101,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 64
+   "rank": 69
   },
   {
    "strategy_id": "NHL_HOME_FAV",
@@ -2980,7 +3165,7 @@
    "clv_avg": -0.00167,
    "n_clv": 3,
    "starting_bankroll": 1000.0,
-   "rank": 65
+   "rank": 70
   },
   {
    "strategy_id": "NHL_PUCK_LINE_MODEL_COVER",
@@ -3007,15 +3192,15 @@
     },
     "regular season": {
      "game_type": 2,
-     "bets": 35,
-     "settled": 35,
+     "bets": 40,
+     "settled": 40,
      "open": 0,
-     "wins": 3,
-     "losses": 32,
-     "pnl": -448.34,
-     "staked": 602.83,
-     "roi": -0.7437,
-     "win_rate": 0.0857,
+     "wins": 4,
+     "losses": 36,
+     "pnl": -457.38,
+     "staked": 692.02,
+     "roi": -0.6609,
+     "win_rate": 0.1,
      "scored_in_competition": true
     }
    },
@@ -3044,7 +3229,7 @@
    "clv_avg": -0.00667,
    "n_clv": 3,
    "starting_bankroll": 1000.0,
-   "rank": 66
+   "rank": 71
   },
   {
    "strategy_id": "NHL_BOOK_VS_EXCHANGE",
@@ -3095,7 +3280,7 @@
    "clv_avg": -0.015,
    "n_clv": 1,
    "starting_bankroll": 1000.0,
-   "rank": 67
+   "rank": 72
   },
   {
    "strategy_id": "NHL_TOTALS_UNDER",
@@ -3146,7 +3331,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 68
+   "rank": 73
   },
   {
    "strategy_id": "NHL_INJURY_IMPACT",
@@ -3197,7 +3382,7 @@
    "clv_avg": 0.02,
    "n_clv": 2,
    "starting_bankroll": 1000.0,
-   "rank": 69
+   "rank": 74
   },
   {
    "strategy_id": "NHL_POISSON_ML",
@@ -3261,7 +3446,7 @@
    "clv_avg": 0.02,
    "n_clv": 2,
    "starting_bankroll": 1000.0,
-   "rank": 70
+   "rank": 75
   },
   {
    "strategy_id": "NHL_TOTALS_OVER_TIGHT",
@@ -3288,15 +3473,15 @@
     },
     "regular season": {
      "game_type": 2,
-     "bets": 280,
-     "settled": 280,
+     "bets": 323,
+     "settled": 323,
      "open": 0,
-     "wins": 111,
-     "losses": 169,
-     "pnl": -331.04,
-     "staked": 4829.06,
-     "roi": -0.0686,
-     "win_rate": 0.3964,
+     "wins": 133,
+     "losses": 190,
+     "pnl": -420.26,
+     "staked": 5780.0,
+     "roi": -0.0727,
+     "win_rate": 0.4118,
      "scored_in_competition": true
     }
    },
@@ -3325,7 +3510,7 @@
    "clv_avg": -0.005,
    "n_clv": 3,
    "starting_bankroll": 1000.0,
-   "rank": 71
+   "rank": 76
   },
   {
    "strategy_id": "NHL_PDO_REGRESSION",
@@ -3389,7 +3574,7 @@
    "clv_avg": -0.015,
    "n_clv": 1,
    "starting_bankroll": 1000.0,
-   "rank": 72
+   "rank": 77
   },
   {
    "strategy_id": "NHL_ROADTRIP_END",
@@ -3453,7 +3638,7 @@
    "clv_avg": -0.015,
    "n_clv": 1,
    "starting_bankroll": 1000.0,
-   "rank": 73
+   "rank": 78
   },
   {
    "strategy_id": "NHL_GEN_HOME_STREAK_LOSSES",
@@ -3517,7 +3702,7 @@
    "clv_avg": 0.0,
    "n_clv": 2,
    "starting_bankroll": 1000.0,
-   "rank": 74
+   "rank": 79
   },
   {
    "strategy_id": "NHL_GEN_HOME_EXP_GOALS",
@@ -3581,7 +3766,7 @@
    "clv_avg": -0.01333,
    "n_clv": 3,
    "starting_bankroll": 1000.0,
-   "rank": 75
+   "rank": 80
   },
   {
    "strategy_id": "NHL_GEN_HOME_PK_PCT_L10",
@@ -3645,7 +3830,7 @@
    "clv_avg": -0.00167,
    "n_clv": 3,
    "starting_bankroll": 1000.0,
-   "rank": 76
+   "rank": 81
   },
   {
    "strategy_id": "NHL_GEN_AWAY_GAMES_LAST_7",
@@ -3709,7 +3894,7 @@
    "clv_avg": -0.01125,
    "n_clv": 4,
    "starting_bankroll": 1000.0,
-   "rank": 77
+   "rank": 82
   },
   {
    "strategy_id": "NHL_GEN_AWAY_REST_DAYS",
@@ -3773,7 +3958,7 @@
    "clv_avg": -0.01125,
    "n_clv": 4,
    "starting_bankroll": 1000.0,
-   "rank": 78
+   "rank": 83
   }
  ],
  "BACKTEST": [
@@ -5905,9 +6090,9 @@
   },
   {
    "strategy_id": "NHL_PERIOD_ML_1P",
-   "version": 1,
-   "username": "NHL_PERIOD_ML_1P_041",
-   "name": "First-period moneyline (blocked: market empty)",
+   "version": 3,
+   "username": "NHL_PERIOD_ML_1P_068",
+   "name": "First-period ML home (uniform split model)",
    "category": "period_betting",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -5941,10 +6126,10 @@
    "rank": 44
   },
   {
-   "strategy_id": "NHL_PERIOD_ML_2P",
+   "strategy_id": "NHL_PERIOD_ML_1P_AWAY",
    "version": 1,
-   "username": "NHL_PERIOD_ML_2P_042",
-   "name": "Second-period moneyline (blocked)",
+   "username": "NHL_PERIOD_ML_1P_AWAY_069",
+   "name": "First-period ML away (uniform split)",
    "category": "period_betting",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -5978,10 +6163,10 @@
    "rank": 45
   },
   {
-   "strategy_id": "NHL_PERIOD_ML_3P",
-   "version": 1,
-   "username": "NHL_PERIOD_ML_3P_043",
-   "name": "Third-period moneyline (blocked)",
+   "strategy_id": "NHL_PERIOD_ML_2P",
+   "version": 2,
+   "username": "NHL_PERIOD_ML_2P_070",
+   "name": "Second-period ML home",
    "category": "period_betting",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -6013,6 +6198,43 @@
    "n_clv": 0,
    "starting_bankroll": 1000.0,
    "rank": 46
+  },
+  {
+   "strategy_id": "NHL_PERIOD_ML_3P",
+   "version": 2,
+   "username": "NHL_PERIOD_ML_3P_071",
+   "name": "Third-period ML home",
+   "category": "period_betting",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 47
   },
   {
    "strategy_id": "NHL_PERIOD_SPREAD",
@@ -6049,50 +6271,13 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 47
-  },
-  {
-   "strategy_id": "NHL_PERIOD_TOTAL_1P_OVER",
-   "version": 1,
-   "username": "NHL_PERIOD_TOTAL_1P_OVER_044",
-   "name": "First-period total over (blocked)",
-   "category": "period_totals",
-   "status": "active",
-   "test_mode": "FORWARD TEST",
-   "preseason_bets": 0,
-   "phases": {},
-   "n_bets": 0,
-   "n_settled": 0,
-   "wins": 0,
-   "losses": 0,
-   "pushes": 0,
-   "open": 0,
-   "win_rate": null,
-   "win_rate_ci": [
-    0.0,
-    0.0
-   ],
-   "pnl": 0,
-   "staked": 0,
-   "roi": null,
-   "bankroll": 1000.0,
-   "open_exposure": 0,
-   "max_drawdown": 0.0,
-   "volatility": null,
-   "longest_losing_streak": 0,
-   "avg_price": null,
-   "avg_edge": null,
-   "clv_beat_close": null,
-   "clv_avg": null,
-   "n_clv": 0,
-   "starting_bankroll": 1000.0,
    "rank": 48
   },
   {
-   "strategy_id": "NHL_PERIOD_TOTAL_2P_OVER",
-   "version": 1,
-   "username": "NHL_PERIOD_TOTAL_2P_OVER_045",
-   "name": "Second-period total over (blocked)",
+   "strategy_id": "NHL_PERIOD_TOTAL_1P_OVER",
+   "version": 2,
+   "username": "NHL_PERIOD_TOTAL_1P_OVER_072",
+   "name": "First-period total over 1.5 (Poisson uniform)",
    "category": "period_totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -6126,10 +6311,10 @@
    "rank": 49
   },
   {
-   "strategy_id": "NHL_PERIOD_TOTAL_3P_OVER",
+   "strategy_id": "NHL_PERIOD_TOTAL_1P_UNDER",
    "version": 1,
-   "username": "NHL_PERIOD_TOTAL_3P_OVER_046",
-   "name": "Third-period total over (blocked)",
+   "username": "NHL_PERIOD_TOTAL_1P_UNDER_073",
+   "name": "First-period total under 1.5 (forward)",
    "category": "period_totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -6161,6 +6346,80 @@
    "n_clv": 0,
    "starting_bankroll": 1000.0,
    "rank": 50
+  },
+  {
+   "strategy_id": "NHL_PERIOD_TOTAL_2P_OVER",
+   "version": 2,
+   "username": "NHL_PERIOD_TOTAL_2P_OVER_074",
+   "name": "Second-period total over 1.5",
+   "category": "period_totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 51
+  },
+  {
+   "strategy_id": "NHL_PERIOD_TOTAL_3P_OVER",
+   "version": 2,
+   "username": "NHL_PERIOD_TOTAL_3P_OVER_075",
+   "name": "Third-period total over 1.5",
+   "category": "period_totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 52
   },
   {
    "strategy_id": "NHL_PLAYER_ANYGOAL",
@@ -6197,7 +6456,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 51
+   "rank": 53
   },
   {
    "strategy_id": "NHL_PLAYER_ASSIST",
@@ -6234,7 +6493,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 52
+   "rank": 54
   },
   {
    "strategy_id": "NHL_PLAYER_FIRSTGOAL",
@@ -6271,7 +6530,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 53
+   "rank": 55
   },
   {
    "strategy_id": "NHL_PLAYER_GOAL",
@@ -6308,7 +6567,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 54
+   "rank": 56
   },
   {
    "strategy_id": "NHL_PLAYER_POINTS",
@@ -6345,7 +6604,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 55
+   "rank": 57
   },
   {
    "strategy_id": "NHL_PROP_EDGE",
@@ -6382,7 +6641,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 56
+   "rank": 58
   },
   {
    "strategy_id": "NHL_PUCK_LINE_DOG_PLUS",
@@ -6433,7 +6692,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 57
+   "rank": 59
   },
   {
    "strategy_id": "NHL_PUCK_LINE_HOME_25",
@@ -6470,13 +6729,13 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 58
+   "rank": 60
   },
   {
    "strategy_id": "NHL_REGULATION",
-   "version": 1,
-   "username": "NHL_REGULATION_040",
-   "name": "Regulation win (blocked: no verified contracts)",
+   "version": 2,
+   "username": "NHL_REGULATION_062",
+   "name": "Regulation win home (Poisson reg prob)",
    "category": "regulation",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -6507,13 +6766,87 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 59
+   "rank": 61
+  },
+  {
+   "strategy_id": "NHL_REGULATION_AWAY",
+   "version": 1,
+   "username": "NHL_REGULATION_AWAY_063",
+   "name": "Regulation win away (Poisson reg prob)",
+   "category": "regulation",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 62
+  },
+  {
+   "strategy_id": "NHL_TEAM_TOTAL_ALT_OVER15",
+   "version": 1,
+   "username": "NHL_TEAM_TOTAL_ALT_OVER15_067",
+   "name": "Team total over 1.5 home (low line)",
+   "category": "alternate_lines",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 63
   },
   {
    "strategy_id": "NHL_TEAM_TOTAL_OVER",
-   "version": 1,
-   "username": "NHL_TEAM_TOTAL_OVER_038",
-   "name": "Team totals over (blocked: no verified market shape yet)",
+   "version": 2,
+   "username": "NHL_TEAM_TOTAL_OVER_064",
+   "name": "Team total over 2.5 home (Poisson)",
    "category": "team_totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -6544,13 +6877,50 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 60
+   "rank": 64
+  },
+  {
+   "strategy_id": "NHL_TEAM_TOTAL_OVER_AWAY",
+   "version": 1,
+   "username": "NHL_TEAM_TOTAL_OVER_AWAY_065",
+   "name": "Team total over 2.5 away (Poisson)",
+   "category": "team_totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 0,
+   "phases": {},
+   "n_bets": 0,
+   "n_settled": 0,
+   "wins": 0,
+   "losses": 0,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": null,
+   "win_rate_ci": [
+    0.0,
+    0.0
+   ],
+   "pnl": 0,
+   "staked": 0,
+   "roi": null,
+   "bankroll": 1000.0,
+   "open_exposure": 0,
+   "max_drawdown": 0.0,
+   "volatility": null,
+   "longest_losing_streak": 0,
+   "avg_price": null,
+   "avg_edge": null,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 65
   },
   {
    "strategy_id": "NHL_TEAM_TOTAL_UNDER",
-   "version": 1,
-   "username": "NHL_TEAM_TOTAL_UNDER_039",
-   "name": "Team totals under (blocked)",
+   "version": 2,
+   "username": "NHL_TEAM_TOTAL_UNDER_066",
+   "name": "Team total under 3.5 home (Poisson, forward)",
    "category": "team_totals",
    "status": "active",
    "test_mode": "FORWARD TEST",
@@ -6581,7 +6951,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 61
+   "rank": 66
   },
   {
    "strategy_id": "NHL_TOTALS_ALT_75_UNDER",
@@ -6618,7 +6988,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 62
+   "rank": 67
   },
   {
    "strategy_id": "NHL_TOTALS_UNDER",
@@ -6669,7 +7039,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 63
+   "rank": 68
   },
   {
    "strategy_id": "NHL_WEATHER_OUTDOOR",
@@ -6706,7 +7076,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 64
+   "rank": 69
   },
   {
    "strategy_id": "NHL_STEAM_FOLLOW",
@@ -6757,7 +7127,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 65
+   "rank": 70
   },
   {
    "strategy_id": "NHL_GEN_HOME_STREAK_LOSSES",
@@ -6821,7 +7191,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 66
+   "rank": 71
   },
   {
    "strategy_id": "NHL_PUCK_ALT_25",
@@ -6872,7 +7242,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 67
+   "rank": 72
   },
   {
    "strategy_id": "NHL_STEAM_FADE",
@@ -6923,7 +7293,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 68
+   "rank": 73
   },
   {
    "strategy_id": "NHL_REST_EDGE",
@@ -6987,7 +7357,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 69
+   "rank": 74
   },
   {
    "strategy_id": "NHL_HOMEICE_STRONG",
@@ -7051,58 +7421,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 70
-  },
-  {
-   "strategy_id": "NHL_TOTALS_ALT_55_OVER",
-   "version": 1,
-   "username": "NHL_TOTALS_ALT_55_OVER_047",
-   "name": "Alternate total 5.5 over (tight line value)",
-   "category": "alternate_lines",
-   "status": "active",
-   "test_mode": "FORWARD TEST",
-   "preseason_bets": 0,
-   "phases": {
-    "regular season": {
-     "game_type": 2,
-     "bets": 102,
-     "settled": 102,
-     "open": 0,
-     "wins": 50,
-     "losses": 52,
-     "pnl": -235.55,
-     "staked": 2693.98,
-     "roi": -0.0874,
-     "win_rate": 0.4902,
-     "scored_in_competition": true
-    }
-   },
-   "n_bets": 102,
-   "n_settled": 102,
-   "wins": 50,
-   "losses": 52,
-   "pushes": 0,
-   "open": 0,
-   "win_rate": 0.4902,
-   "win_rate_ci": [
-    0.3953,
-    0.5858
-   ],
-   "pnl": -235.55,
-   "staked": 2693.98,
-   "roi": -0.0874,
-   "bankroll": 764.45,
-   "open_exposure": 0,
-   "max_drawdown": -476.9482,
-   "volatility": 27.3399,
-   "longest_losing_streak": 9,
-   "avg_price": 0.5201,
-   "avg_edge": 0.0511,
-   "clv_beat_close": null,
-   "clv_avg": null,
-   "n_clv": 0,
-   "starting_bankroll": 1000.0,
-   "rank": 71
+   "rank": 75
   },
   {
    "strategy_id": "NHL_HOME_FAV",
@@ -7166,71 +7485,58 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 72
+   "rank": 76
   },
   {
-   "strategy_id": "NHL_TOTALS_OVER_TIGHT",
+   "strategy_id": "NHL_TOTALS_ALT_55_OVER",
    "version": 1,
-   "username": "NHL_TOTALS_OVER_TIGHT_032",
-   "name": "Expected-goals model over the exchange total (2c edge)",
-   "category": "totals",
+   "username": "NHL_TOTALS_ALT_55_OVER_047",
+   "name": "Alternate total 5.5 over (tight line value)",
+   "category": "alternate_lines",
    "status": "active",
    "test_mode": "FORWARD TEST",
-   "preseason_bets": 3,
+   "preseason_bets": 0,
    "phases": {
-    "preseason": {
-     "game_type": 1,
-     "bets": 3,
-     "settled": 3,
-     "open": 0,
-     "wins": 0,
-     "losses": 3,
-     "pnl": -67.68,
-     "staked": 65.55,
-     "roi": -1.0325,
-     "win_rate": 0.0,
-     "scored_in_competition": false
-    },
     "regular season": {
      "game_type": 2,
-     "bets": 280,
-     "settled": 280,
+     "bets": 133,
+     "settled": 133,
      "open": 0,
-     "wins": 111,
-     "losses": 169,
-     "pnl": -331.04,
-     "staked": 4829.06,
-     "roi": -0.0686,
-     "win_rate": 0.3964,
+     "wins": 65,
+     "losses": 68,
+     "pnl": -321.5,
+     "staked": 3478.44,
+     "roi": -0.0924,
+     "win_rate": 0.4887,
      "scored_in_competition": true
     }
    },
-   "n_bets": 280,
-   "n_settled": 280,
-   "wins": 111,
-   "losses": 169,
+   "n_bets": 133,
+   "n_settled": 133,
+   "wins": 65,
+   "losses": 68,
    "pushes": 0,
    "open": 0,
-   "win_rate": 0.3964,
+   "win_rate": 0.4887,
    "win_rate_ci": [
-    0.3409,
-    0.4548
+    0.4053,
+    0.5728
    ],
-   "pnl": -331.04,
-   "staked": 4829.06,
-   "roi": -0.0686,
-   "bankroll": 668.96,
+   "pnl": -321.5,
+   "staked": 3478.44,
+   "roi": -0.0924,
+   "bankroll": 678.5,
    "open_exposure": 0,
-   "max_drawdown": -506.9204,
-   "volatility": 22.3337,
-   "longest_losing_streak": 13,
-   "avg_price": 0.4093,
-   "avg_edge": 0.0385,
+   "max_drawdown": -476.9482,
+   "volatility": 26.9703,
+   "longest_losing_streak": 9,
+   "avg_price": 0.5187,
+   "avg_edge": 0.051,
    "clv_beat_close": null,
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 73
+   "rank": 77
   },
   {
    "strategy_id": "NHL_SPECIAL_TEAMS",
@@ -7294,7 +7600,71 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 74
+   "rank": 78
+  },
+  {
+   "strategy_id": "NHL_TOTALS_OVER_TIGHT",
+   "version": 1,
+   "username": "NHL_TOTALS_OVER_TIGHT_032",
+   "name": "Expected-goals model over the exchange total (2c edge)",
+   "category": "totals",
+   "status": "active",
+   "test_mode": "FORWARD TEST",
+   "preseason_bets": 3,
+   "phases": {
+    "preseason": {
+     "game_type": 1,
+     "bets": 3,
+     "settled": 3,
+     "open": 0,
+     "wins": 0,
+     "losses": 3,
+     "pnl": -67.68,
+     "staked": 65.55,
+     "roi": -1.0325,
+     "win_rate": 0.0,
+     "scored_in_competition": false
+    },
+    "regular season": {
+     "game_type": 2,
+     "bets": 323,
+     "settled": 323,
+     "open": 0,
+     "wins": 133,
+     "losses": 190,
+     "pnl": -420.26,
+     "staked": 5780.0,
+     "roi": -0.0727,
+     "win_rate": 0.4118,
+     "scored_in_competition": true
+    }
+   },
+   "n_bets": 323,
+   "n_settled": 323,
+   "wins": 133,
+   "losses": 190,
+   "pushes": 0,
+   "open": 0,
+   "win_rate": 0.4118,
+   "win_rate_ci": [
+    0.3594,
+    0.4662
+   ],
+   "pnl": -420.26,
+   "staked": 5780.0,
+   "roi": -0.0727,
+   "bankroll": 579.74,
+   "open_exposure": 0,
+   "max_drawdown": -525.5826,
+   "volatility": 22.4061,
+   "longest_losing_streak": 13,
+   "avg_price": 0.4244,
+   "avg_edge": 0.039,
+   "clv_beat_close": null,
+   "clv_avg": null,
+   "n_clv": 0,
+   "starting_bankroll": 1000.0,
+   "rank": 79
   },
   {
    "strategy_id": "NHL_PUCK_LINE_MODEL_COVER",
@@ -7321,44 +7691,44 @@
     },
     "regular season": {
      "game_type": 2,
-     "bets": 35,
-     "settled": 35,
+     "bets": 40,
+     "settled": 40,
      "open": 0,
-     "wins": 3,
-     "losses": 32,
-     "pnl": -448.34,
-     "staked": 602.83,
-     "roi": -0.7437,
-     "win_rate": 0.0857,
+     "wins": 4,
+     "losses": 36,
+     "pnl": -457.38,
+     "staked": 692.02,
+     "roi": -0.6609,
+     "win_rate": 0.1,
      "scored_in_competition": true
     }
    },
-   "n_bets": 35,
-   "n_settled": 35,
-   "wins": 3,
-   "losses": 32,
+   "n_bets": 40,
+   "n_settled": 40,
+   "wins": 4,
+   "losses": 36,
    "pushes": 0,
    "open": 0,
-   "win_rate": 0.0857,
+   "win_rate": 0.1,
    "win_rate_ci": [
-    0.0296,
-    0.2238
+    0.0396,
+    0.2305
    ],
-   "pnl": -448.34,
-   "staked": 602.83,
-   "roi": -0.7437,
-   "bankroll": 551.66,
+   "pnl": -457.38,
+   "staked": 692.02,
+   "roi": -0.6609,
+   "bankroll": 542.62,
    "open_exposure": 0,
-   "max_drawdown": -477.8509,
-   "volatility": 20.082,
+   "max_drawdown": -522.6452,
+   "volatility": 22.6399,
    "longest_losing_streak": 17,
-   "avg_price": 0.2263,
-   "avg_edge": 0.0649,
+   "avg_price": 0.2265,
+   "avg_edge": 0.0641,
    "clv_beat_close": null,
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 75
+   "rank": 80
   },
   {
    "strategy_id": "NHL_GEN_AWAY_GAMES_LAST_7",
@@ -7422,7 +7792,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 76
+   "rank": 81
   },
   {
    "strategy_id": "NHL_GEN_HOME_EXP_GOALS",
@@ -7486,7 +7856,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 77
+   "rank": 82
   },
   {
    "strategy_id": "NHL_ELO_ML",
@@ -7550,7 +7920,7 @@
    "clv_avg": null,
    "n_clv": 0,
    "starting_bankroll": 1000.0,
-   "rank": 78
+   "rank": 83
   }
  ]
 }

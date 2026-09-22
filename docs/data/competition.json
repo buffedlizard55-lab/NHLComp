@@ -1,7 +1,7 @@
 {
  "FORWARD TEST": {
   "mode": "FORWARD TEST",
-  "strategies": 78,
+  "strategies": 83,
   "bets": 0,
   "settled": 0,
   "open": 0,
@@ -14,15 +14,15 @@
  },
  "BACKTEST": {
   "mode": "BACKTEST",
-  "strategies": 78,
-  "bets": 3726,
-  "settled": 3726,
+  "strategies": 83,
+  "bets": 3805,
+  "settled": 3805,
   "open": 0,
-  "wins": 1752,
-  "losses": 1974,
-  "pnl": 1547.82,
-  "staked": 118331.73,
-  "roi": 0.0131,
-  "win_rate": 0.4702
+  "wins": 1790,
+  "losses": 2015,
+  "pnl": 1363.6,
+  "staked": 120156.32,
+  "roi": 0.0113,
+  "win_rate": 0.4704
  }
 }
