@@ -24,8 +24,8 @@ forward test leaderboard (settled wagers only)
    19. NHL_GEN_AWAY_GAMES_LAST_7_001 n=4    pnl= -150.13 roi=-1.0458 dd=-150.13 wr_ci=[0.0, 0.4899]
    20. NHL_GEN_AWAY_REST_DAYS_002   n=4    pnl= -150.13 roi=-1.0458 dd=-150.13 wr_ci=[0.0, 0.4899]
 
-[BACKTEST] strategies: 78  bets: 3587  settled: 3587  open: 0
-[BACKTEST] pnl: 1771.31  staked: 115015.29  roi: 0.0154  win rate: 0.4698
+[BACKTEST] strategies: 78  bets: 3726  settled: 3726  open: 0
+[BACKTEST] pnl: 1547.82  staked: 118331.73  roi: 0.0131  win rate: 0.4702
 
 backtest leaderboard (settled wagers only)
     1. NHL_GEN_HOME_G3_IN_4_AND_AWAY_G4_IN__001 n=44   pnl=  613.09 roi=0.453 dd=-173.07 wr_ci=[0.4662, 0.7428]
@@ -50,13 +50,13 @@ backtest leaderboard (settled wagers only)
    20. NHL_SHOT_SHARE_023           n=7    pnl=  156.86 roi=0.6623 dd=-77.35 wr_ci=[0.1582, 0.7495]
 
 season phase split (the headline totals above are regular season + playoffs only)
-  [         ALL] excluded  preseason                bets=115   settled=57    open=58    pnl=  -991.94 staked=   3353.18 roi=-0.2958
+  [         ALL] excluded  preseason                bets=140   settled=57    open=83    pnl=  -991.94 staked=   3592.99 roi=-0.2761
   [    BACKTEST] excluded  preseason                bets=13    settled=13    open=0     pnl=  -112.34 staked=    660.94 roi=-0.17
-  [FORWARD TEST] excluded  preseason                bets=102   settled=44    open=58    pnl=  -879.61 staked=   2692.24 roi=-0.3267
-  [         ALL] scored   regular season           bets=3587  settled=3587  open=0     pnl=  1771.31 staked= 115015.29 roi=0.0154
-  [    BACKTEST] scored   regular season           bets=3587  settled=3587  open=0     pnl=  1771.31 staked= 115015.29 roi=0.0154
+  [FORWARD TEST] excluded  preseason                bets=127   settled=44    open=83    pnl=  -879.61 staked=   2932.05 roi=-0.3
+  [         ALL] scored   regular season           bets=3726  settled=3726  open=0     pnl=  1547.82 staked= 118331.73 roi=0.0131
+  [    BACKTEST] scored   regular season           bets=3726  settled=3726  open=0     pnl=  1547.82 staked= 118331.73 roi=0.0131
 
 market baseline (buy every side at the close, net of fees): {"home": {"n": 1312, "roi": -0.0606, "pnl": -79.5258, "avg_price": 0.5409, "hit": 0.5221, "mdd": 85.2756, "sharpe": -0.063}, "away": {"n": 1312, "roi": -0.018, "pnl": -23.5663, "avg_price": 0.4723, "hit": 0.4779, "mdd": 42.3855, "sharpe": -0.0162}}
-kalshi settled contracts: 16345  with pre-game candle: 9102
+kalshi settled contracts: 16345  with pre-game candle: 11090
 
-open irregularities: 13
+open irregularities: 18
