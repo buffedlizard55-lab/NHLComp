@@ -293,6 +293,53 @@ class TestFeedAbbreviationAliases(Base):
         self.assertIsNone(self.store.team_id_for(""))
 
 
+class TestNicknameMapping(unittest.TestCase):
+    """The second venue's outcome names must resolve to one club, or to nothing at all.
+
+    ``Utah`` is the case that forced a second rule: Polymarket names the franchise plainly
+    "Utah", and the club's full name ("Utah Mammoth") neither ends in "utah" nor is unique
+    across all franchises, so a suffix-only matcher left three comparisons unmapped.  A
+    prefix is therefore tried *after* the suffix rule and only when the suffix rule found
+    nothing -- and it still has to name exactly one active club, so "New" (three of them)
+    stays unmapped rather than becoming a coin flip.
+    """
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.store = Store(os.path.join(self.tmp.name, "t.db"))
+        self.addCleanup(self.store.close)
+        for tid, abbrev, full, active in (
+                (68, "UTA", "Utah Mammoth", 1),
+                (59, "UTA", "Utah Hockey Club", 0),      # the club's earlier name
+                (26, "LAK", "Los Angeles Kings", 1),
+                (1, "NJD", "New Jersey Devils", 1),
+                (3, "NYR", "New York Rangers", 1),
+                (2, "NYI", "New York Islanders", 1)):
+            self.store.execute(
+                "INSERT INTO teams(team_id, abbrev, full_name, active) VALUES(?,?,?,?)",
+                (tid, abbrev, full, active))
+        self.store.commit()
+        self.verifier = Verifier(self.store)
+
+    def test_a_nickname_that_is_a_suffix_of_the_full_name_resolves(self):
+        self.assertEqual(self.verifier._polymarket_team_abbrev("Kings"), "LAK")
+        self.assertEqual(self.verifier._polymarket_team_abbrev("Devils"), "NJD")
+
+    def test_a_unique_prefix_of_an_active_club_resolves(self):
+        self.assertEqual(self.verifier._polymarket_team_abbrev("Utah"), "UTA")
+
+    def test_an_ambiguous_prefix_is_left_unmapped(self):
+        # three clubs start with "New": a guess here would turn a corroboration into a
+        # fabricated disagreement, so the answer must be "unknown", not "probably"
+        self.assertIsNone(self.verifier._polymarket_team_abbrev("New"))
+
+    def test_a_nickname_that_names_nothing_is_left_unmapped(self):
+        self.assertIsNone(self.verifier._polymarket_team_abbrev("Mammoths"))
+        self.assertIsNone(self.verifier._polymarket_team_abbrev(""))
+        self.assertIsNone(self.verifier._polymarket_team_abbrev(None))
+
+
 # ------------------------------------------------------------------------- 5. season scope
 class TestSeasonScope(Base):
     def test_the_default_scope_is_regular_season_and_playoffs(self):

@@ -624,19 +624,32 @@ class Verifier:
     def _polymarket_team_abbrev(self, name: str | None) -> str | None:
         """Map a Polymarket outcome nickname ("Red Wings") to exactly one NHL abbrev.
 
-        Matched by suffix against ``teams.full_name`` among active franchises, and only when
-        the match is unique: an ambiguous nickname is left unmapped and counted, never
-        guessed, because a wrong team turns a corroboration into a fake conflict.
+        Two rules, each requiring a **unique** match among active franchises, and the second
+        only consulted when the first finds nothing:
+
+        1. **Suffix** on the full name ("Red Wings" -> Detroit Red Wings).
+        2. **Word-boundary prefix** on the full name ("Utah" -> Utah Mammoth).  This is what
+           resolves the one case the suffix rule could not: Polymarket names the Utah
+           franchise simply "Utah", and its full name is neither "Utah Hockey Club" (the
+           club's earlier name, stored inactive) nor anything ending in "utah".  A prefix is
+           only ever used when it names exactly one active club -- "New" prefixes three of
+           them and so stays unmapped, which is the point: a wrong team turns a corroboration
+           into a fake conflict.
         """
         if not name:
             return None
         want = name.strip().lower()
         if not want:
             return None
-        hits = {r["abbrev"] for r in self.store.query(
-            "SELECT abbrev, full_name FROM teams WHERE active=1")
-            if (r["full_name"] or "").lower().endswith(want)}
-        return hits.pop() if len(hits) == 1 else None
+        teams = [(r["abbrev"], (r["full_name"] or "").lower()) for r in self.store.query(
+            "SELECT abbrev, full_name FROM teams WHERE active=1")]
+        hits = {ab for ab, full in teams if full.endswith(want)}
+        if len(hits) == 1:
+            return hits.pop()
+        if hits:
+            return None      # genuinely ambiguous nickname: never guessed
+        prefix = {ab for ab, full in teams if full.startswith(want + " ")}
+        return prefix.pop() if len(prefix) == 1 else None
 
     def _kalshi_quote_for(self, game_id: Any, before_ts: str | None, *, market_type: str,
                           side: str, strike: float | None = None,
