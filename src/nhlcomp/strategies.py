@@ -129,6 +129,14 @@ class Signal:
             self.model_prob - (self.quote.ask or self.quote.mid or 0.0)
 
 
+#: NHL ``gameTypeId`` values, spelled out because a rule's scope has to be readable.
+PRESEASON = 1
+REGULAR_SEASON = 2
+PLAYOFFS = 3
+GAME_TYPE_LABELS = {PRESEASON: "preseason", REGULAR_SEASON: "regular season",
+                    PLAYOFFS: "playoffs"}
+
+
 class Strategy:
     """Base class.  Subclasses implement :meth:`evaluate`."""
 
@@ -138,6 +146,15 @@ class Strategy:
     name = "Baseline"
     category = "baseline"
     hypothesis = "None."
+    #: Which NHL season phases this rule may trade.  Default is regular season + playoffs --
+    #: the games every input in this project describes.  Preseason is excluded on evidence,
+    #: not on taste: on the 2025-26 preseason there is no priced edge to claim (62 games,
+    #: 124 settled contracts, blind buy at the close offer -9.15% ROI, favourite -1.33%,
+    #: underdog -20.0%), and the 2026-27 preseason books are largely empty (102 of 170 close
+    #: candles traded nothing at all; mean bid-ask spread 0.314 against 0.103 a year earlier).
+    #: A rule fitted on regular-season Elo and last season's team stats would be claiming a
+    #: view on a September roster it has never seen, so it does not get to trade one.
+    game_types: tuple[int, ...] = (REGULAR_SEASON, PLAYOFFS)
     data_used = "None."
     entry_rule = "None."
     price_rule = "None."
@@ -226,6 +243,10 @@ class Strategy:
             "hypothesis": self.hypothesis, "data_used": self.data_used,
             "entry_rule": self.entry_rule, "price_rule": self.price_rule,
             "settlement_rule": self.settlement_rule, "markets": self.markets,
+            # which season phases this rule is allowed to trade, as a stored column so the
+            # scope is queryable and a reader can see the rule was never let near a game it
+            # was not fitted for
+            "game_types": json.dumps(list(self.game_types)),
             # the DB column is params_json; keeping it serialized here means the same dict
             # round-trips into the ledger and back out of _hydrate unchanged
             "params_json": json.dumps(self.params, default=str, sort_keys=True),
@@ -295,7 +316,8 @@ class ThresholdStrategy(Strategy):
                        "blocked_reason": self.blocked_reason,
                        "stake_fraction": self.stake_fraction,
                        "stake_mode": self.stake_mode, "flat_pct": self.flat_pct,
-                       "quote_side": self.quote_side}
+                       "quote_side": self.quote_side,
+                       "game_types": list(self.game_types)}
         self.hypothesis = (f"When {feature} {operator} {threshold} the {bet_side} side wins more "
                            f"often than the market price implies.")
         self.entry_rule = (f"At decision time, compute {feature} from NHL schedule/results only; "

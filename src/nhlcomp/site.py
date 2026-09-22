@@ -16,7 +16,7 @@ import os
 from typing import Any, Iterable, Sequence
 
 from . import mastersite
-from .analysis import Performance
+from .analysis import COMPETITION_PHASES, Performance
 from .backtest import CAVEAT_NO_PRICE
 from .store import Store, utcnow
 
@@ -269,21 +269,42 @@ def page_dashboard(store: Store, perf: Performance, gen: str) -> str:
                 f'<div class="card"><div class="k">{e(k)}</div>'
                 f'<div class="v">{v}</div></div>' for k, v in cards) + "</div>"]
 
-    # BACKTEST and FORWARD TEST are never merged: show them side by side
+    # BACKTEST and FORWARD TEST are never merged: show them side by side.  Nor are the
+    # season phases: these two rows are the SCORED competition (regular season + playoffs).
+    # Wagers placed on preseason games are counted on their own row below, never here.
+    scored = ",".join("?" * len(COMPETITION_PHASES))
     modes = []
     for mode in ("BACKTEST", "FORWARD TEST"):
         r = store.one(
-            """SELECT COUNT(*) c, SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN 1 ELSE 0 END) settled,
+            f"""SELECT COUNT(*) c, SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN 1 ELSE 0 END) settled,
                       SUM(CASE WHEN result='OPEN' THEN 1 ELSE 0 END) open_n,
                       COALESCE(SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN pnl END),0) pnl,
                       COALESCE(SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN stake END),0) staked,
                       COALESCE(SUM(fee),0) fees,
                       SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) wins
-                 FROM bets WHERE test_mode=?""", (mode,))
+                 FROM bets WHERE test_mode=? AND COALESCE(game_type,2) IN ({scored})""",
+            (mode, *COMPETITION_PHASES))
         settled = int(r["settled"] or 0)
         modes.append([e(mode), str(r["c"]), str(settled), str(r["open_n"] or 0),
                       signed(r["pnl"]), n(r["staked"]), pct((r["pnl"] / r["staked"]) if r["staked"] else None),
                       pct((r["wins"] / settled) if settled else None), n(r["fees"])])
+    body.append("<h2>Season phase (a preseason wager is not a competition result)</h2>")
+    phase_rows = []
+    for p in perf.phase_breakdown():
+        phase_rows.append([p["mode"], e(p["phase"]),
+                           "scored" if p["scored_in_competition"] else "excluded",
+                           str(p["bets"]), str(p["settled"]), str(p["open"]),
+                           signed(p["pnl"]), n(p["staked"]), pct(p["roi"]), pct(p["win_rate"])])
+    body.append(_table("phases", ["Mode", "Phase", "In competition", "Bets", "Settled", "Open",
+                                  "P&L", "Staked", "ROI", "Win rate"], phase_rows,
+                       numeric=(3, 4, 5, 6, 7, 8, 9)))
+    body.append('<p class="small">Every wager records the NHL <code>gameTypeId</code> of the game '
+                'it was placed on (1 preseason, 2 regular season, 3 playoffs). Rules default to '
+                'trading <b>regular season and playoffs only</b>: the models here are fitted on '
+                'regular-season form, and a September preseason roster is not the roster they '
+                'rate. Wagers placed before that scope gate was added (2026-09-22) are kept in '
+                'the ledger, labelled here, and excluded from every scored number on this page.</p>')
+
     body.append("<h2>Backtest vs forward test (never merged)</h2>")
     body.append(_table("modes", ["Mode", "Bets", "Settled", "Open", "P&L", "Staked", "ROI",
                                  "Win rate", "Fees paid"], modes, numeric=(1, 2, 3, 4, 5, 6, 7, 8)))
@@ -305,7 +326,8 @@ def page_dashboard(store: Store, perf: Performance, gen: str) -> str:
                           COALESCE(SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN pnl END),0) pnl,
                           COALESCE(SUM(CASE WHEN result IN ('WIN','LOSS','PUSH') THEN stake END),0) staked,
                           SUM(CASE WHEN result='WIN' THEN 1 ELSE 0 END) wins
-                     FROM bets WHERE test_mode=? GROUP BY market ORDER BY c DESC""", (mode,)):
+                     FROM bets WHERE test_mode=? AND COALESCE(game_type,2) IN (%s)
+                     GROUP BY market ORDER BY c DESC""" % scored, (mode, *COMPETITION_PHASES)):
             settled = int(r["settled"] or 0)
             mrows.append([e(mode), e(r["market"] or "?"), str(r["c"]), str(settled),
                           str(r["open_n"] or 0), signed(r["pnl"]), n(r["staked"]),

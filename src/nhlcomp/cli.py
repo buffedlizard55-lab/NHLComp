@@ -187,6 +187,17 @@ def cmd_report(args: argparse.Namespace) -> int:
         if not shown:
             print("  (none settled yet)")
         print()
+    # Season phase.  The totals above are the SCORED competition only (regular season +
+    # playoffs).  Every wager carries the game_type of the game it was on, so wagers placed
+    # on preseason games -- a phase no rule here is fitted for -- are shown on their own line
+    # instead of being folded into a headline number they do not belong to.
+    print("season phase split (the headline totals above are regular season + playoffs only)")
+    for p in perf.phase_breakdown():
+        phase = p["phase"]
+        mark = "scored " if p["scored_in_competition"] else "excluded"
+        print(f"  [{p['mode']:>12}] {mark}  {phase:<24} bets={p['bets']:<5} settled={p['settled']:<5} "
+              f"open={p['open']:<5} pnl={p['pnl']:>9} staked={p['staked']:>10} roi={p['roi']}")
+    print()
     base = store.one("SELECT evidence FROM findings WHERE finding_id='FIND_MARKET_BASELINE'")
     if base:
         print(f"market baseline (buy every side at the close, net of fees): {base['evidence']}")

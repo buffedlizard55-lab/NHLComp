@@ -293,7 +293,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_only_b2b=0.0)",
   "supporting_data": "{\"trigger\": \"away_only_b2b=0.0\", \"feature\": \"away_only_b2b\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -316,7 +316,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_only_b2b=0.0)",
   "supporting_data": "{\"trigger\": \"away_only_b2b=0.0\", \"feature\": \"away_only_b2b\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -339,7 +339,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_only_b2b=0.0)",
   "supporting_data": "{\"trigger\": \"away_only_b2b=0.0\", \"feature\": \"away_only_b2b\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -822,7 +822,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_only_b2b=0.0)",
   "supporting_data": "{\"trigger\": \"home_only_b2b=0.0\", \"feature\": \"home_only_b2b\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-COL\", \"contract_label\": \"Colorado wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3146, \"kalshi_ask_minus_book_prob\": 0.0254}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -845,7 +845,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.225767Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_only_b2b=0.0)",
   "supporting_data": "{\"trigger\": \"home_only_b2b=0.0\", \"feature\": \"home_only_b2b\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.225767Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-MIN\", \"contract_label\": \"Minnesota wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3194, \"kalshi_ask_minus_book_prob\": 0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -868,7 +868,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_only_b2b=0.0)",
   "supporting_data": "{\"trigger\": \"home_only_b2b=0.0\", \"feature\": \"home_only_b2b\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-STL\", \"contract_label\": \"St. Louis wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.4066, \"kalshi_ask_minus_book_prob\": 0.0034}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -1351,7 +1351,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "nhl.com/stats/edge is not reachable as a plain GET and has no published API; recorded unreachable in data/probe.json. EDGE variables are not assumed predictive and cannot be sourced, so nothing is fabricated",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -1374,7 +1374,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "nhl.com/stats/edge is not reachable as a plain GET and has no published API; recorded unreachable in data/probe.json. EDGE variables are not assumed predictive and cannot be sourced, so nothing is fabricated",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -1397,7 +1397,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "nhl.com/stats/edge is not reachable as a plain GET and has no published API; recorded unreachable in data/probe.json. EDGE variables are not assumed predictive and cannot be sourced, so nothing is fabricated",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -1903,7 +1903,7 @@
   "edge": -0.30335965983493285,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.68 > required 0.33",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -1926,7 +1926,7 @@
   "edge": -0.3325567009997508,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.67 > required 0.29",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -1949,7 +1949,7 @@
   "edge": 0.042722371055008646,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.60 > required 0.59",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -2455,7 +2455,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4=0.0\", \"feature\": \"away_g3_in_4\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -2478,7 +2478,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4=0.0\", \"feature\": \"away_g3_in_4\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -2501,7 +2501,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4=0.0\", \"feature\": \"away_g3_in_4\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -3007,7 +3007,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4=0.0\", \"feature\": \"away_g3_in_4\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -3030,7 +3030,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4=0.0\", \"feature\": \"away_g3_in_4\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -3053,7 +3053,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4=0.0\", \"feature\": \"away_g3_in_4\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -3559,7 +3559,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"away_g4_in_6=0.0\", \"feature\": \"away_g4_in_6\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -3582,7 +3582,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"away_g4_in_6=0.0\", \"feature\": \"away_g4_in_6\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -3605,7 +3605,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"away_g4_in_6=0.0\", \"feature\": \"away_g4_in_6\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -4088,7 +4088,7 @@
   "edge": 0.1887368984970514,
   "stake": 33.82,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"away_games_last_7=1.0\", \"feature\": \"away_games_last_7\", \"feature_value\": 1, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-COL\", \"contract_label\": \"Colorado wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3146, \"kalshi_ask_minus_book_prob\": 0.0254}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -4111,7 +4111,7 @@
   "edge": 0.2295227466216509,
   "stake": 40.51,
   "decision_ts": "2026-09-21T22:21:22.225767Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"away_games_last_7=1.0\", \"feature\": \"away_games_last_7\", \"feature_value\": 1, \"decision_ts\": \"2026-09-21T22:21:22.225767Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-MIN\", \"contract_label\": \"Minnesota wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3194, \"kalshi_ask_minus_book_prob\": 0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -4134,7 +4134,7 @@
   "edge": 0.028843694738160397,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.41 > required 0.40",
   "supporting_data": "{\"trigger\": \"away_games_last_7=1.0\", \"feature\": \"away_games_last_7\", \"feature_value\": 1, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-STL\", \"contract_label\": \"St. Louis wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.4066, \"kalshi_ask_minus_book_prob\": 0.0034}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -4617,7 +4617,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_rest_days=157.917)",
   "supporting_data": "{\"trigger\": \"away_rest_days=157.917\", \"feature\": \"away_rest_days\", \"feature_value\": 157.917, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -4640,7 +4640,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_rest_days=160.0)",
   "supporting_data": "{\"trigger\": \"away_rest_days=160.0\", \"feature\": \"away_rest_days\", \"feature_value\": 160.0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -4663,7 +4663,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_rest_days=158.021)",
   "supporting_data": "{\"trigger\": \"away_rest_days=158.021\", \"feature\": \"away_rest_days\", \"feature_value\": 158.021, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -5169,7 +5169,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_streak_losses=0.0)",
   "supporting_data": "{\"trigger\": \"away_streak_losses=0.0\", \"feature\": \"away_streak_losses\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -5192,7 +5192,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_streak_losses=0.0)",
   "supporting_data": "{\"trigger\": \"away_streak_losses=0.0\", \"feature\": \"away_streak_losses\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -5215,7 +5215,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_streak_losses=0.0)",
   "supporting_data": "{\"trigger\": \"away_streak_losses=0.0\", \"feature\": \"away_streak_losses\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -5698,7 +5698,7 @@
   "edge": 0.1887368984970514,
   "stake": 37.51,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"home_exp_goals=2.8811\", \"feature\": \"home_exp_goals\", \"feature_value\": 2.8811, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-COL\", \"contract_label\": \"Colorado wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3146, \"kalshi_ask_minus_book_prob\": 0.0254}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -5721,7 +5721,7 @@
   "edge": 0.2295227466216509,
   "stake": 44.94,
   "decision_ts": "2026-09-21T22:21:22.225767Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"home_exp_goals=2.7988\", \"feature\": \"home_exp_goals\", \"feature_value\": 2.7988, \"decision_ts\": \"2026-09-21T22:21:22.225767Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-MIN\", \"contract_label\": \"Minnesota wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3194, \"kalshi_ask_minus_book_prob\": 0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -5744,7 +5744,7 @@
   "edge": 0.028843694738160397,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.41 > required 0.40",
   "supporting_data": "{\"trigger\": \"home_exp_goals=3.1921\", \"feature\": \"home_exp_goals\", \"feature_value\": 3.1921, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-STL\", \"contract_label\": \"St. Louis wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.4066, \"kalshi_ask_minus_book_prob\": 0.0034}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -6227,7 +6227,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_road_trip_len=0.0)",
   "supporting_data": "{\"trigger\": \"home_road_trip_len=0.0\", \"feature\": \"home_road_trip_len\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -6250,7 +6250,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_road_trip_len=0.0)",
   "supporting_data": "{\"trigger\": \"home_road_trip_len=0.0\", \"feature\": \"home_road_trip_len\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -6273,7 +6273,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_road_trip_len=2.0)",
   "supporting_data": "{\"trigger\": \"home_road_trip_len=2.0\", \"feature\": \"home_road_trip_len\", \"feature_value\": 2, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -6756,7 +6756,7 @@
   "edge": 0.1887368984970514,
   "stake": 50.79,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"home_streak_losses=4.0\", \"feature\": \"home_streak_losses\", \"feature_value\": 4, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-COL\", \"contract_label\": \"Colorado wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3146, \"kalshi_ask_minus_book_prob\": 0.0254}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -6779,7 +6779,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.225767Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_streak_losses=0.0)",
   "supporting_data": "{\"trigger\": \"home_streak_losses=0.0\", \"feature\": \"home_streak_losses\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.225767Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-MIN\", \"contract_label\": \"Minnesota wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3194, \"kalshi_ask_minus_book_prob\": 0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -6802,7 +6802,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_streak_losses=0.0)",
   "supporting_data": "{\"trigger\": \"home_streak_losses=0.0\", \"feature\": \"home_streak_losses\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-STL\", \"contract_label\": \"St. Louis wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.4066, \"kalshi_ask_minus_book_prob\": 0.0034}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -7285,7 +7285,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_streak_wins=0.0)",
   "supporting_data": "{\"trigger\": \"home_streak_wins=0.0\", \"feature\": \"home_streak_wins\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -7308,7 +7308,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_streak_wins=1.0)",
   "supporting_data": "{\"trigger\": \"home_streak_wins=1.0\", \"feature\": \"home_streak_wins\", \"feature_value\": 1, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -7331,7 +7331,7 @@
   "edge": -0.038843694738160295,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.60 > required 0.52",
   "supporting_data": "{\"trigger\": \"home_streak_wins=5.0\", \"feature\": \"home_streak_wins\", \"feature_value\": 5, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -7837,7 +7837,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR GOALIE",
+  "status": "EXPIRED",
   "blocking_reason": "confirmed starter unknown for team id(s) [52, 21]; no verified public source publishes starting goalies before game time, so this strategy stays gated rather than assume a starter",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -7860,7 +7860,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR GOALIE",
+  "status": "EXPIRED",
   "blocking_reason": "confirmed starter unknown for team id(s) [16, 30]; no verified public source publishes starting goalies before game time, so this strategy stays gated rather than assume a starter",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -7883,7 +7883,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR GOALIE",
+  "status": "EXPIRED",
   "blocking_reason": "confirmed starter unknown for team id(s) [25, 19]; no verified public source publishes starting goalies before game time, so this strategy stays gated rather than assume a starter",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -8389,7 +8389,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR GOALIE",
+  "status": "EXPIRED",
   "blocking_reason": "confirmed starter unknown for team id(s) [52, 21]; no verified public source publishes starting goalies before game time, so this strategy stays gated rather than assume a starter",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -8412,7 +8412,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR GOALIE",
+  "status": "EXPIRED",
   "blocking_reason": "confirmed starter unknown for team id(s) [16, 30]; no verified public source publishes starting goalies before game time, so this strategy stays gated rather than assume a starter",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -8435,7 +8435,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR GOALIE",
+  "status": "EXPIRED",
   "blocking_reason": "confirmed starter unknown for team id(s) [25, 19]; no verified public source publishes starting goalies before game time, so this strategy stays gated rather than assume a starter",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -8941,7 +8941,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_home_win_pct=0.5976)",
   "supporting_data": "{\"trigger\": \"home_home_win_pct=0.5976\", \"feature\": \"home_home_win_pct\", \"feature_value\": 0.5976, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -8964,7 +8964,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_home_win_pct=0.3537)",
   "supporting_data": "{\"trigger\": \"home_home_win_pct=0.3537\", \"feature\": \"home_home_win_pct\", \"feature_value\": 0.3537, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -8987,7 +8987,7 @@
   "edge": -0.038843694738160295,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.60 > required 0.52",
   "supporting_data": "{\"trigger\": \"home_home_win_pct=0.6585\", \"feature\": \"home_home_win_pct\", \"feature_value\": 0.6585, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -9493,7 +9493,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "QUALIFIED",
+  "status": "EXPIRED",
   "blocking_reason": "condition met and priced, but no quote published for this market yet",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -9516,7 +9516,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "QUALIFIED",
+  "status": "EXPIRED",
   "blocking_reason": "condition met and priced, but no quote published for this market yet",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -9539,7 +9539,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "QUALIFIED",
+  "status": "EXPIRED",
   "blocking_reason": "condition met and priced, but no quote published for this market yet",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -10045,7 +10045,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR LINEUP",
+  "status": "EXPIRED",
   "blocking_reason": "forward lines unconfirmed for team id(s) [52, 21]; no verified public source publishes confirmed line combinations",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -10068,7 +10068,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WAITING FOR LINEUP",
+  "status": "EXPIRED",
   "blocking_reason": "forward lines unconfirmed for team id(s) [16, 30]; no verified public source publishes confirmed line combinations",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -10091,7 +10091,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR LINEUP",
+  "status": "EXPIRED",
   "blocking_reason": "forward lines unconfirmed for team id(s) [25, 19]; no verified public source publishes confirmed line combinations",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -10597,7 +10597,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi candle history returns 404 on both documented path shapes (confirmed from CI, recorded in data/probe.json), so there is no intraday price series to react to; the scoreboard does carry LIVE state but no verified live price feed exists to trade against",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -10620,7 +10620,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi candle history returns 404 on both documented path shapes (confirmed from CI, recorded in data/probe.json), so there is no intraday price series to react to; the scoreboard does carry LIVE state but no verified live price feed exists to trade against",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -10643,7 +10643,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi candle history returns 404 on both documented path shapes (confirmed from CI, recorded in data/probe.json), so there is no intraday price series to react to; the scoreboard does carry LIVE state but no verified live price feed exists to trade against",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -11149,7 +11149,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"away_prev_ot=0.0\", \"feature\": \"away_prev_ot\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -11172,7 +11172,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"away_prev_ot=0.0\", \"feature\": \"away_prev_ot\", \"feature_value\": 0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -11195,7 +11195,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"away_prev_ot=0.0\", \"feature\": \"away_prev_ot\", \"feature_value\": 0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -11701,7 +11701,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature ot_rate unavailable)",
   "supporting_data": "{\"trigger\": \"feature ot_rate unavailable\", \"feature\": \"ot_rate\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -11724,7 +11724,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature ot_rate unavailable)",
   "supporting_data": "{\"trigger\": \"feature ot_rate unavailable\", \"feature\": \"ot_rate\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -11747,7 +11747,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature ot_rate unavailable)",
   "supporting_data": "{\"trigger\": \"feature ot_rate unavailable\", \"feature\": \"ot_rate\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -12253,7 +12253,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (pace_diff=-0.3475)",
   "supporting_data": "{\"trigger\": \"pace_diff=-0.3475\", \"feature\": \"pace_diff\", \"feature_value\": -0.3475, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -12276,7 +12276,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (pace_diff=0.189)",
   "supporting_data": "{\"trigger\": \"pace_diff=0.189\", \"feature\": \"pace_diff\", \"feature_value\": 0.189, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -12299,7 +12299,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (pace_diff=0.1829)",
   "supporting_data": "{\"trigger\": \"pace_diff=0.1829\", \"feature\": \"pace_diff\", \"feature_value\": 0.1829, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -12805,7 +12805,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi KXNHLGAME exposes game-level moneyline contracts only; no verified first-period or period-specific market was found, and none is assumed to exist",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -12828,7 +12828,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi KXNHLGAME exposes game-level moneyline contracts only; no verified first-period or period-specific market was found, and none is assumed to exist",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -12851,7 +12851,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi KXNHLGAME exposes game-level moneyline contracts only; no verified first-period or period-specific market was found, and none is assumed to exist",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -13357,7 +13357,7 @@
   "edge": -0.20873689849705152,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.68 > required 0.42",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -13380,7 +13380,7 @@
   "edge": -0.2295227466216509,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.67 > required 0.39",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -13403,7 +13403,7 @@
   "edge": -0.038843694738160295,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.60 > required 0.51",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -13909,7 +13909,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR LINEUP",
+  "status": "EXPIRED",
   "blocking_reason": "forward lines unconfirmed for team id(s) [52, 21]; no verified public source publishes confirmed line combinations",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -13932,7 +13932,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WAITING FOR LINEUP",
+  "status": "EXPIRED",
   "blocking_reason": "forward lines unconfirmed for team id(s) [16, 30]; no verified public source publishes confirmed line combinations",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -13955,7 +13955,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR LINEUP",
+  "status": "EXPIRED",
   "blocking_reason": "forward lines unconfirmed for team id(s) [25, 19]; no verified public source publishes confirmed line combinations",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -14461,7 +14461,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (rest_diff=0.083)",
   "supporting_data": "{\"trigger\": \"rest_diff=0.083\", \"feature\": \"rest_diff\", \"feature_value\": 0.083, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -14484,7 +14484,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (rest_diff=-1.021)",
   "supporting_data": "{\"trigger\": \"rest_diff=-1.021\", \"feature\": \"rest_diff\", \"feature_value\": -1.021, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -14507,7 +14507,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (rest_diff=1.021)",
   "supporting_data": "{\"trigger\": \"rest_diff=1.021\", \"feature\": \"rest_diff\", \"feature_value\": 1.021, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -15013,7 +15013,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_road_trip_len=1.0)",
   "supporting_data": "{\"trigger\": \"away_road_trip_len=1.0\", \"feature\": \"away_road_trip_len\", \"feature_value\": 1, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -15036,7 +15036,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_road_trip_len=1.0)",
   "supporting_data": "{\"trigger\": \"away_road_trip_len=1.0\", \"feature\": \"away_road_trip_len\", \"feature_value\": 1, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -15059,7 +15059,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_road_trip_len=2.0)",
   "supporting_data": "{\"trigger\": \"away_road_trip_len=2.0\", \"feature\": \"away_road_trip_len\", \"feature_value\": 2, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -15565,7 +15565,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "no verified play-by-play source: PP% and PK% are not obtainable from the endpoints recorded as reachable in data/probe.json, so special-teams features cannot be built without inventing them",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -15588,7 +15588,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "no verified play-by-play source: PP% and PK% are not obtainable from the endpoints recorded as reachable in data/probe.json, so special-teams features cannot be built without inventing them",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -15611,7 +15611,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "no verified play-by-play source: PP% and PK% are not obtainable from the endpoints recorded as reachable in data/probe.json, so special-teams features cannot be built without inventing them",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -16117,7 +16117,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "open-meteo archive is verified reachable, but arena coordinates are not: statsapi.web.nhl.com (the only first-party lat/lon source) is unreachable from the CI runner, so venues.lat/lon are NULL by design and outdoor games cannot be identified without guessing",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -16140,7 +16140,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "open-meteo archive is verified reachable, but arena coordinates are not: statsapi.web.nhl.com (the only first-party lat/lon source) is unreachable from the CI runner, so venues.lat/lon are NULL by design and outdoor games cannot be identified without guessing",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -16163,7 +16163,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "open-meteo archive is verified reachable, but arena coordinates are not: statsapi.web.nhl.com (the only first-party lat/lon source) is unreachable from the CI runner, so venues.lat/lon are NULL by design and outdoor games cannot be identified without guessing",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -16692,7 +16692,7 @@
   "edge": 0.00539999999999996,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.68 > required 0.66",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -16715,7 +16715,7 @@
   "edge": 0.010599999999999943,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.67 > required 0.65",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -16738,7 +16738,7 @@
   "edge": -0.006599999999999939,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.60 > required 0.56",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -17152,7 +17152,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "EDGE team snapshots (skating distance, speed bursts, shot speed, zone time) are collected forward from the verified api-web.nhle.com/v1/edge API, but the feed is season-to-date with no per-game history; no test is possible until enough dated snapshots exist, and predictiveness is not assumed",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -17175,7 +17175,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "EDGE team snapshots (skating distance, speed bursts, shot speed, zone time) are collected forward from the verified api-web.nhle.com/v1/edge API, but the feed is season-to-date with no per-game history; no test is possible until enough dated snapshots exist, and predictiveness is not assumed",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -17198,7 +17198,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "EDGE team snapshots (skating distance, speed bursts, shot speed, zone time) are collected forward from the verified api-web.nhle.com/v1/edge API, but the feed is season-to-date with no per-game history; no test is possible until enough dated snapshots exist, and predictiveness is not assumed",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -17612,7 +17612,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4+away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4+away_g4_in_6=0.0\", \"feature\": \"away_g3_in_4+away_g4_in_6\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -17635,7 +17635,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4+away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4+away_g4_in_6=0.0\", \"feature\": \"away_g3_in_4+away_g4_in_6\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -17658,7 +17658,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g3_in_4+away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"away_g3_in_4+away_g4_in_6=0.0\", \"feature\": \"away_g3_in_4+away_g4_in_6\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -18072,7 +18072,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g4_in_6+away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"away_g4_in_6+away_prev_ot=0.0\", \"feature\": \"away_g4_in_6+away_prev_ot\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -18095,7 +18095,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g4_in_6+away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"away_g4_in_6+away_prev_ot=0.0\", \"feature\": \"away_g4_in_6+away_prev_ot\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -18118,7 +18118,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_g4_in_6+away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"away_g4_in_6+away_prev_ot=0.0\", \"feature\": \"away_g4_in_6+away_prev_ot\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -18532,7 +18532,7 @@
   "edge": 0.1887368984970514,
   "stake": 33.82,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"away_rest_days=157.917\", \"feature\": \"away_rest_days\", \"feature_value\": 157.917, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-COL\", \"contract_label\": \"Colorado wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3146, \"kalshi_ask_minus_book_prob\": 0.0254}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -18555,7 +18555,7 @@
   "edge": 0.2295227466216509,
   "stake": 40.51,
   "decision_ts": "2026-09-21T22:21:22.225767Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"away_rest_days=160.0\", \"feature\": \"away_rest_days\", \"feature_value\": 160.0, \"decision_ts\": \"2026-09-21T22:21:22.225767Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-MIN\", \"contract_label\": \"Minnesota wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3194, \"kalshi_ask_minus_book_prob\": 0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -18578,7 +18578,7 @@
   "edge": 0.028843694738160397,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.41 > required 0.40",
   "supporting_data": "{\"trigger\": \"away_rest_days=158.021\", \"feature\": \"away_rest_days\", \"feature_value\": 158.021, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-STL\", \"contract_label\": \"St. Louis wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.4066, \"kalshi_ask_minus_book_prob\": 0.0034}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19015,7 +19015,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g3_in_4+away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"home_g3_in_4+away_g4_in_6=0.0\", \"feature\": \"home_g3_in_4+away_g4_in_6\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19038,7 +19038,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g3_in_4+away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"home_g3_in_4+away_g4_in_6=0.0\", \"feature\": \"home_g3_in_4+away_g4_in_6\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19061,7 +19061,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g3_in_4+away_g4_in_6=0.0)",
   "supporting_data": "{\"trigger\": \"home_g3_in_4+away_g4_in_6=0.0\", \"feature\": \"home_g3_in_4+away_g4_in_6\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19452,7 +19452,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g3_in_4+home_prev_so=0.0)",
   "supporting_data": "{\"trigger\": \"home_g3_in_4+home_prev_so=0.0\", \"feature\": \"home_g3_in_4+home_prev_so\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-COL\", \"contract_label\": \"Colorado wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3146, \"kalshi_ask_minus_book_prob\": 0.0254}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19475,7 +19475,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.225767Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g3_in_4+home_prev_so=0.0)",
   "supporting_data": "{\"trigger\": \"home_g3_in_4+home_prev_so=0.0\", \"feature\": \"home_g3_in_4+home_prev_so\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.225767Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-MIN\", \"contract_label\": \"Minnesota wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3194, \"kalshi_ask_minus_book_prob\": 0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19498,7 +19498,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g3_in_4+home_prev_so=1.0)",
   "supporting_data": "{\"trigger\": \"home_g3_in_4+home_prev_so=1.0\", \"feature\": \"home_g3_in_4+home_prev_so\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-STL\", \"contract_label\": \"St. Louis wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.4066, \"kalshi_ask_minus_book_prob\": 0.0034}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19912,7 +19912,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g4_in_6+away_g5_in_7=0.0)",
   "supporting_data": "{\"trigger\": \"home_g4_in_6+away_g5_in_7=0.0\", \"feature\": \"home_g4_in_6+away_g5_in_7\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19935,7 +19935,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g4_in_6+away_g5_in_7=0.0)",
   "supporting_data": "{\"trigger\": \"home_g4_in_6+away_g5_in_7=0.0\", \"feature\": \"home_g4_in_6+away_g5_in_7\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -19958,7 +19958,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g4_in_6+away_g5_in_7=0.0)",
   "supporting_data": "{\"trigger\": \"home_g4_in_6+away_g5_in_7=0.0\", \"feature\": \"home_g4_in_6+away_g5_in_7\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -20372,7 +20372,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g4_in_6+away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"home_g4_in_6+away_prev_ot=0.0\", \"feature\": \"home_g4_in_6+away_prev_ot\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -20395,7 +20395,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g4_in_6+away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"home_g4_in_6+away_prev_ot=0.0\", \"feature\": \"home_g4_in_6+away_prev_ot\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -20418,7 +20418,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (home_g4_in_6+away_prev_ot=0.0)",
   "supporting_data": "{\"trigger\": \"home_g4_in_6+away_prev_ot=0.0\", \"feature\": \"home_g4_in_6+away_prev_ot\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -20809,7 +20809,7 @@
   "edge": 0.1887368984970514,
   "stake": 34.46,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"home_pk_pct_l10=0.6794\", \"feature\": \"home_pk_pct_l10\", \"feature_value\": 0.6794, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-COL\", \"contract_label\": \"Colorado wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3146, \"kalshi_ask_minus_book_prob\": 0.0254}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -20832,7 +20832,7 @@
   "edge": 0.2295227466216509,
   "stake": 41.28,
   "decision_ts": "2026-09-21T22:21:22.225767Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"home_pk_pct_l10=0.6583\", \"feature\": \"home_pk_pct_l10\", \"feature_value\": 0.6583, \"decision_ts\": \"2026-09-21T22:21:22.225767Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-MIN\", \"contract_label\": \"Minnesota wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.3194, \"kalshi_ask_minus_book_prob\": 0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -20855,7 +20855,7 @@
   "edge": 0.028843694738160397,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.41 > required 0.40",
   "supporting_data": "{\"trigger\": \"home_pk_pct_l10=0.7483\", \"feature\": \"home_pk_pct_l10\", \"feature_value\": 0.7483, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-STL\", \"contract_label\": \"St. Louis wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.4066, \"kalshi_ask_minus_book_prob\": 0.0034}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -21292,7 +21292,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_close_home_mid=0.675)",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.675\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.675, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -21315,7 +21315,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_close_home_mid=0.665)",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.665\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.665, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -21338,7 +21338,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_close_home_mid=0.595)",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.595\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.595, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -21752,7 +21752,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature diff_starter_sv_pct_l10 unavailable)",
   "supporting_data": "{\"trigger\": \"feature diff_starter_sv_pct_l10 unavailable\", \"feature\": \"diff_starter_sv_pct_l10\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -21775,7 +21775,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature diff_starter_sv_pct_l10 unavailable)",
   "supporting_data": "{\"trigger\": \"feature diff_starter_sv_pct_l10 unavailable\", \"feature\": \"diff_starter_sv_pct_l10\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -21798,7 +21798,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature diff_starter_sv_pct_l10 unavailable)",
   "supporting_data": "{\"trigger\": \"feature diff_starter_sv_pct_l10 unavailable\", \"feature\": \"diff_starter_sv_pct_l10\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -22212,7 +22212,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature away_starter_b2b unavailable)",
   "supporting_data": "{\"trigger\": \"feature away_starter_b2b unavailable\", \"feature\": \"away_starter_b2b\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -22235,7 +22235,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature away_starter_b2b unavailable)",
   "supporting_data": "{\"trigger\": \"feature away_starter_b2b unavailable\", \"feature\": \"away_starter_b2b\", \"feature_value\": null, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -22258,7 +22258,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (feature away_starter_b2b unavailable)",
   "supporting_data": "{\"trigger\": \"feature away_starter_b2b unavailable\", \"feature\": \"away_starter_b2b\", \"feature_value\": null, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -22672,7 +22672,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_close_home_mid=0.675)",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.675\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.675, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -22695,7 +22695,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_close_home_mid=0.665)",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.665\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.665, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -22718,7 +22718,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_close_home_mid=0.595)",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.595\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.595, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -23132,7 +23132,7 @@
   "edge": 0.0,
   "stake": 18.43,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.675\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.675, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -23155,7 +23155,7 @@
   "edge": 0.0,
   "stake": 18.43,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.665\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.665, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -23178,7 +23178,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_close_home_mid=0.595)",
   "supporting_data": "{\"trigger\": \"mkt_close_home_mid=0.595\", \"feature\": \"mkt_close_home_mid\", \"feature_value\": 0.595, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -23592,7 +23592,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "intraday Kalshi candlesticks are now ingested (ig60/ig120 points) and can be studied, but the paper-trading loop runs on a batch schedule and cannot observe or act on a price during a game; no in-game bet is simulated because its execution time cannot be honoured",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -23615,7 +23615,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "intraday Kalshi candlesticks are now ingested (ig60/ig120 points) and can be studied, but the paper-trading loop runs on a batch schedule and cannot observe or act on a price during a game; no in-game bet is simulated because its execution time cannot be honoured",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -23638,7 +23638,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "intraday Kalshi candlesticks are now ingested (ig60/ig120 points) and can be studied, but the paper-trading loop runs on a batch schedule and cannot observe or act on a price during a game; no in-game bet is simulated because its execution time cannot be honoured",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -24052,7 +24052,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_pdo_l10=1.0196)",
   "supporting_data": "{\"trigger\": \"away_pdo_l10=1.0196\", \"feature\": \"away_pdo_l10\", \"feature_value\": 1.0196, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -24075,7 +24075,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (away_pdo_l10=1.0019)",
   "supporting_data": "{\"trigger\": \"away_pdo_l10=1.0019\", \"feature\": \"away_pdo_l10\", \"feature_value\": 1.0019, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -24098,7 +24098,7 @@
   "edge": -0.038843694738160295,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.60 > required 0.52",
   "supporting_data": "{\"trigger\": \"away_pdo_l10=1.0482\", \"feature\": \"away_pdo_l10\", \"feature_value\": 1.0482, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -24512,7 +24512,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi lists first-period (KXNHL1P) and overtime (KXNHLOVERTIME) series (verified via /series?category=Sports&tags=Hockey), but this system has no period-level model and does not ingest those contracts' prices yet; nothing is bet until both exist",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -24535,7 +24535,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi lists first-period (KXNHL1P) and overtime (KXNHLOVERTIME) series (verified via /series?category=Sports&tags=Hockey), but this system has no period-level model and does not ingest those contracts' prices yet; nothing is bet until both exist",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -24558,7 +24558,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi lists first-period (KXNHL1P) and overtime (KXNHLOVERTIME) series (verified via /series?category=Sports&tags=Hockey), but this system has no period-level model and does not ingest those contracts' prices yet; nothing is bet until both exist",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -24972,7 +24972,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (diff_shot_share_l10=-0.0648)",
   "supporting_data": "{\"trigger\": \"diff_shot_share_l10=-0.0648\", \"feature\": \"diff_shot_share_l10\", \"feature_value\": -0.0648, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -24995,7 +24995,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (diff_shot_share_l10=-0.0505)",
   "supporting_data": "{\"trigger\": \"diff_shot_share_l10=-0.0505\", \"feature\": \"diff_shot_share_l10\", \"feature_value\": -0.0505, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -25018,7 +25018,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (diff_shot_share_l10=0.0167)",
   "supporting_data": "{\"trigger\": \"diff_shot_share_l10=0.0167\", \"feature\": \"diff_shot_share_l10\", \"feature_value\": 0.0167, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -25432,7 +25432,7 @@
   "edge": -0.20873689849705152,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.68 > required 0.43",
   "supporting_data": "{\"trigger\": \"st_edge_home=0.4073\", \"feature\": \"st_edge_home\", \"feature_value\": 0.4073, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -25455,7 +25455,7 @@
   "edge": -0.2295227466216509,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.67 > required 0.40",
   "supporting_data": "{\"trigger\": \"st_edge_home=0.1951\", \"feature\": \"st_edge_home\", \"feature_value\": 0.1951, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -25478,7 +25478,7 @@
   "edge": -0.038843694738160295,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.60 > required 0.52",
   "supporting_data": "{\"trigger\": \"st_edge_home=0.1241\", \"feature\": \"st_edge_home\", \"feature_value\": 0.1241, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -25892,7 +25892,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_move6_home=0.0)",
   "supporting_data": "{\"trigger\": \"mkt_move6_home=0.0\", \"feature\": \"mkt_move6_home\", \"feature_value\": 0.0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -25915,7 +25915,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_move6_home=0.0)",
   "supporting_data": "{\"trigger\": \"mkt_move6_home=0.0\", \"feature\": \"mkt_move6_home\", \"feature_value\": 0.0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -25938,7 +25938,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_move6_home=0.005)",
   "supporting_data": "{\"trigger\": \"mkt_move6_home=0.005\", \"feature\": \"mkt_move6_home\", \"feature_value\": 0.005, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -26352,7 +26352,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_move6_home=0.0)",
   "supporting_data": "{\"trigger\": \"mkt_move6_home=0.0\", \"feature\": \"mkt_move6_home\", \"feature_value\": 0.0, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -26375,7 +26375,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_move6_home=0.0)",
   "supporting_data": "{\"trigger\": \"mkt_move6_home=0.0\", \"feature\": \"mkt_move6_home\", \"feature_value\": 0.0, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -26398,7 +26398,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WATCHING",
+  "status": "EXPIRED",
   "blocking_reason": "condition not met (mkt_move6_home=0.005)",
   "supporting_data": "{\"trigger\": \"mkt_move6_home=0.005\", \"feature\": \"mkt_move6_home\", \"feature_value\": 0.005, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -26812,7 +26812,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "requires a timestamped starting-goalie announcement feed and the Kalshi price immediately before it; neither exists in a verified source, and the post-game goalie log cannot stand in for an announcement time",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -26835,7 +26835,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "requires a timestamped starting-goalie announcement feed and the Kalshi price immediately before it; neither exists in a verified source, and the post-game goalie log cannot stand in for an announcement time",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -26858,7 +26858,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "requires a timestamped starting-goalie announcement feed and the Kalshi price immediately before it; neither exists in a verified source, and the post-game goalie log cannot stand in for an announcement time",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -27272,7 +27272,7 @@
   "edge": -0.20873689849705152,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.68 > required 0.42",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -27295,7 +27295,7 @@
   "edge": -0.2295227466216509,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.67 > required 0.39",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -27318,7 +27318,7 @@
   "edge": -0.038843694738160295,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.60 > required 0.51",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -36035,7 +36035,7 @@
   "edge": 0.02320899999999998,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:04.743379Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.37 > required 0.35 (model P(over)=0.3932)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 6.5, \"contract\": \"KXNHLTOTAL-26SEP21COLWPG-7\", \"contract_label\": \"Full Game: Over 6.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 6.5, \"strike_choice\": \"offered strike nearest 6.5 inside [4.5, 8.5]\", \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"p_over\": 0.393209, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:04.743379Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -36058,7 +36058,7 @@
   "edge": -0.02033199999999996,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:06.872868Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.42 > required 0.36 (model P(over)=0.3997)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 6.5, \"contract\": \"KXNHLTOTAL-26SEP21MINCHI-7\", \"contract_label\": \"Full Game: Over 6.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 6.5, \"strike_choice\": \"offered strike nearest 6.5 inside [4.5, 8.5]\", \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"p_over\": 0.399668, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:06.872868Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -36081,7 +36081,7 @@
   "edge": 0.006446000000000007,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.393761Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.39 > required 0.36 (model P(over)=0.3964)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 6.5, \"contract\": \"KXNHLTOTAL-26SEP21STLDAL-7\", \"contract_label\": \"Full Game: Over 6.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 6.5, \"strike_choice\": \"offered strike nearest 6.5 inside [4.5, 8.5]\", \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"p_over\": 0.396446, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:07.393761Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -36679,7 +36679,7 @@
   "edge": 0.023836999999999997,
   "stake": 11.02,
   "decision_ts": "2026-09-18T01:13:04.743379Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 5.5, \"contract\": \"KXNHLTOTAL-26SEP21COLWPG-6\", \"contract_label\": \"Full Game: Over 5.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 5.5, \"strike_choice\": \"offered strike nearest 5.5 inside [4.5, 8.5]\", \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"p_over\": 0.553837, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:04.743379Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -36702,7 +36702,7 @@
   "edge": 0.0002789999999999182,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:06.872868Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.56 > required 0.54 (model P(over)=0.5603)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 5.5, \"contract\": \"KXNHLTOTAL-26SEP21MINCHI-6\", \"contract_label\": \"Full Game: Over 5.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 5.5, \"strike_choice\": \"offered strike nearest 5.5 inside [4.5, 8.5]\", \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"p_over\": 0.560279, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:06.872868Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -36725,7 +36725,7 @@
   "edge": 0.0070709999999999384,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.393761Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.55 > required 0.54 (model P(over)=0.5571)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 5.5, \"contract\": \"KXNHLTOTAL-26SEP21STLDAL-6\", \"contract_label\": \"Full Game: Over 5.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 5.5, \"strike_choice\": \"offered strike nearest 5.5 inside [4.5, 8.5]\", \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"p_over\": 0.557071, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:07.393761Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -37323,7 +37323,7 @@
   "edge": -0.033209000000000044,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:04.743379Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.64 > required 0.57 (model P(under)=0.6068)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"under\", \"strike\": 6.5, \"contract\": \"KXNHLTOTAL-26SEP21COLWPG-7\", \"contract_label\": \"Full Game: Over 6.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 6.5, \"strike_choice\": \"offered strike nearest 6.5 inside [4.5, 8.5]\", \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"p_over\": 0.393209, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:04.743379Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -37346,7 +37346,7 @@
   "edge": 0.010332000000000008,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:06.872868Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.59 > required 0.56 (model P(under)=0.6003)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"under\", \"strike\": 6.5, \"contract\": \"KXNHLTOTAL-26SEP21MINCHI-7\", \"contract_label\": \"Full Game: Over 6.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 6.5, \"strike_choice\": \"offered strike nearest 6.5 inside [4.5, 8.5]\", \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"p_over\": 0.399668, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:06.872868Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -37369,7 +37369,7 @@
   "edge": -0.01644599999999996,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.393761Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.62 > required 0.56 (model P(under)=0.6036)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"under\", \"strike\": 6.5, \"contract\": \"KXNHLTOTAL-26SEP21STLDAL-7\", \"contract_label\": \"Full Game: Over 6.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 6.5, \"strike_choice\": \"offered strike nearest 6.5 inside [4.5, 8.5]\", \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"p_over\": 0.396446, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:07.393761Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -41601,7 +41601,7 @@
   "edge": -0.14658399999999994,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:04.736302Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.85 > required 0.66 (model P=0.7034)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"NO\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"away\", \"contract_team_reason\": \"P(home covers 1.5)=0.2343, P(away covers 1.5)=0.2966 -> model_stronger=away\", \"strike\": 1.5, \"contract\": \"KXNHLSPREAD-26SEP21COLWPG-COL2\", \"contract_label\": \"Colorado wins by over 1.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 1.5, \"strike_choice\": \"offered strike nearest 1.5 inside [1.5, 2.5]\", \"p_cover\": 0.296584, \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:04.736302Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -41624,7 +41624,7 @@
   "edge": -0.18526399999999998,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:06.866638Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.86 > required 0.63 (model P=0.6747)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"NO\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"away\", \"contract_team_reason\": \"P(home covers 1.5)=0.2111, P(away covers 1.5)=0.3253 -> model_stronger=away\", \"strike\": 1.5, \"contract\": \"KXNHLSPREAD-26SEP21MINCHI-MIN2\", \"contract_label\": \"Minnesota wins by over 1.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 1.5, \"strike_choice\": \"offered strike nearest 1.5 inside [1.5, 2.5]\", \"p_cover\": 0.325264, \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:06.866638Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -41647,7 +41647,7 @@
   "edge": 0.038760999999999934,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.386841Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.65 > required 0.65 (model P=0.6888)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"NO\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"home\", \"contract_team_reason\": \"P(home covers 1.5)=0.3112, P(away covers 1.5)=0.2221 -> model_stronger=home\", \"strike\": 1.5, \"contract\": \"KXNHLSPREAD-26SEP21STLDAL-DAL2\", \"contract_label\": \"Dallas wins by over 1.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 1.5, \"strike_choice\": \"offered strike nearest 1.5 inside [1.5, 2.5]\", \"p_cover\": 0.311239, \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:07.386841Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -42314,7 +42314,7 @@
   "edge": -0.202581,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:04.736302Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.33 > required 0.08 (model P=0.1274)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"home\", \"contract_team\": \"home\", \"contract_team_reason\": \"contract_team=home (declared in the rule)\", \"strike\": 2.5, \"contract\": \"KXNHLSPREAD-26SEP21COLWPG-WPG3\", \"contract_label\": \"Winnipeg wins by over 2.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 2.5, \"strike_choice\": \"offered strike nearest 2.5 inside [2.5, 3.5]\", \"p_cover\": 0.127419, \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:04.736302Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -42337,7 +42337,7 @@
   "edge": -0.23796699999999998,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:06.866638Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.35 > required 0.06 (model P=0.1120)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"home\", \"contract_team\": \"home\", \"contract_team_reason\": \"contract_team=home (declared in the rule)\", \"strike\": 2.5, \"contract\": \"KXNHLSPREAD-26SEP21MINCHI-CHI3\", \"contract_label\": \"Chicago wins by over 2.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 2.5, \"strike_choice\": \"offered strike nearest 2.5 inside [2.5, 3.5]\", \"p_cover\": 0.112033, \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:06.866638Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -42360,7 +42360,7 @@
   "edge": -0.09712900000000002,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.386841Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.28 > required 0.13 (model P=0.1829)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"home\", \"contract_team\": \"home\", \"contract_team_reason\": \"contract_team=home (declared in the rule)\", \"strike\": 2.5, \"contract\": \"KXNHLSPREAD-26SEP21STLDAL-DAL3\", \"contract_label\": \"Dallas wins by over 2.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 2.5, \"strike_choice\": \"offered strike nearest 2.5 inside [2.5, 3.5]\", \"p_cover\": 0.182871, \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:07.386841Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -43027,7 +43027,7 @@
   "edge": 0.11658400000000002,
   "stake": 35.39,
   "decision_ts": "2026-09-18T01:13:04.736302Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"away\", \"contract_team_reason\": \"P(home covers 1.5)=0.2343, P(away covers 1.5)=0.2966 -> model_stronger=away\", \"strike\": 1.5, \"contract\": \"KXNHLSPREAD-26SEP21COLWPG-COL2\", \"contract_label\": \"Colorado wins by over 1.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 1.5, \"strike_choice\": \"offered strike nearest 1.5 inside [1.5, 2.5]\", \"p_cover\": 0.296584, \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:04.736302Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -43050,7 +43050,7 @@
   "edge": 0.145264,
   "stake": 44.1,
   "decision_ts": "2026-09-18T01:13:06.866638Z",
-  "status": "READY TO BET",
+  "status": "EXPIRED",
   "blocking_reason": "",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"away\", \"contract_team_reason\": \"P(home covers 1.5)=0.2111, P(away covers 1.5)=0.3253 -> model_stronger=away\", \"strike\": 1.5, \"contract\": \"KXNHLSPREAD-26SEP21MINCHI-MIN2\", \"contract_label\": \"Minnesota wins by over 1.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 1.5, \"strike_choice\": \"offered strike nearest 1.5 inside [1.5, 2.5]\", \"p_cover\": 0.325264, \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:06.866638Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -43073,7 +43073,7 @@
   "edge": -0.048761,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.386841Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.36 > required 0.27 (model P=0.3112)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"home\", \"contract_team_reason\": \"P(home covers 1.5)=0.3112, P(away covers 1.5)=0.2221 -> model_stronger=home\", \"strike\": 1.5, \"contract\": \"KXNHLSPREAD-26SEP21STLDAL-DAL2\", \"contract_label\": \"Dallas wins by over 1.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 1.5, \"strike_choice\": \"offered strike nearest 1.5 inside [1.5, 2.5]\", \"p_cover\": 0.311239, \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:07.386841Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -43487,7 +43487,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi candlesticks provide 60-min in-game points for research (ig60/ig120), but paper-trading loop runs batch and cannot act during a game; no live execution.",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21COLWPG-WPG\", \"contract_label\": \"Winnipeg wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6854, \"kalshi_ask_minus_book_prob\": -0.0054}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -43510,7 +43510,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:05:01.133233Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi candlesticks provide 60-min in-game points for research (ig60/ig120), but paper-trading loop runs batch and cannot act during a game; no live execution.",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-18T01:05:01.133233Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21STLDAL-DAL\", \"contract_label\": \"Dallas wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.5934, \"kalshi_ask_minus_book_prob\": 0.0066}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -43786,7 +43786,7 @@
   "edge": null,
   "stake": 0.0,
   "decision_ts": "2026-09-21T22:21:22.218774Z",
-  "status": "WAITING FOR OTHER INFORMATION",
+  "status": "EXPIRED",
   "blocking_reason": "Kalshi candlesticks provide 60-min in-game points for research (ig60/ig120), but paper-trading loop runs batch and cannot act during a game; no live execution.",
   "supporting_data": "{\"trigger\": \"home_n_prior=164.0\", \"feature\": \"home_n_prior\", \"feature_value\": 164, \"decision_ts\": \"2026-09-21T22:21:22.218774Z\", \"price_point\": \"live_quote\", \"contract\": \"KXNHLGAME-26SEP21MINCHI-CHI\", \"contract_label\": \"Chicago wins\", \"strike\": null, \"quote_side\": \"YES\", \"sportsbook_reference\": {\"provider\": \"DraftKings\", \"ts\": \"2026-09-21T23:30:38Z\", \"devigged_prob\": 0.6806, \"kalshi_ask_minus_book_prob\": -0.0106}}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -44338,7 +44338,7 @@
   "edge": -0.298214,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:04.736302Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.47 > required 0.12 (model P=0.1718)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"away\", \"contract_team_reason\": \"P(home covers 2.5)=0.1274, P(away covers 2.5)=0.1718 -> model_stronger=away\", \"strike\": 2.5, \"contract\": \"KXNHLSPREAD-26SEP21COLWPG-COL3\", \"contract_label\": \"Colorado wins by over 2.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 2.5, \"strike_choice\": \"offered strike nearest 2.5 inside [2.5, 2.5]\", \"p_cover\": 0.171786, \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:04.736302Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -44361,7 +44361,7 @@
   "edge": -0.22633599999999998,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:06.866638Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.42 > required 0.14 (model P=0.1937)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"away\", \"contract_team_reason\": \"P(home covers 2.5)=0.1120, P(away covers 2.5)=0.1937 -> model_stronger=away\", \"strike\": 2.5, \"contract\": \"KXNHLSPREAD-26SEP21MINCHI-MIN3\", \"contract_label\": \"Minnesota wins by over 2.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 2.5, \"strike_choice\": \"offered strike nearest 2.5 inside [2.5, 2.5]\", \"p_cover\": 0.193664, \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:06.866638Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -44384,7 +44384,7 @@
   "edge": -0.09712900000000002,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.386841Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.28 > required 0.13 (model P=0.1829)",
   "supporting_data": "{\"market\": \"puck_line\", \"exchange_side\": \"YES\", \"contract_team_rule\": \"model_stronger\", \"contract_team\": \"home\", \"contract_team_reason\": \"P(home covers 2.5)=0.1829, P(away covers 2.5)=0.1193 -> model_stronger=home\", \"strike\": 2.5, \"contract\": \"KXNHLSPREAD-26SEP21STLDAL-DAL3\", \"contract_label\": \"Dallas wins by over 2.5 goals\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5], \"target_strike\": 2.5, \"strike_choice\": \"offered strike nearest 2.5 inside [2.5, 2.5]\", \"p_cover\": 0.182871, \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent-Poisson margin distribution)\"}, \"decision_ts\": \"2026-09-18T01:13:07.386841Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -44867,7 +44867,7 @@
   "edge": 0.023836999999999997,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:04.743379Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.53 > required 0.52 (model P(over)=0.5538)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 5.5, \"contract\": \"KXNHLTOTAL-26SEP21COLWPG-6\", \"contract_label\": \"Full Game: Over 5.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 5.5, \"strike_choice\": \"offered strike nearest 5.5 inside [5.5, 5.5]\", \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"p_over\": 0.553837, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:04.743379Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -44890,7 +44890,7 @@
   "edge": 0.0002789999999999182,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:06.872868Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.56 > required 0.53 (model P(over)=0.5603)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 5.5, \"contract\": \"KXNHLTOTAL-26SEP21MINCHI-6\", \"contract_label\": \"Full Game: Over 5.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 5.5, \"strike_choice\": \"offered strike nearest 5.5 inside [5.5, 5.5]\", \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"p_over\": 0.560279, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:06.872868Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -44913,7 +44913,7 @@
   "edge": 0.0070709999999999384,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.393761Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.55 > required 0.53 (model P(over)=0.5571)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"over\", \"strike\": 5.5, \"contract\": \"KXNHLTOTAL-26SEP21STLDAL-6\", \"contract_label\": \"Full Game: Over 5.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 5.5, \"strike_choice\": \"offered strike nearest 5.5 inside [5.5, 5.5]\", \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"p_over\": 0.557071, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:07.393761Z\", \"price_point\": \"live_quote\", \"quote_side\": \"YES\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -45465,7 +45465,7 @@
   "edge": -0.10559399999999997,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:04.743379Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.85 > required 0.71 (model P(under)=0.7444)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"under\", \"strike\": 7.5, \"contract\": \"KXNHLTOTAL-26SEP21COLWPG-8\", \"contract_label\": \"Full Game: Over 7.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 7.5, \"strike_choice\": \"offered strike nearest 7.5 inside [7.5, 7.5]\", \"lam_home\": 2.882186206896552, \"lam_away\": 3.1149011494252874, \"p_over\": 0.255594, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:04.743379Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -45488,7 +45488,7 @@
   "edge": -0.10114499999999993,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:06.872868Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.84 > required 0.71 (model P(under)=0.7389)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"under\", \"strike\": 7.5, \"contract\": \"KXNHLTOTAL-26SEP21MINCHI-8\", \"contract_label\": \"Full Game: Over 7.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 7.5, \"strike_choice\": \"offered strike nearest 7.5 inside [7.5, 7.5]\", \"lam_home\": 2.8046160919540233, \"lam_away\": 3.2327172413793104, \"p_over\": 0.261145, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:06.872868Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"
@@ -45511,7 +45511,7 @@
   "edge": -0.108371,
   "stake": 0.0,
   "decision_ts": "2026-09-18T01:13:07.393761Z",
-  "status": "PRICE TOO HIGH",
+  "status": "EXPIRED",
   "blocking_reason": "ask 0.85 > required 0.71 (model P(under)=0.7416)",
   "supporting_data": "{\"market\": \"total\", \"direction\": \"under\", \"strike\": 7.5, \"contract\": \"KXNHLTOTAL-26SEP21STLDAL-8\", \"contract_label\": \"Full Game: Over 7.5 goals scored\", \"price_basis\": \"exchange\", \"strikes_offered\": [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5], \"target_strike\": 7.5, \"strike_choice\": \"offered strike nearest 7.5 inside [7.5, 7.5]\", \"lam_home\": 3.175312643678161, \"lam_away\": 2.841944827586207, \"p_over\": 0.258371, \"data_labels\": {\"price\": \"SOURCE DATA (kalshi, exchange)\", \"features\": \"DERIVED (point-in-time)\", \"model_prob\": \"MODEL OUTPUT (independent Poisson)\"}, \"decision_ts\": \"2026-09-18T01:13:07.393761Z\", \"price_point\": \"live_quote\", \"quote_side\": \"NO\"}",
   "source_url": "https://api.elections.kalshi.com/trade-api/v2/markets"

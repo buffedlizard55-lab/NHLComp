@@ -21,7 +21,23 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Iterable, Iterator
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
+
+#: Published feeds disagree on club abbreviation style.  This maps the *short* forms other
+#: sources use onto the three-letter form the NHL API returns, so a row from ESPN can be
+#: attached to the same franchise the rest of the ledger uses.  It is looked up only when the
+#: abbreviation is not already a team in the ``teams`` table, so it can never shadow a real
+#: club code (``SJ``, ``TB``, ``NJ`` and ``LA`` are not NHL codes).
+#: Only pairs that were read off the two feeds for the *same* club are listed.  Nothing here
+#: is inferred from a naming convention: a plausible-looking guess such as ``PHO`` -> Utah
+#: would silently attach a historical Phoenix Coyotes row to the wrong modern franchise, and
+#: an unmapped row that is reported is worth more than a mapped row that is wrong.
+ABBREV_ALIASES: dict[str, str] = {
+    "SJ": "SJS",   # ESPN injury feed / NHL api-web
+    "TB": "TBL",
+    "NJ": "NJD",
+    "LA": "LAK",
+}
 
 # Columns added after their table already shipped.  Applied by Store._migrate so a
 # committed ledger.db from an earlier version gains them without a destructive rebuild.
@@ -58,6 +74,10 @@ ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("bets", "depth_basis", "TEXT"),               # published_offer_size | traded_volume | declared_cap
     ("market_settlements", "rung", "TEXT"),        # the ticker suffix, kept verbatim, never parsed as a line
     ("kalshi_series", "open_contracts", "INTEGER"),   # from the last listing poll
+    # schema v7: which phase of a season a rule is allowed to trade, and which phase a
+    # wager was actually placed in (1 = preseason, 2 = regular season, 3 = playoffs)
+    ("strategies", "game_types", "TEXT NOT NULL DEFAULT '[2, 3]'"),
+    ("bets", "game_type", "INTEGER"),
     ("kalshi_series", "last_listed_check", "TEXT"),
     ("kalshi_series", "listing_note", "TEXT"),        # incl. verified-negative observations
 )
@@ -431,6 +451,10 @@ CREATE TABLE IF NOT EXISTS strategies (
     starting_bankroll REAL NOT NULL,
     bankroll       REAL NOT NULL,
     test_mode      TEXT NOT NULL DEFAULT 'FORWARD TEST',
+    -- the NHL season phases this rule may trade: 2 = regular season, 3 = playoffs.
+    -- Preseason (1) is deliberately excluded by default: a rule fitted on regular-season
+    -- form has no verified claim on a September roster, and WC-1 below records why.
+    game_types     TEXT NOT NULL DEFAULT '[2, 3]',
     leakage_checked INTEGER NOT NULL DEFAULT 0,
     provenance     TEXT NOT NULL DEFAULT 'MODEL',
     PRIMARY KEY (strategy_id, version)
@@ -779,6 +803,11 @@ class Store:
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
         self._migrate()
+        #: ``(kind, entity_id)`` pairs raised by ``flag`` *during this process*.  A check that
+        #: runs on every pass re-raises every condition it still finds, so anything absent
+        #: from this set no longer reproduces (see ``flag`` and
+        #: ``Verifier.reconcile_stale_flags``).
+        self.flag_seen: set[tuple[str, str]] = set()
         self.conn.commit()
         cur = self.conn.execute("SELECT value FROM meta WHERE key='schema_version'")
         row = cur.fetchone()
@@ -837,8 +866,23 @@ class Store:
 
     def team_id_for(self, abbrev: str, full_name: str | None = None) -> int | None:
         """Resolve an abbreviation to a team_id, preferring the active franchise and an
-        exact full-name match.  Returns None when the source cannot disambiguate."""
+        exact full-name match.  Returns None when the source cannot disambiguate.
+
+        Published feeds do not agree on abbreviation style.  The NHL uses three letters
+        (``LAK``, ``NJD``, ``SJS``, ``TBL``); ESPN's injury feed uses two (``LA``, ``NJ``,
+        ``SJ``, ``TB``).  Before this alias table existed, every ESPN injury row for those
+        four clubs failed to resolve, so four franchises silently had **no** injury context
+        feeding the injury-gated strategies while the queue recorded 13 unmappable entries.
+        The alias is a mapping between two published vocabularies, not a guess: each pair was
+        read off the two feeds for the same club, and an alias is only applied when the exact
+        abbreviation is not already a team in its own right.
+        """
         rows = self.query("SELECT team_id, full_name, active FROM teams WHERE abbrev=?", (abbrev,))
+        if not rows:
+            canon = ABBREV_ALIASES.get((abbrev or "").upper())
+            if canon:
+                rows = self.query("SELECT team_id, full_name, active FROM teams WHERE abbrev=?",
+                                  (canon,))
         if not rows:
             return None
         if len(rows) == 1:
@@ -851,6 +895,35 @@ class Store:
         if len(act) == 1:
             return int(act[0]["team_id"])
         return None
+
+    def backfill_bet_game_type(self) -> int:
+        """Fill ``bets.game_type`` from the game each wager was placed on.
+
+        DERIVED DATA, not a correction: the season phase of a bet is a property of its game,
+        which is SOURCE DATA already in the ``games`` table, and this only copies it across
+        for rows written before the column existed.  No price, stake, result or P&L is
+        touched, every affected row is left auditable through ``audit_log``, and a row whose
+        game is not in the ledger stays NULL rather than being assigned a phase it never had.
+        """
+        rows = self.query(
+            """SELECT g.game_type t, COUNT(*) n
+                 FROM bets b JOIN games g ON g.game_id=b.game_id
+                WHERE b.game_type IS NULL GROUP BY 1""")
+        if not rows:
+            return 0
+        cur = self.execute(
+            """UPDATE bets SET game_type = (SELECT g.game_type FROM games g
+                                           WHERE g.game_id = bets.game_id)
+                WHERE game_type IS NULL
+                  AND game_id IN (SELECT game_id FROM games)""")
+        self.commit()
+        self.audit("store", "BACKFILL_BET_GAME_TYPE", "bets",
+                   json.dumps({"rows": cur.rowcount,
+                               "by_phase": {str(r["t"]): int(r["n"]) for r in rows},
+                               "derived_from": "games.game_type (SOURCE DATA)",
+                               "columns_touched": ["game_type"],
+                               "note": "price, stake, result and pnl untouched"}))
+        return cur.rowcount
 
     def derive_winners(self) -> int:
         """Fill games.winner_id from the published final scores.
@@ -989,7 +1062,16 @@ class Store:
              entity_id: str | None = None, sources: str | None = None,
              auto_corrected: int = 0) -> bool:
         """Record an irregularity.  Never auto-correct silently: auto_corrected must be
-        accompanied by a resolution note in the caller's own audit entry."""
+        accompanied by a resolution note in the caller's own audit entry.
+
+        Every call also marks ``(kind, entity_id)`` as *still reproducing* in
+        :attr:`flag_seen`.  A condition-based check re-raises its flags on every run, so a
+        flag that is open but was not re-raised this run describes something that is no
+        longer true -- otherwise ``INSERT OR IGNORE`` would keep a fixed problem in the queue
+        forever, which is exactly what happened to the two ``duplicate_game`` rows left over
+        from the split-squad matching bug.  See ``Verifier.reconcile_stale_flags``, which acts
+        on this and closes such rows with a resolution note rather than deleting them.
+        """
         cur = self.execute(
             """INSERT OR IGNORE INTO irregularities
                (ts_utc, kind, severity, entity_type, entity_id, detail, sources, auto_corrected)
@@ -1000,6 +1082,7 @@ class Store:
              auto_corrected),
         )
         self.commit()
+        self.flag_seen.add((kind, entity_id or ""))
         return cur.rowcount > 0
 
     def resolve_irregularity(self, irr_id: int, resolution: str, status: str = "resolved") -> None:
