@@ -1,0 +1,291 @@
+{
+  "_capture": {
+    "source_url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20260923",
+    "retrieved_at": "2026-09-22T23:05:00Z",
+    "method": "fetched with the Arena fetch tool (no key, no auth). The development sandbox has no outbound network to this host; CI does.",
+    "completeness": "FIELD-PRESERVING EXCERPT of a 7-chunk response. The 2026-09-23 slate had 4 NHL games; this file retains the FIRST event in full for the fields this project parses (identifiers, date, venue, both competitors, each competitor's `probables` block and `status`) and the SECOND event's identifying head only. The `leaders`, `broadcasts`, `geoBroadcasts` and `highlights` blocks, the `leagues[].calendar` array (189 dates) and the team `links` arrays were dropped at capture time, except where retained below to show the shape. No retained value was edited.",
+    "why_it_matters": "This is the FIRST verified public source this project has found that names a starting goalie BEFORE puck drop. Until 2026-09-22 the ledger recorded `goalie_starts` as permanently empty and every goalie-gated strategy stayed WAITING FOR GOALIE in forward tests, because probes of the NHL endpoints (`/v1/gamecentre/{id}/probable-goalies` -> 404, `/v1/gamecentre/{id}/landing` -> 404 for a future game) found nothing. ESPN publishes, per competitor of a scheduled game, `probables[]` with `name=\"probableStartingGoalie\"` and a `status` object -- here `{\"id\":\"101\",\"name\":\"Expected\",\"type\":\"expected\"}` -- i.e. EXPECTED, not CONFIRMED. That distinction is carried into the ledger verbatim (`status_type`) and is never silently upgraded: a strategy that requires a confirmed starter still waits.",
+    "caveats": [
+      "The status observed on 2026-09-22 for both teams of a next-day preseason game was `expected`. Whether ESPN ever publishes `type=\"confirmed\"` for NHL games, and how far ahead of puck drop it appears, is NOT verified by this capture; the ledger records only what was observed and CI re-probes every run.",
+      "ESPN event ids are not NHL game ids. Joining needs date + both team abbreviations + venue name; on 2026-09-23 the same two clubs play twice (a split-squad home-and-home), so the venue is REQUIRED to disambiguate -- see nhl_schedule_20260923_excerpt.json for the matching NHL rows (2026010036 at Canadian Tire Centre, 2026010035 at Scotiabank Arena).",
+      "The feed is a snapshot with no published announcement timestamp: `status` carries no time. Anything derived from it is FORWARD-ONLY. It can never be used to price a historical decision, because when ESPN first published the name is unknowable from this payload."
+    ]
+  },
+  "leagues": [
+    {
+      "id": "90",
+      "uid": "s:70~l:90",
+      "name": "National Hockey League",
+      "abbreviation": "NHL",
+      "slug": "nhl",
+      "season": {
+        "year": 2027,
+        "startDate": "2026-09-15T07:00Z",
+        "endDate": "2027-07-01T06:59Z",
+        "displayName": "2026-27",
+        "type": { "id": "1", "type": 1, "name": "Preseason", "abbreviation": "pre" }
+      },
+      "calendarType": "day",
+      "calendarIsWhitelist": true,
+      "calendarStartDate": "2026-09-15T07:00Z",
+      "calendarEndDate": "2027-07-01T06:59Z"
+    }
+  ],
+  "events": [
+    {
+      "id": "401879650",
+      "uid": "s:70~l:90~e:401879650",
+      "date": "2026-09-23T23:00Z",
+      "name": "Toronto Maple Leafs at Ottawa Senators",
+      "shortName": "TOR @ OTT",
+      "season": { "year": 2027, "type": 1, "slug": "preseason" },
+      "competitions": [
+        {
+          "id": "401879650",
+          "uid": "s:70~l:90~e:401879650~c:401879650",
+          "date": "2026-09-23T23:00Z",
+          "attendance": 0,
+          "type": { "id": "1", "abbreviation": "STD" },
+          "timeValid": true,
+          "neutralSite": false,
+          "playByPlayAvailable": false,
+          "recent": false,
+          "venue": {
+            "id": "1832",
+            "fullName": "Canadian Tire Centre",
+            "address": { "city": "Ottawa", "state": "ON", "country": "Canada" },
+            "indoor": true
+          },
+          "competitors": [
+            {
+              "id": "14",
+              "uid": "s:70~l:90~t:14",
+              "type": "team",
+              "order": 0,
+              "homeAway": "home",
+              "team": {
+                "id": "14",
+                "uid": "s:70~l:90~t:14",
+                "location": "Ottawa",
+                "name": "Senators",
+                "abbreviation": "OTT",
+                "displayName": "Ottawa Senators",
+                "shortDisplayName": "Senators",
+                "color": "dd1a32",
+                "isActive": true,
+                "venue": { "id": "1832" }
+              },
+              "score": "0",
+              "probables": [
+                {
+                  "name": "probableStartingGoalie",
+                  "displayName": "Probable Starting Goalie",
+                  "shortDisplayName": "Starter",
+                  "abbreviation": "SG",
+                  "playerId": 3069285,
+                  "athlete": {
+                    "id": "3069285",
+                    "fullName": "Linus Ullmark",
+                    "displayName": "Linus Ullmark",
+                    "shortName": "L. Ullmark",
+                    "links": [
+                      {
+                        "rel": ["playercard", "desktop", "athlete"],
+                        "href": "https://www.espn.com/nhl/player/_/id/3069285"
+                      }
+                    ],
+                    "headshot": "https://a.espncdn.com/i/headshots/nhl/players/full/3069285.png",
+                    "jersey": "35",
+                    "position": "G",
+                    "team": { "id": "14" }
+                  },
+                  "status": {
+                    "id": "101",
+                    "name": "Expected",
+                    "type": "expected",
+                    "abbreviation": "Expected"
+                  },
+                  "statistics": [],
+                  "record": ""
+                }
+              ],
+              "curatedRank": { "current": 99 },
+              "statistics": [
+                { "name": "saves", "abbreviation": "SV", "displayValue": "33", "rankDisplayValue": "11th" },
+                { "name": "savePct", "abbreviation": "SV%", "displayValue": ".917", "rankDisplayValue": "10th" },
+                { "name": "plusMinus", "abbreviation": "+/-", "displayValue": "0" },
+                { "name": "goals", "abbreviation": "G", "displayValue": "2", "rankDisplayValue": "Tied-17th" },
+                { "name": "ytdGoals", "abbreviation": "YTDG", "displayValue": "0" },
+                { "name": "assists", "abbreviation": "A", "displayValue": "3", "rankDisplayValue": "Tied-21st" },
+                { "name": "points", "abbreviation": "PTS", "displayValue": "5", "rankDisplayValue": "Tied-21st" }
+              ],
+              "records": [
+                { "name": "overall", "abbreviation": "TOTAL", "type": "total", "summary": "0-0-1" },
+                { "name": "Home", "abbreviation": "HOME", "type": "home", "summary": "0-0-0" },
+                { "name": "Road", "abbreviation": "ROAD", "type": "road", "summary": "0-0-1" }
+              ]
+            },
+            {
+              "id": "21",
+              "uid": "s:70~l:90~t:21",
+              "type": "team",
+              "order": 1,
+              "homeAway": "away",
+              "team": {
+                "id": "21",
+                "uid": "s:70~l:90~t:21",
+                "location": "Toronto",
+                "name": "Maple Leafs",
+                "abbreviation": "TOR",
+                "displayName": "Toronto Maple Leafs",
+                "shortDisplayName": "Maple Leafs",
+                "color": "003e7e",
+                "isActive": true,
+                "venue": { "id": "1838" }
+              },
+              "score": "0",
+              "probables": [
+                {
+                  "name": "probableStartingGoalie",
+                  "displayName": "Probable Starting Goalie",
+                  "shortDisplayName": "Starter",
+                  "abbreviation": "SG",
+                  "playerId": 3067313,
+                  "athlete": {
+                    "id": "3067313",
+                    "fullName": "Anthony Stolarz",
+                    "displayName": "Anthony Stolarz",
+                    "shortName": "A. Stolarz",
+                    "links": [
+                      {
+                        "rel": ["playercard", "desktop", "athlete"],
+                        "href": "https://www.espn.com/nhl/player/_/id/3067313"
+                      }
+                    ],
+                    "headshot": "https://a.espncdn.com/i/headshots/nhl/players/full/3067313.png",
+                    "jersey": "41",
+                    "position": "G",
+                    "team": { "id": "21" }
+                  },
+                  "status": {
+                    "id": "101",
+                    "name": "Expected",
+                    "type": "expected",
+                    "abbreviation": "Expected"
+                  },
+                  "statistics": [],
+                  "record": ""
+                }
+              ],
+              "curatedRank": { "current": 99 },
+              "statistics": [
+                { "name": "saves", "abbreviation": "SV", "displayValue": "51", "rankDisplayValue": "Tied-4th" },
+                { "name": "savePct", "abbreviation": "SV%", "displayValue": ".879", "rankDisplayValue": "22nd" },
+                { "name": "plusMinus", "abbreviation": "+/-", "displayValue": "0" },
+                { "name": "goals", "abbreviation": "G", "displayValue": "4", "rankDisplayValue": "Tied-12th" },
+                { "name": "ytdGoals", "abbreviation": "YTDG", "displayValue": "0" },
+                { "name": "assists", "abbreviation": "A", "displayValue": "8", "rankDisplayValue": "Tied-10th" },
+                { "name": "points", "abbreviation": "PTS", "displayValue": "12", "rankDisplayValue": "11th" }
+              ],
+              "records": [
+                { "name": "overall", "abbreviation": "TOTAL", "type": "total", "summary": "0-1-1" },
+                { "name": "Home", "abbreviation": "HOME", "type": "home", "summary": "0-1-0" },
+                { "name": "Road", "abbreviation": "AWAY", "type": "road", "summary": "0-0-1" }
+              ]
+            }
+          ],
+          "notes": [],
+          "status": {
+            "clock": 0.0,
+            "displayClock": "0:00",
+            "period": 0,
+            "type": {
+              "id": "1",
+              "name": "STATUS_SCHEDULED",
+              "state": "pre",
+              "completed": false,
+              "description": "Scheduled",
+              "detail": "Wed, September 23rd at 7:00 PM EDT",
+              "shortDetail": "9/23 - 7:00 PM EDT"
+            }
+          },
+          "broadcasts": [{ "market": "national", "names": ["NHL Net"] }],
+          "format": { "regulation": { "periods": 3 } },
+          "startDate": "2026-09-23T23:00Z",
+          "broadcast": "NHL Net"
+        }
+      ],
+      "links": [
+        {
+          "language": "en-US",
+          "rel": ["summary", "desktop", "event"],
+          "href": "https://www.espn.com/nhl/game/_/gameId/401879650/maple-leafs-senators",
+          "text": "Gamecast",
+          "shortText": "Gamecast",
+          "isExternal": false,
+          "isPremium": false
+        }
+      ],
+      "status": {
+        "clock": 0.0,
+        "displayClock": "0:00",
+        "period": 0,
+        "type": {
+          "id": "1",
+          "name": "STATUS_SCHEDULED",
+          "state": "pre",
+          "completed": false,
+          "description": "Scheduled",
+          "detail": "Wed, September 23rd at 7:00 PM EDT",
+          "shortDetail": "9/23 - 7:00 PM EDT"
+        }
+      }
+    },
+    {
+      "_note": "Second event of the same slate: the same two clubs play each other again the same evening at the OTHER venue (NHL game 2026010035, Scotiabank Arena). Retained only as far as it was read -- its `probables` block was not captured. It is kept here to document the ambiguity a date+teams join would hit and why the venue is part of the join key.",
+      "id": "401886441",
+      "uid": "s:70~l:90~e:401886441",
+      "date": "2026-09-23T23:00Z",
+      "name": "Ottawa Senators at Toronto Maple Leafs",
+      "shortName": "OTT @ TOR",
+      "season": { "year": 2027, "type": 1, "slug": "preseason" },
+      "competitions": [
+        {
+          "id": "401886441",
+          "uid": "s:70~l:90~e:401886441~c:401886441",
+          "date": "2026-09-23T23:00Z",
+          "attendance": 0,
+          "type": { "id": "1", "abbreviation": "STD" },
+          "timeValid": true,
+          "neutralSite": false,
+          "playByPlayAvailable": false,
+          "recent": false,
+          "venue": {
+            "id": "1838",
+            "fullName": "Scotiabank Arena",
+            "address": { "city": "Toronto", "state": "ON", "country": "Canada" },
+            "indoor": true
+          },
+          "competitors": [
+            {
+              "id": "21",
+              "uid": "s:70~l:90~t:21",
+              "type": "team",
+              "order": 0,
+              "homeAway": "home",
+              "team": {
+                "id": "21",
+                "uid": "s:70~l:90~t:21",
+                "location": "Toronto",
+                "name": "Maple Leafs",
+                "abbreviation": "TOR",
+                "displayName": "Toronto Maple Leafs",
+                "shortDisplayName": "Maple Leafs"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

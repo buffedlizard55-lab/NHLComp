@@ -547,6 +547,7 @@ origin {e(s['origin'])}</span></summary>
 <tr><th>Settlement</th><td>{e(s['settlement_rule'])}</td></tr>
 <tr><th>Markets</th><td>{e(s['markets'])}</td></tr>
 <tr><th>Parameters</th><td><code>{e(s['params_json'])}</code></td></tr>
+<tr><th>Information gates</th><td>{_gates_cell(s)}</td></tr>
 <tr><th>Forward test</th><td>{f.get('n_settled', 0)} settled · P&L {signed(f.get('pnl'))} ·
 ROI {pct(f.get('roi'))} · win rate {pct(f.get('win_rate'))}
 ({pct((f.get('win_rate_ci') or [0, 0])[0], 1)}–{pct((f.get('win_rate_ci') or [0, 0])[1], 1)})</td></tr>
@@ -600,6 +601,31 @@ ROI {pct(b.get('roi'))}</td></tr>
     return _page("Strategies", "strategies.html", "".join(parts), gen)
 
 
+def _gates_cell(s: Any) -> str:
+    """Human-readable information dependencies for one strategy row."""
+    try:
+        params = json.loads(s["params_json"] or "{}")
+    except (ValueError, TypeError):
+        params = {}
+    bits = []
+    if params.get("requires_goalie"):
+        bits.append("requires a CONFIRMED starter (the verified pre-game feed publishes "
+                    "'expected' only, so this waits by design)")
+    if params.get("requires_probable_goalie"):
+        bits.append("requires the probable starter named by espn.nhl_probables (verified "
+                    "2026-09-22; forward test only -- the feed has no history)")
+    if params.get("requires_lineup"):
+        bits.append("requires confirmed forward lines (no verified source; waits)")
+    if params.get("injury_sensitive"):
+        bits.append("waits on unresolved (day-to-day / GTD) injuries via espn.nhl_api")
+    if params.get("blocked_reason"):
+        bits.append(f"blocked: {params['blocked_reason']}")
+    if params.get("game_types"):
+        bits.append("trades NHL gameTypes " + ", ".join(str(g) for g in params["game_types"])
+                    + " (1 preseason, 2 regular season, 3 playoffs)")
+    return e("; ".join(bits) or "none declared")
+
+
 def _ratio(a: Any, b: Any) -> float | None:
     try:
         return float(a) / float(b) if b else None
@@ -607,9 +633,32 @@ def _ratio(a: Any, b: Any) -> float | None:
         return None
 
 
+def _bet_goalies(b: Any) -> tuple[str, str]:
+    """(goalie names, statuses) a wager carried, read from its own features_json.
+
+    A probable-starter strategy's bet stores what the feed said at decision time
+    (``home_probable_starter`` / ``away_probable_starter``); surfacing it here gives the
+    site a real goalie filter instead of an empty placeholder, and lets a reader see the
+    exact status ('expected') the rule acted on.
+    """
+    try:
+        sup = json.loads(b["features_json"] or "{}")
+    except (ValueError, TypeError):
+        return "", ""
+    names, statuses = [], []
+    for side in ("home", "away"):
+        p = sup.get(f"{side}_probable_starter") or {}
+        if p.get("name"):
+            names.append(str(p["name"]))
+            statuses.append(f"{p.get('status') or 'expected'}"
+                            + (" (confirmed)" if p.get("confirmed") else ""))
+    return "; ".join(names), "; ".join(statuses)
+
+
 def _bets_table(id_: str, bets: Sequence[Any]) -> str:
     rows_html = []
     for b in bets:
+        goalies, goalie_status = _bet_goalies(b)
         try:
             game_date = str(b["game_date"] or "")
             season = game_date[:4] if len(game_date)>=4 else ""
@@ -624,7 +673,7 @@ def _bets_table(id_: str, bets: Sequence[Any]) -> str:
         strategy = (b["strategy_id"] or "").lower()
         mode = (b["test_mode"] or "").lower()
         player = ""
-        goalie = ""
+        goalie = goalies
         pnl = b["pnl"] or 0
         roi = b["roi"] or 0
         edge = b["edge"] or 0
@@ -642,11 +691,12 @@ def _bets_table(id_: str, bets: Sequence[Any]) -> str:
             f'<td class="num">{n(b["stake"])}</td><td class="num">{n(b["filled_size"],2)}</td><td class="num">{n(b["liquidity"],0)}</td>'
             f'<td class="num">{n(_col(b, "fee"),2)}</td><td>{e(b["result"])}</td><td class="num">{signed(b["pnl"])}</td><td class="num">{pct(b["roi"])}</td>'
             f'<td class="num">{n(b["close_price"],3)}</td><td class="num">{n(b["clv"],4)}</td><td>{e(b["verification_status"])}</td>'
+            f'<td>{e(goalie_status)}</td>'
             f'<td>{e(b["decision_ts"])[:19]}</td><td>{e(b["bet_ts"])}</td>'
             f'</tr>')
     headers = ["Bet ID", "Mode", "Game", "Matchup", "Market", "Selection", "Provider",
                "Price", "Price point", "Model p", "Edge", "Stake", "Contracts", "Liquidity",
-               "Fee", "Result", "P&L", "ROI", "Close", "CLV", "Verification",
+               "Fee", "Result", "P&L", "ROI", "Close", "CLV", "Verification", "Goalies",
                "Decision ts", "Placed"]
     ths = "".join(f'<th class="{"num" if i in (7,9,10,11,12,13,14,16,17,18,19) else ""}" onclick="sortTable(\'{id_}\',{i},\'{"n" if i in (7,9,10,11,12,13,14,16,17,18,19) else "s"}\')">{e(h)}</th>' for i,h in enumerate(headers))
     return f'<div class="wrap"><table id="{id_}"><thead><tr>{ths}</tr></thead><tbody>{"".join(rows_html) or f"<tr><td colspan={len(headers)}>No rows yet.</td></tr>"}</tbody></table></div>' 
@@ -675,7 +725,9 @@ def page_upcoming(store: Store, gen: str) -> str:
         '<option value="futures">futures</option><option value="alternate">alternate</option></select>'
         '<select onchange="setFilter(\'up\',\'status\',this.value)"><option value="">all statuses</option>'
         '<option value="READY TO BET">READY TO BET</option><option value="PRICE TOO HIGH">PRICE TOO HIGH</option>'
-        '<option value="WATCHING">WATCHING</option><option value="WAITING FOR">WAITING</option></select>'
+        '<option value="WATCHING">WATCHING</option><option value="WAITING FOR">WAITING</option>'
+        '<option value="OUT OF SCOPE">OUT OF SCOPE</option>'
+        '<option value="EXPIRED">EXPIRED</option></select>'
         '<input placeholder="team id or matchup" style="width:140px" oninput="setFilter(\'up\',\'team\',this.value)">'
         '<input placeholder="season YYYY" style="width:110px" oninput="setFilter(\'up\',\'season\',this.value)">'
         '<input placeholder="month MM" style="width:90px" oninput="setFilter(\'up\',\'month\',this.value)">'
@@ -744,7 +796,7 @@ def page_positions(store: Store, gen: str) -> str:
     return _page("Live Paper Trading", "positions.html", "".join(body), gen)
 
 
-def page_history(store: Store, gen: str) -> str:
+def page_history(store: Store, perf: Performance, gen: str) -> str:
     body = ["<h2>Trade history</h2>",
             '<p class="small">Append-only. Corrections are never made in place — they are '
             'written as amendments with a before/after audit row. Filters combine with AND: '
@@ -772,6 +824,30 @@ def page_history(store: Store, gen: str) -> str:
     body.append(_bets_table("th", bets))
     aud = store.one("SELECT COUNT(*) c FROM bet_audit")["c"]
     body.append(f'<p class="small">{aud} audit rows in <code>bet_audit</code>.</p>')
+    # requirement 12: every settled wager gets its brief post-settlement analysis -- what
+    # the model said, what was obtained, whether the close agreed, and whether the sample
+    # can support any conclusion at all.  Small samples are labelled as such, never spun.
+    settled_recent = store.query(
+        """SELECT bet_id FROM bets WHERE result IN ('WIN','LOSS','PUSH','VOID')
+            ORDER BY settle_ts DESC LIMIT 20""")
+    parts = []
+    for r in settled_recent:
+        a = perf.post_settlement_analysis(r["bet_id"])
+        if not a:
+            continue
+        notes = "; ".join(a.get("notes") or []) or "no caveats"
+        parts.append(
+            f"<details><summary><b>{e(a['bet_id'])}</b> — {e(a['result'])} · "
+            f"P&amp;L {signed(a.get('pnl'))} · model p {n(a.get('model_prob'), 4)} at "
+            f"{n(a.get('price'), 3)} · CLV {n(a.get('clv'), 4)} · "
+            f"strategy n={a.get('strategy_n')} (CI "
+            f"{pct((a.get('strategy_win_rate_ci') or [0, 0])[0], 1)}–"
+            f"{pct((a.get('strategy_win_rate_ci') or [0, 0])[1], 1)})</summary>"
+            f"<p>{e(notes)}. Modify recommended: "
+            f"{'yes' if a.get('recommend_modify') else 'no (evidence does not support a change yet)'}</p></details>")
+    if parts:
+        body.append("<h2>Post-settlement analysis (20 most recent settled wagers)</h2>")
+        body.extend(parts)
     return _page("Trade History", "history.html", "".join(body), gen)
 
 
@@ -1030,6 +1106,31 @@ single quoted level.</li>
 carrying a <code>blocked_reason</code>.</li>
 </ul>
 
+<h2>3c. Starting goalies: probable is not confirmed</h2>
+<p>Until 2026-09-22 this project had <b>no</b> verified pre-game starter source: the NHL endpoints
+publish nothing before puck drop (probes recorded), so every goalie-gated rule sat in
+<code>WAITING FOR GOALIE</code>. That changed when ESPN's public scoreboard was found to publish a
+<code>probableStartingGoalie</code> per competitor of a scheduled game (registered as
+<code>espn.nhl_probables</code>, capture in <code>data/captured/</code>). The handling is
+deliberately split three ways:</p>
+<ul>
+<li><b>Confirmed-gated rules</b> (<code>requires_goalie</code>) keep waiting. The feed's observed
+status is <code>expected</code>; if it ever publishes <code>confirmed</code> these rules unlock
+automatically, and while it does not, the blocking reason names the probable it refused to treat
+as a confirmation.</li>
+<li><b>Probable-gated rules</b> (<code>requires_probable_goalie</code> — GOALIE_EDGE v3,
+GOALIE_FATIGUE v2, GOALIE_NEWS v3) trade forward on the expected starter. They are FORWARD TEST
+only: the feed publishes no announcement time and has no history, so no honest backtest price
+exists and none is reconstructed.</li>
+<li><b>The feed itself is measured</b>: after each game, the probable name is compared against the
+NHL's own goalie log (who was credited with the start) and the running conversion counts are
+published in the Research Lab. A mismatch is kept, never corrected away.</li>
+</ul>
+<p>Identity plumbing: the ESPN name is resolved to an NHL <code>player_id</code> through the club's
+published roster (a table that existed since schema v1 but was empty until the roster ingest was
+wired up on 2026-09-22). Every resolution carries its match basis; an unresolved name is stored
+without an id rather than borrowed.</p>
+
 <h2>4. Execution model</h2>
 <p>Buys happen at the <b>offer</b>, never the mid. Size is capped by the quoted
 <code>yes_ask_size_fp</code>; if the desired stake needs more contracts than are offered the order
@@ -1088,13 +1189,17 @@ closing candle only; the DraftKings reference exists only from the day collectio
 scheduled start, so it may include trades from the final minutes before puck drop. Kalshi's NHL
 books are thin outside the playoffs; the candle's <code>yes_ask</code> is a price, not a
 guarantee of size, and the fee model assumes the general schedule.</li>
-<li>Starting goalies for <i>upcoming</i> games have no verified pre-game source, so goalie-gated
-strategies forward-test only when a starter becomes known; their backtests rely on the post-game
-log (an explicit ASSUMPTION).</li>
+<li>Starting goalies: since 2026-09-22 a verified pre-game feed exists (ESPN's scoreboard
+publishes a <i>probable</i> starting goalie per competitor, status <code>expected</code>). Rules
+that require a CONFIRMED starter still wait by design; probable-starter rules (GOALIE_EDGE v3,
+GOALIE_FATIGUE v2) trade forward only — the feed publishes no announcement time, so it can never
+price a historical decision and there is nothing to backtest it against. Their backtests rely on
+the post-game log (an explicit ASSUMPTION); the feed's conversion is measured against that log in
+the Research Lab, not asserted.</li>
 <li>Arena latitude/longitude is unavailable: the legacy NHL venue host could not be reached, so
 travel is derived from published venue UTC offsets rather than invented coordinates.</li>
-<li>Line combinations, goalie announcements and player props have no verified feed. EDGE tracking
-is snapshotted forward only (season-to-date aggregates, no per-game history).</li>
+<li>Line combinations, goalie-announcement <i>times</i> and player props have no verified feed.
+EDGE tracking is snapshotted forward only (season-to-date aggregates, no per-game history).</li>
 <li>Preseason Kalshi markets are thin; contracts with zero size on both sides are recorded as
 <code>insufficient_liquidity</code> instead of being traded.</li>
 <li>In-game candles (60/120 minutes after the start) are stored for research; the pipeline runs on
@@ -1118,7 +1223,7 @@ def build_site(store: Store, outdir: str) -> int:
         "strategies.html": lambda: page_strategies(store, perf, gen),
         "upcoming.html": lambda: page_upcoming(store, gen),
         "positions.html": lambda: page_positions(store, gen),
-        "history.html": lambda: page_history(store, gen),
+        "history.html": lambda: page_history(store, perf, gen),
         "performance.html": lambda: page_performance(store, perf, gen),
         "research.html": lambda: page_research(store, gen),
         "sources.html": lambda: page_sources(store, gen),

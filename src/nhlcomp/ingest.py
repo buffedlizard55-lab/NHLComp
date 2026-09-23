@@ -18,6 +18,7 @@ from .ingest_ext import IngestExtensions
 from .sources.kalshi import (KalshiApi, KalshiApiError, normalize_market,
                              parse_event_ticker, split_team_codes)
 from .sources.nhl import (NhlApi, NhlStatsRest, daterange, normalize_game,
+                          parse_espn_events, parse_roster, parse_schedule_games,
                           parse_scoreboard_games, parse_standings)
 from .sources.polymarket import PolymarketGamma
 from .sources.registry import SOURCES, probe_urls_for, seed_registry
@@ -307,6 +308,220 @@ class Ingestor(IngestExtensions):
         ins, upd = self._insert_games(games, "nhl.api_web")
         self.log(f"club schedule {abbrev} {season}: {len(games)} games ({ins} new, {upd} updated)")
         return len(games)
+
+    def schedule_day(self, day: str) -> int:
+        """``/v1/schedule/{YYYY-MM-DD}`` -- the day's slate with the split-squad flags.
+
+        The scoreboard feed does not publish ``homeSplitSquad``/``awaySplitSquad``; only
+        this endpoint does (verified 2026-09-22 on 2026-09-23, where both OTT/TOR preseason
+        games are split-squad and MIN at DAL is not).  The rows go through the same
+        ``_insert_games`` upsert as every other schedule source; because the upsert writes
+        only the keys a row carries, a scoreboard row can never overwrite a published
+        ``false`` with an absent ``null``.
+        """
+        url = f"https://api-web.nhle.com/v1/schedule/{day}"
+        try:
+            payload = self.nhl.schedule(day)
+        except NetworkUnavailable as exc:
+            self.store.flag("broken_api", f"schedule {day}: {exc}", severity="error",
+                            entity_type="source", entity_id="nhl.api_web")
+            return 0
+        self.store.record_raw(url, json.dumps(payload), source_id="nhl.api_web",
+                              notes="split-squad flags source")
+        games = parse_schedule_games(payload)
+        ins, upd = self._insert_games(games, "nhl.api_web")
+        n_split = sum(1 for g in games if g.get("split_squad_home") or g.get("split_squad_away"))
+        self.log(f"schedule {day}: {len(games)} games ({ins} new, {upd} updated, "
+                 f"{n_split} split-squad)")
+        return len(games)
+
+    def rosters(self, abbrevs: Sequence[str], season: int) -> int:
+        """Store one roster per club into ``players`` (snapshot semantics).
+
+        The ``players`` table has existed since schema v1 and was EMPTY in every committed
+        ledger: ``NhlApi.roster`` was implemented but nothing called it, so the project had
+        no way to tie an injury name or a probable-starter name to an NHL ``player_id``.
+        This stage is that join's source.  Rows are the feed's own words; nothing here is
+        inferred about line combinations or depth -- a roster is not a lineup.
+        """
+        n = 0
+        ts = utcnow()
+        for ab in abbrevs:
+            url = f"https://api-web.nhle.com/v1/roster/{ab}/{season}"
+            try:
+                payload = self.nhl.roster(ab, season)
+            except NetworkUnavailable as exc:
+                self.store.flag("broken_api", f"roster {ab}: {exc}", severity="error",
+                                entity_type="source", entity_id="nhl.roster")
+                continue
+            self.store.record_raw(url, json.dumps(payload), source_id="nhl.roster")
+            rows = parse_roster(payload, abbrev=ab, season=season, retrieved_at=ts)
+            team_id = self.store.team_id_for(ab)
+            for r in rows:
+                r["team_id"] = team_id
+                self.store.upsert_player(r)
+                n += 1
+        self.store.commit()
+        self.log(f"rosters: {n} player rows across {len(abbrevs)} clubs for {season}")
+        return n
+
+    def resolve_injury_players(self) -> int:
+        """Tie ESPN injury rows to NHL player ids through the published rosters.
+
+        Only after rosters are stored.  Every match records HOW it was made
+        (``player_match_basis``); an unmatched row is counted and flagged, never guessed.
+        Idempotent: rows that already carry a player_id are left alone.
+        """
+        n = 0
+        unresolved: list[str] = []
+        for r in self.store.query(
+                "SELECT id, player_name, team_abbrev, position, player_id FROM injuries "
+                "WHERE player_id IS NULL"):
+            basis_pos = "G" if (r["position"] or "").upper() in ("G", " goalie") else None
+            pid, basis = self.store.resolve_player(r["player_name"], r["team_abbrev"],
+                                                   position=basis_pos)
+            if pid is not None:
+                self.store.execute(
+                    "UPDATE injuries SET player_id=?, player_match_basis=? WHERE id=?",
+                    (pid, basis, r["id"]))
+                n += 1
+            else:
+                unresolved.append(f"{r['player_name']} ({r['team_abbrev']}): {basis}")
+        self.store.commit()
+        if unresolved:
+            self.store.resolve_irregularities_where(
+                "unmapped_injury", "",
+                "superseded by the per-row player_id resolution pass", actor="ingest")
+            self.store.flag(
+                "unmapped_injury",
+                f"{len(unresolved)} injury row(s) could not be resolved to an NHL player_id "
+                f"from the published rosters: " + "; ".join(unresolved[:6])
+                + (" ..." if len(unresolved) > 6 else ""),
+                severity="info", entity_type="dataset", entity_id="injuries",
+                sources="espn.nhl_api;nhl.roster")
+        self.log(f"injury player resolution: {n} matched, {len(unresolved)} unresolved")
+        return n
+
+    def espn_probables(self, days: Sequence[str]) -> int:
+        """Read probable starting goalies off the ESPN scoreboard, forward only.
+
+        For each NHL game on the requested days that has NOT started, each competitor's
+        ``probableStartingGoalie`` is stored with the feed's own status words.  The NHL
+        game_id is resolved from (UTC date, home abbrev, away abbrev), disambiguated by
+        venue when the pair is not unique; an event that cannot be matched is still stored
+        (game_id NULL, ``source_event_id`` kept) and flagged, never attached to a guessed
+        game.  ``snapshot_ts`` is recorded on every row because the feed publishes no
+        announcement time -- the moment this project read it is the only timestamp that
+        exists, and point-in-time use depends on it.
+        """
+        from datetime import datetime, timezone
+        url = "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard"
+        new_rows = 0
+        for day in days:
+            full = f"{url}?dates={day.replace('-', '')}"
+            try:
+                payload = self.http.get(full).json
+            except NetworkUnavailable as exc:
+                self.store.flag("broken_api", f"espn probables {day}: {exc}", severity="error",
+                                entity_type="source", entity_id="espn.nhl_probables")
+                continue
+            self.store.record_raw(full, json.dumps(payload), source_id="espn.nhl_probables")
+            ts = utcnow()
+            unmatched: list[str] = []
+            for ev in parse_espn_events(payload):
+                if not ev["probables"]:
+                    continue
+                start = ev.get("start_utc") or ""
+                try:
+                    start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
+                except ValueError:
+                    start_dt = None
+                if start_dt is not None and start_dt <= datetime.now(timezone.utc):
+                    continue  # the game has started: not a pre-game observation
+                utc_date = start[:10] if start else day
+                probs = ev["probables"]
+                by_side = {p.get("home_away"): p for p in probs}
+                home_p, away_p = by_side.get("home"), by_side.get("away")
+                # -- resolve the NHL game: unique (date, home, away) first, venue to break ties
+                home_ab, away_ab = (home_p or {}).get("abbrev"), (away_p or {}).get("abbrev")
+                cands = [g for g in self.store.query(
+                    """SELECT game_id, venue FROM games WHERE start_time_utc LIKE ? AND
+                       home_id IN (SELECT team_id FROM teams WHERE abbrev=?) AND
+                       away_id IN (SELECT team_id FROM teams WHERE abbrev=?)""",
+                    (utc_date + "%", home_ab or "\0", away_ab or "\0"))]
+                if not cands and home_ab and away_ab:
+                    # the feed's vocabulary may differ from the NHL triCode; team_id_for
+                    # applies the published alias table and returns None when unsure
+                    hid, aid = self.store.team_id_for(home_ab), self.store.team_id_for(away_ab)
+                    if hid and aid:
+                        cands = [g for g in self.store.query(
+                            """SELECT game_id, venue FROM games
+                                 WHERE start_time_utc LIKE ? AND home_id=? AND away_id=?""",
+                            (utc_date + "%", hid, aid))]
+                gid, basis = None, None
+                if len(cands) == 1:
+                    gid, basis = int(cands[0]["game_id"]), "unique date+home+away match"
+                elif len(cands) > 1:
+                    want = (ev.get("venue") or "").strip().casefold()
+                    venue_hits = [c for c in cands
+                                  if (c["venue"] or "").strip().casefold() == want]
+                    if len(venue_hits) == 1:
+                        gid = int(venue_hits[0]["game_id"])
+                        basis = ("date+home+away ambiguous; resolved by venue "
+                                 f"'{ev.get('venue')}'")
+                    else:
+                        unmatched.append(
+                            f"{ev['event_id']} ({(away_p or {}).get('abbrev')} @ "
+                            f"{(home_p or {}).get('abbrev')}: {len(cands)} candidate games, "
+                            f"venue '{ev.get('venue')}' matched {len(venue_hits)})")
+                elif len(cands) == 0:
+                    unmatched.append(
+                        f"{ev['event_id']} ({(away_p or {}).get('abbrev')} @ "
+                        f"{(home_p or {}).get('abbrev')}: no NHL game on {utc_date})")
+                if gid is None and unmatched:
+                    self.store.flag(
+                        "probable_goalie_unmatched",
+                        f"ESPN probable-starter event could not be matched to exactly one NHL "
+                        f"game; rows are still stored with game_id NULL and their "
+                        f"source_event_id kept -- never attached to a guessed game: "
+                        + "; ".join(unmatched[:4]) + (" ..." if len(unmatched) > 4 else ""),
+                        severity="warn", entity_type="source",
+                        entity_id=f"espn:{ev['event_id']}",
+                        sources="espn.nhl_probables")
+                for side_key, p in (("home", home_p), ("away", away_p)):
+                    if not p:
+                        continue
+                    if (p.get("position") or "G").upper() != "G":
+                        self.store.flag(
+                            "probable_goalie_position_mismatch",
+                            f"ESPN probable '{p.get('goalie_name')}' carries position "
+                            f"'{p.get('position')}', not G; row not recorded as a starter",
+                            severity="warn", entity_type="source",
+                            entity_id=f"espn:{ev['event_id']}",
+                            sources="espn.nhl_probables")
+                        continue
+                    team_id = self.store.team_id_for(p.get("abbrev") or "") if p.get("abbrev") else None
+                    status_type = (p.get("status_type") or "").lower()
+                    goalie_id, id_basis = (None, "not resolved")
+                    if team_id is not None:
+                        goalie_id, id_basis = self.store.resolve_player(
+                            p.get("goalie_name") or "", p.get("abbrev"), position="G")
+                    wrote = self.store.record_goalie_start({
+                        "game_id": gid, "game_date": utc_date, "team_id": team_id,
+                        "team_abbrev": p.get("abbrev"),
+                        "goalie_name": p.get("goalie_name"), "goalie_id": goalie_id,
+                        "announced_at": None, "source_id": "espn.nhl_probables",
+                        "retrieved_at": ts, "is_confirmed": status_type == "confirmed",
+                        "provenance": "SOURCE", "status_type": p.get("status_type"),
+                        "status_name": p.get("status_name"),
+                        "source_player_id": p.get("espn_player_id"), "snapshot_ts": ts,
+                        "venue": ev.get("venue"), "source_event_id": ev["event_id"],
+                        "match_basis": (basis + "; " + id_basis) if basis else id_basis,
+                        "side": side_key})
+                    new_rows += 1 if wrote else 0
+            self.store.commit()
+            self.log(f"espn probables {day}: parsed, {new_rows} new goalie_start rows so far")
+        return new_rows
 
     def sweep_scoreboards(self, start: str, end: str, *, step_days: int = 10,
                           season: int | None = None, game_types: tuple[int, ...] = (1, 2, 3)) -> int:

@@ -21,7 +21,7 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Iterable, Iterator
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 #: Published feeds disagree on club abbreviation style.  This maps the *short* forms other
 #: sources use onto the three-letter form the NHL API returns, so a row from ESPN can be
@@ -41,6 +41,14 @@ ABBREV_ALIASES: dict[str, str] = {
 
 # Columns added after their table already shipped.  Applied by Store._migrate so a
 # committed ledger.db from an earlier version gains them without a destructive rebuild.
+#: Indexes that reference a column added by :data:`ADDITIVE_COLUMNS`.  Applied by
+#: ``_migrate`` after the ALTERs, never inside SCHEMA (see the comment there).
+POST_MIGRATION_INDEXES: tuple[str, ...] = (
+    "CREATE INDEX IF NOT EXISTS idx_players_team ON players(team_abbrev, position)",
+    "CREATE INDEX IF NOT EXISTS idx_goalie_starts_game ON goalie_starts(game_id, snapshot_ts)",
+    "CREATE INDEX IF NOT EXISTS idx_goalie_starts_snapshot ON goalie_starts(snapshot_ts)",
+)
+
 ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("injuries", "position", "TEXT"),
     ("injuries", "long_comment", "TEXT"),
@@ -80,6 +88,30 @@ ADDITIVE_COLUMNS: tuple[tuple[str, str, str], ...] = (
     ("bets", "game_type", "INTEGER"),
     ("kalshi_series", "last_listed_check", "TEXT"),
     ("kalshi_series", "listing_note", "TEXT"),        # incl. verified-negative observations
+    # schema v8: a verified PRE-GAME starter feed (ESPN `probables`) and the roster that
+    # gives its names an NHL player_id.  Every column is additive; no historical row is
+    # rewritten, and a row written before the column existed keeps NULL -- which reads as
+    # "the source did not publish this", never as "no".
+    ("goalie_starts", "status_type", "TEXT"),         # the feed's own word: expected|confirmed
+    ("goalie_starts", "status_name", "TEXT"),         # the feed's own label: "Expected"
+    ("goalie_starts", "source_player_id", "INTEGER"), # ESPN's id, which is not an NHL id
+    ("goalie_starts", "snapshot_ts", "TEXT"),         # when this project read it
+    ("goalie_starts", "venue", "TEXT"),               # part of the join key
+    ("goalie_starts", "source_event_id", "TEXT"),
+    ("goalie_starts", "match_basis", "TEXT"),
+    ("goalie_starts", "side", "TEXT"),
+    ("goalie_starts", "actual_goalie_name", "TEXT"),  # post-game cross-check, DERIVED
+    ("goalie_starts", "conversion_checked_at", "TEXT"),
+    ("players", "team_abbrev", "TEXT"),
+    ("players", "season", "INTEGER"),
+    ("players", "sweater", "INTEGER"),
+    ("players", "roster_group", "TEXT"),
+    ("players", "source_id", "TEXT"),
+    ("players", "retrieved_at", "TEXT"),
+    ("injuries", "player_id", "INTEGER"),
+    ("injuries", "player_match_basis", "TEXT"),
+    ("games", "split_squad_home", "INTEGER"),
+    ("games", "split_squad_away", "INTEGER"),
 )
 
 SCHEMA = """
@@ -168,6 +200,11 @@ CREATE TABLE IF NOT EXISTS teams (
 
 CREATE INDEX IF NOT EXISTS idx_teams_abbrev ON teams(abbrev);
 
+-- Roster snapshot.  One row per player, carrying the season of the most recent roster
+-- that named him: this table resolves identities (an injury name -> a player_id, an ESPN
+-- probable starter -> an NHL goalie), it is not a roster history.  `roster_group` keeps the
+-- feed's own grouping (forwards / defensemen / goalies) instead of inferring it from the
+-- position letter, so a mismatch between the two is visible rather than hidden.
 CREATE TABLE IF NOT EXISTS players (
     player_id   INTEGER PRIMARY KEY,
     full_name   TEXT NOT NULL,
@@ -175,6 +212,12 @@ CREATE TABLE IF NOT EXISTS players (
     shoots      TEXT,
     birth_date  TEXT,
     team_id     INTEGER,
+    team_abbrev TEXT,
+    season      INTEGER,
+    sweater     INTEGER,
+    roster_group TEXT,
+    source_id   TEXT,
+    retrieved_at TEXT,
     provenance  TEXT NOT NULL DEFAULT 'SOURCE'
 );
 
@@ -201,6 +244,13 @@ CREATE TABLE IF NOT EXISTS games (
     winner_id     INTEGER,
     source_id     TEXT,
     provenance    TEXT NOT NULL DEFAULT 'SOURCE',
+    -- the schedule payload publishes these itself (verified 2026-09-22 on
+    -- /v1/schedule/2026-09-23: the two OTT/TOR preseason games are both split-squad, the
+    -- MIN at DAL and LAK at ANA games are not).  A split-squad game is not played by the
+    -- club's NHL roster, which is a first-party reason to keep it out of a competition
+    -- scored on NHL-roster performance.  NULL means the feed did not publish the field.
+    split_squad_home INTEGER,
+    split_squad_away INTEGER,
     UNIQUE (game_id)
 );
 CREATE INDEX IF NOT EXISTS idx_games_date ON games(game_date);
@@ -262,10 +312,19 @@ CREATE TABLE IF NOT EXISTS injuries (
     retrieved_at  TEXT NOT NULL,
     provenance    TEXT NOT NULL DEFAULT 'SOURCE',
     verified      INTEGER NOT NULL DEFAULT 0,
+    -- resolved against the club's published roster by name.  DERIVED, never asserted:
+    -- `player_match_basis` records how the row was matched and NULL means no roster named
+    -- that player, which is a fact about the roster, not a licence to guess an id.
+    player_id     INTEGER,
+    player_match_basis TEXT,
     UNIQUE (source_id, player_name, reported_at)
 );
 
--- starting-goalie announcements; NULL means "not yet announced", never a guess
+-- Starting-goalie announcements.  NULL means "not published by any verified source", never
+-- a guess.  A row records what the source SAID (`status_type`, `status_name` are the feed's
+-- own words: ESPN publishes type='expected' for a probable starter) and when this project
+-- read it (`snapshot_ts`).  Nothing downstream may use a row whose snapshot postdates the
+-- decision it is being used for -- that is the point of storing the timestamp at all.
 CREATE TABLE IF NOT EXISTS goalie_starts (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     game_id       INTEGER,
@@ -273,12 +332,25 @@ CREATE TABLE IF NOT EXISTS goalie_starts (
     team_id       INTEGER,
     team_abbrev   TEXT,
     goalie_name   TEXT,
-    goalie_id     INTEGER,
-    announced_at  TEXT,
+    goalie_id     INTEGER,               -- NHL player_id when resolved by name, else NULL
+    announced_at  TEXT,                  -- only when the source publishes a time
     source_id     TEXT NOT NULL,
     retrieved_at  TEXT NOT NULL,
     is_confirmed  INTEGER NOT NULL DEFAULT 0,
     provenance    TEXT NOT NULL DEFAULT 'SOURCE',
+    status_type   TEXT,                  -- feed's own word: expected | confirmed | ...
+    status_name   TEXT,                  -- feed's own label: "Expected"
+    source_player_id INTEGER,            -- the feed's own player id (ESPN != NHL)
+    snapshot_ts   TEXT,                  -- when this project read it (point-in-time guard)
+    venue         TEXT,                  -- part of the join key: two clubs can meet twice a day
+    source_event_id TEXT,                -- ESPN event id, kept verbatim
+    match_basis   TEXT,                  -- how the NHL game_id was resolved
+    side          TEXT,                  -- home | away
+    -- the post-game cross-check, filled only after the NHL's own goalie log reports who
+    -- actually started.  DERIVED: it is this project's comparison of two sources, and a
+    -- NULL means "the game has not been played / the log has not been read yet".
+    actual_goalie_name TEXT,
+    conversion_checked_at TEXT,
     UNIQUE (game_id, team_id, goalie_name, source_id)
 );
 
@@ -788,6 +860,20 @@ def utcnow() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _normalize_name(name: str) -> str:
+    """Case-, diacritic- and punctuation-insensitive form of a published player name.
+
+    Used only as a *second* attempt at identity resolution, after an exact match on the
+    roster's own ``full_name`` failed, and every match made this way is recorded as
+    DERIVED with its basis so a reader can see the name was not published identically.
+    """
+    import unicodedata
+    stripped = unicodedata.normalize("NFKD", name or "")
+    ascii_only = "".join(ch for ch in stripped if not unicodedata.combining(ch))
+    kept = "".join(ch for ch in ascii_only.lower() if ch.isalnum() or ch == " ")
+    return " ".join(kept.split())
+
+
 def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
@@ -837,6 +923,12 @@ class Store:
                 continue
             if column not in have:
                 self.conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
+        # Indexes over additive columns cannot live in SCHEMA: `executescript(SCHEMA)` runs
+        # before this migration, so on a ledger that predates the column the CREATE INDEX
+        # would fail on a column that is about to exist.  They are created here instead,
+        # after every ALTER has been applied.
+        for sql in POST_MIGRATION_INDEXES:
+            self.conn.execute(sql)
 
     # ------------------------------------------------------------- helpers
     def execute(self, sql: str, params: Iterable[Any] = ()) -> sqlite3.Cursor:
@@ -1205,3 +1297,128 @@ class Store:
         self.execute("UPDATE strategies SET bankroll=? WHERE strategy_id=? AND version=?",
                      (start + realized - float(open_exposure), strategy_id, version))
         self.commit()
+
+    # ------------------------------------------------------- rosters and starters
+    def upsert_player(self, p: dict[str, Any]) -> None:
+        """Store one roster row.  Keyed on the NHL ``player_id`` the feed publishes.
+
+        This table exists to resolve identities (an injury name to a player_id, an ESPN
+        probable starter to an NHL goalie), so the most recent roster that names a player
+        wins and the season of that roster is kept with the row.  It is a snapshot, not a
+        roster history, and is labelled as one wherever it is displayed.
+        """
+        self.execute(
+            """INSERT INTO players(player_id, full_name, position, shoots, birth_date, team_id,
+                                   team_abbrev, season, sweater, roster_group, source_id,
+                                   retrieved_at, provenance)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(player_id) DO UPDATE SET
+                 full_name=excluded.full_name, position=excluded.position,
+                 shoots=excluded.shoots, birth_date=excluded.birth_date,
+                 team_id=excluded.team_id, team_abbrev=excluded.team_abbrev,
+                 season=excluded.season, sweater=excluded.sweater,
+                 roster_group=excluded.roster_group, source_id=excluded.source_id,
+                 retrieved_at=excluded.retrieved_at, provenance=excluded.provenance""",
+            (p["player_id"], p["full_name"], p.get("position"), p.get("shoots"),
+             p.get("birth_date"), p.get("team_id"), p.get("team_abbrev"), p.get("season"),
+             p.get("sweater"), p.get("roster_group"), p.get("source_id") or "nhl.roster",
+             p.get("retrieved_at") or utcnow(), p.get("provenance") or "SOURCE"))
+
+    def resolve_player(self, name: str, team_abbrev: str | None = None,
+                       position: str | None = None) -> tuple[int | None, str]:
+        """``(player_id, match_basis)`` for a name the roster publishes, or ``(None, why)``.
+
+        Matching is exact on the published ``full_name`` first.  Only if that fails is a
+        case/punctuation-insensitive form tried, and the basis string says which happened,
+        because a fuzzy identity match is DERIVED data and has to be readable as such.
+        Two different players on the same roster sharing a normalised name is a conflict:
+        it returns ``(None, ...)`` rather than picking one.
+        """
+        want = (name or "").strip()
+        if not want:
+            return None, "no name published"
+        clauses = ["full_name=?"]
+        params: list[Any] = [want]
+        if team_abbrev:
+            clauses.append("(team_abbrev=? OR team_abbrev IS NULL)")
+            params.append(team_abbrev)
+        if position:
+            clauses.append("(position=? OR position IS NULL)")
+            params.append(position)
+        rows = self.query(f"SELECT player_id FROM players WHERE {' AND '.join(clauses)}", params)
+        if len(rows) == 1:
+            return int(rows[0]["player_id"]), f"exact full_name match on the published roster"
+        if len(rows) > 1:
+            return None, (f"{len(rows)} roster rows publish that exact name; not resolved "
+                          f"rather than picked")
+        norm = _normalize_name(want)
+        sql = "SELECT player_id, full_name FROM players WHERE 1=1"
+        params2: list[Any] = []
+        if team_abbrev:
+            sql += " AND team_abbrev=?"
+            params2.append(team_abbrev)
+        if position:
+            # scope applies to the fallback pass too: a team's G must never be borrowed
+            # for a D, even when the name matches after normalisation
+            sql += " AND (position=? OR position IS NULL)"
+            params2.append(position)
+        rows = self.query(sql, params2)
+        hits = [r for r in rows if _normalize_name(r["full_name"] or "") == norm]
+        if len(hits) == 1:
+            return int(hits[0]["player_id"]), (
+                f"normalised match: roster publishes '{hits[0]['full_name']}' for '{want}' "
+                f"(case/diacritic-insensitive) -- DERIVED, not an exact source match")
+        if len(hits) > 1:
+            return None, (f"{len(hits)} roster rows normalise to '{want}'; not resolved "
+                          f"rather than picked")
+        return None, "no roster row published that name"
+
+    def record_goalie_start(self, row: dict[str, Any]) -> bool:
+        """Append a starter/probable-starter observation.  True when a new row was written.
+
+        The UNIQUE key is (game_id, team_id, goalie_name, source_id): a source that names a
+        *different* goalie for the same game and team on a later run writes a second row, so
+        the change of announcement is preserved as two observations instead of overwriting
+        the first one.  Rows are never deleted here.
+        """
+        before = self.one("SELECT COUNT(*) c FROM goalie_starts")["c"]
+        self.execute(
+            """INSERT OR IGNORE INTO goalie_starts(
+                 game_id, game_date, team_id, team_abbrev, goalie_name, goalie_id,
+                 announced_at, source_id, retrieved_at, is_confirmed, provenance,
+                 status_type, status_name, source_player_id, snapshot_ts, venue,
+                 source_event_id, match_basis, side)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (row.get("game_id"), row.get("game_date"), row.get("team_id"),
+             row.get("team_abbrev"), row.get("goalie_name"), row.get("goalie_id"),
+             row.get("announced_at"), row["source_id"], row["retrieved_at"],
+             1 if row.get("is_confirmed") else 0, row.get("provenance") or "SOURCE",
+             row.get("status_type"), row.get("status_name"), row.get("source_player_id"),
+             row.get("snapshot_ts") or row["retrieved_at"], row.get("venue"),
+             row.get("source_event_id"), row.get("match_basis"), row.get("side")))
+        after = self.one("SELECT COUNT(*) c FROM goalie_starts")["c"]
+        return after > before
+
+    def starters_asof(self, decision_ts: str | None = None,
+                      *, confirmed_only: bool = False) -> dict[int, dict[int, dict[str, Any]]]:
+        """``game_id -> team_id -> starter`` from rows this project had read by ``decision_ts``.
+
+        The timestamp filter is the point of the whole table: a probable starter read at
+        21:00Z may not be used to justify a decision stamped 18:00Z.  When two rows exist
+        for one (game, team) -- the announcement changed -- the most recent row that still
+        precedes the decision wins, and both stay in the ledger.
+        """
+        sql = "SELECT * FROM goalie_starts WHERE goalie_name IS NOT NULL"
+        params: list[Any] = []
+        if decision_ts:
+            sql += " AND COALESCE(snapshot_ts, retrieved_at) <= ?"
+            params.append(decision_ts)
+        if confirmed_only:
+            sql += " AND is_confirmed=1"
+        sql += " ORDER BY COALESCE(snapshot_ts, retrieved_at), id"
+        out: dict[int, dict[int, dict[str, Any]]] = {}
+        for r in self.query(sql, params):
+            if r["game_id"] is None or r["team_id"] is None:
+                continue
+            out.setdefault(int(r["game_id"]), {})[int(r["team_id"])] = dict(r)
+        return out

@@ -28,8 +28,8 @@ from .models import (EloModel, HomeIceOnly, LogisticRest, OtCalibration, Poisson
 from .paper import PaperEngine
 from .store import Store, utcnow
 from .sources.kalshi import KALSHI_TEAM_ALIASES, suffix_team_code
-from .strategies import (PLAYOFFS, REGULAR_SEASON, DecisionContext, Quote,
-                          build_seed_strategies)
+from .strategies import (GAME_TYPE_LABELS, PLAYOFFS, REGULAR_SEASON, DecisionContext, Quote,
+                          Signal, build_seed_strategies)
 from .verify import Verifier
 
 
@@ -148,6 +148,27 @@ class Pipeline:
                 prev = sorted(seasons)[-2]
                 self._safe(out, f"edge_snapshots_{prev}", self.ing.nhl_edge_snapshots, prev)
         out["injuries"] = self.ing.espn_injuries()
+        # club rosters: fills the long-empty players table and gives the injury feed and the
+        # probable-starter feed a way to resolve names to NHL player ids.  Kept as a
+        # snapshot table on purpose -- a roster is not a lineup and is labelled as one.
+        if current and club_abbrevs:
+            out["rosters"] = self.ing.rosters(club_abbrevs, current)
+        out["injury_player_resolution"] = self.ing.resolve_injury_players()
+        # the coming week: /v1/schedule/{day} carries the split-squad flags the scoreboard
+        # feed lacks, and ESPN's scoreboard carries the probable starting goalies.  Both are
+        # date-addressable, so a 7-day window keeps them fresh without walking history.
+        today = utcnow()[:10]
+        try:
+            week = [(datetime.fromisoformat(today) + timedelta(days=i)).date().isoformat()
+                    for i in range(0, 8)]
+        except ValueError:
+            week = []
+        if week:
+            out["split_squad_schedule_days"] = sum(self._safe_n(self.ing.schedule_day, d)
+                                                   for d in week)
+            # probables are a near-game feed (observed for the next day's slate): three days
+            # keeps it fresh without paying for a week of very large payloads every run
+            out["probable_goalie_rows"] = self._safe_n(self.ing.espn_probables, week[:3])
         if cross_check_abbrevs and seasons:
             out["cross_validation_conflicts"] = self.ing.cross_validate_scoreboard_vs_club(
                 cross_check_abbrevs, seasons[0])
@@ -358,6 +379,7 @@ class Pipeline:
         candidates = eng.scan(decided)
         created = eng.promote(candidates)
         eng.record_failures(candidates)
+        outcomes_recorded = eng.record_candidate_outcomes(candidates)
         self.store.execute(
             """INSERT OR REPLACE INTO findings(finding_id, created_at, title, body, evidence,
                                                confidence, kind) VALUES(?,?,?,?,?,?,?)""",
@@ -387,10 +409,22 @@ class Pipeline:
                     evidence="definition changed because a new verified data source became "
                              "available; the old version is kept for the record")
         self.report["discovery"] = {"tested": eng.tested, "survivors": len(created),
+                                    "outcomes_recorded": outcomes_recorded,
                                     "candidates": [c.key for c in candidates][:50]}
         self.log(f"strategies: {eng.tested} triggers tested, {len(created)} promoted, "
+                 f"{outcomes_recorded} full-scan outcome rows recorded, "
                  f"{len(self.store.latest_versions())} total")
         return self.report["discovery"]
+
+    def _safe_n(self, fn, *args: Any) -> int:
+        """Run an ingest step, log a failure instead of dying, return its count or 0."""
+        try:
+            return int(fn(*args) or 0)
+        except Exception as exc:  # pragma: no cover - network/parse failure path
+            self.log(f"ingest step {getattr(fn, '__name__', fn)} failed: {exc}")
+            self.store.flag("broken_api", f"{getattr(fn, '__name__', fn)}: {exc}",
+                            severity="error", entity_type="source", entity_id="pipeline")
+            return 0
 
     def _injury_map(self) -> dict[int, list[tuple[str, str]]]:
         """team_id -> [(player, status)] from the verified ESPN feed.
@@ -419,16 +453,28 @@ class Pipeline:
                 sources="espn.nhl_api")
         return out
 
-    def _starters(self) -> dict[int, str | None]:
-        """Confirmed starting goalies, keyed by team id.
+    def _starter_books(self) -> tuple[dict[int, dict[int, str]], dict[int, dict[int, str]]]:
+        """(confirmed, expected) starting goalies from the ledger, keyed game_id -> team_id.
 
-        Deliberately returns an empty mapping: no verified public source publishes
-        starting goalies before game time (probes against the NHL endpoints are recorded
-        in data/probe.json).  An empty map means "unknown", which is what gates
-        goalie-dependent strategies into WAITING FOR GOALIE instead of letting them bet on
-        an assumed starter.  This is not a stub to be filled in with a guess.
+        ``confirmed`` holds only rows whose source said so; ``expected`` holds the
+        probable-starter feed's rows (status 'expected').  The split is the whole point:
+        as of 2026-09-22 the only verified pre-game source (espn.nhl_probables) publishes
+        EXPECTED starters, so every confirmed map this project can build is empty until a
+        source starts saying 'confirmed' -- and no rule may read the expected book through
+        the confirmed one.  ``goalie_starts`` keeps every announcement it ever recorded, so
+        a changed announcement is history, not an overwrite.
         """
-        return {}
+        books: tuple[dict[int, dict[int, str]], dict[int, dict[int, str]]] = ({}, {})
+        for r in self.store.query(
+                """SELECT game_id, team_id, goalie_name, is_confirmed,
+                          ROW_NUMBER() OVER (PARTITION BY game_id, team_id
+                                             ORDER BY COALESCE(snapshot_ts, retrieved_at), id) rn
+                     FROM goalie_starts WHERE game_id IS NOT NULL AND goalie_name IS NOT NULL"""):
+            if r["rn"] != 1 or r["team_id"] is None:
+                continue
+            book = books[0] if r["is_confirmed"] else books[1]
+            book.setdefault(int(r["game_id"]), {})[int(r["team_id"])] = r["goalie_name"]
+        return books
 
     def stage_backtest(self, rows: Sequence[dict[str, Any]]) -> dict[str, Any]:
         """Two kinds of backtest, never merged:
@@ -454,6 +500,16 @@ class Pipeline:
         out = {}
         for s in self.store.latest_versions():
             strat = _hydrate(s)
+            if getattr(strat, "requires_probable_goalie", False):
+                # no historical probable feed exists (the feed was first read 2026-09-22 and
+                # publishes no announcement time), so this rule has nothing to backtest
+                # against: recorded as an explicit note rather than an empty row or a
+                # silent skip
+                out[s["strategy_id"]] = {
+                    "n": 0, "note": "probable-starter rule: no historical probable feed "
+                                    "exists, so accuracy and priced backtests have no signal "
+                                    "by construction; FORWARD TEST only"}
+                continue
             if getattr(strat, "market", "moneyline") == "total":
                 tr = bt.run_totals_accuracy(strat, decided,
                                             strikes_by_game=strikes_by_game)
@@ -1180,10 +1236,38 @@ class Pipeline:
             return f, pred
 
         def starters_for(f: dict[str, Any]) -> dict[int, str | None]:
+            """CONFIRMED starters only: the feed's 'expected' status does not count.
+
+            For a past game the post-game goalie log identifies the starter (an ASSUMPTION
+            the strategy pages state); for an upcoming game only a probable feed exists and
+            its rows are handed over through ``probables_for``, never through here.
+            """
             out: dict[int, str | None] = {}
             for side in ("home", "away"):
-                if f.get(f"{side}_starter_known"):
-                    out[int(f[f"{side}_id"])] = f.get(f"{side}_starter_name") or "confirmed"
+                tid = f.get(f"{side}_id")
+                if tid is None:
+                    continue
+                if f.get(f"{side}_probable_starter_known") and \
+                        f.get(f"{side}_probable_starter_confirmed"):
+                    out[int(tid)] = f.get(f"{side}_probable_starter_name") or "confirmed"
+                elif f.get(f"{side}_starter_known"):
+                    out[int(tid)] = f.get(f"{side}_starter_name") or "confirmed"
+            return out
+
+        def probables_for(f: dict[str, Any]) -> dict[int, dict[str, Any]]:
+            """Probable starters (status 'expected' or better) keyed by team id."""
+            out: dict[int, dict[str, Any]] = {}
+            for side in ("home", "away"):
+                tid = f.get(f"{side}_id")
+                if tid is None or not f.get(f"{side}_probable_starter_known"):
+                    continue
+                out[int(tid)] = {
+                    "name": f.get(f"{side}_probable_starter_name"),
+                    "confirmed": bool(f.get(f"{side}_probable_starter_confirmed")),
+                    "status": f.get(f"{side}_probable_starter_status"),
+                    "snapshot_ts": f.get(f"{side}_probable_starter_snapshot_ts"),
+                    "id": f.get(f"{side}_probable_starter_id"),
+                }
             return out
 
         placed = {"BACKTEST": 0, "FORWARD TEST": 0}
@@ -1245,7 +1329,13 @@ class Pipeline:
             # ---------------------------------------------------------- BACKTEST
             # No historical injury feed exists, so an injury-sensitive rule cannot be
             # replayed honestly: "no pending injuries" would really mean "unknown".
-            backtestable = not getattr(strat, "injury_sensitive", False)
+            # An injury-sensitive rule cannot be replayed (no historical injury feed) and a
+            # probable-starter rule cannot either (no historical probable feed -- the feed
+            # was first read 2026-09-22 and publishes no announcement time), so neither may
+            # appear in a priced BACKTEST.  Both still get accuracy-only evaluation where
+            # their features exist.
+            backtestable = (not getattr(strat, "injury_sensitive", False)
+                            and not getattr(strat, "requires_probable_goalie", False))
             mkt = getattr(strat, "market", "moneyline")
             if backtestable and mkt == "total":
                 placed["BACKTEST"] += self._backtest_totals(
@@ -1310,7 +1400,8 @@ class Pipeline:
                                           "exp_total") if f.get(k) is not None}
                 # historical injuries are not available -> injury-gated strategies wait
                 ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred,
-                                      quotes=[q], starters=starters_for(f), injuries={},
+                                      quotes=[q], starters=starters_for(f), probables={},
+                                      injuries={},
                                       bankroll=strat.starting_bankroll, open_exposure=0.0)
                 for sig in strat.evaluate(ctx):
                     if sig.status != "READY TO BET" or sig.quote is None or sel != strat.bet_side:
@@ -1360,6 +1451,31 @@ class Pipeline:
                     continue
                 if not self._in_scope(strat, g):
                     out_of_scope += 1
+                    # Recorded, not traded.  The signal is not evaluated (a rule scoped to
+                    # regular-season form says nothing about a September split-squad
+                    # roster), but the opportunity is written to the same upcoming table
+                    # with its reason, so the site shows what the scope gate held back
+                    # instead of the gate being an invisible skip.
+                    phase = GAME_TYPE_LABELS.get(int(g.game_type), f"type {g.game_type}")
+                    self.paper.record_upcoming(Signal(
+                        strategy_id=strat.strategy_id, version=int(s["version"]),
+                        username=s["username"], game_id=gid, game_date=g.game_date,
+                        matchup=f"{g.away_id}@{g.home_id}", market=q.market_type or "moneyline",
+                        selection=q.selection, side=q.side, model_prob=float("nan"),
+                        fair_price=float("nan"), required_price=float("nan"), stake=0.0,
+                        status="OUT OF SCOPE",
+                        blocking_reason=(f"game is NHL gameType {g.game_type} ({phase}); this "
+                                         f"rule is scoped to game_types "
+                                         f"{list(getattr(strat, 'game_types', []))} (fitted on "
+                                         f"regular-season form) and recorded here rather than "
+                                         f"traded; a live offer of "
+                                         f"{q.ask if q.ask is not None else 'n/a'} was "
+                                         f"available and not taken"),
+                        quote=q,
+                        supporting={"scope": {"game_type": int(g.game_type),
+                                              "rule_scope": list(getattr(strat, "game_types", []))},
+                                   "decision_ts": q.ts_utc}),
+                        provider="kalshi", source_url=self.KALSHI_MARKETS_URL)
                     continue
                 if not self._pregame(g, as_of):
                     continue
@@ -1491,7 +1607,8 @@ class Pipeline:
                 if ref and ref.get("home_prob") is not None:
                     pred = dict(pred, p_home_book=ref["home_prob"], p_away_book=ref["away_prob"])
                 ctx = DecisionContext(decision_ts=q.ts_utc, features=f, predictions=pred,
-                                      quotes=rungs, starters=starters_for(f), injuries=inj,
+                                      quotes=rungs, starters=starters_for(f),
+                                      probables=probables_for(f), injuries=inj,
                                       bankroll=bankroll, open_exposure=open_exp)
                 for sig in strat.evaluate(ctx):
                     traded = sig.quote if sig.quote is not None else q
@@ -1834,6 +1951,73 @@ class Pipeline:
         self.report["signals_expired"] = self.paper.expire_started(utcnow())
         return n + from_exchange
 
+    def stage_goalie_conversion(self) -> dict[str, int]:
+        """Did the probable starter actually start?  A standing data-quality check.
+
+        Every probable-starter row on a decided game is compared, by normalised name,
+        against the NHL's own per-game goalie log (the same log the post-game
+        ``starter_*`` features come from).  The comparison is written back onto the
+        ``goalie_starts`` row (``actual_goalie_name``, ``conversion_checked_at``) and the
+        running counts are kept in a finding so the feed's reliability is measured, not
+        asserted.  A mismatch is NOT corrected anywhere: the ledger keeps both names.
+        """
+        from .store import _normalize_name
+        checked = matched = named_other = no_log = 0
+        rows = self.store.query(
+            """SELECT gs.id, gs.game_id, gs.team_abbrev, gs.goalie_name
+                 FROM goalie_starts gs JOIN games g ON g.game_id = gs.game_id
+                WHERE gs.game_id IS NOT NULL AND gs.conversion_checked_at IS NULL
+                  AND g.state IN ('FINAL','OFF')""")
+        for r in rows:
+            actual = self.store.one(
+                """SELECT goalie_name FROM goalie_game_stats
+                    WHERE game_id=? AND team_abbrev=? AND started=1""",
+                (r["game_id"], r["team_abbrev"]))
+            actual_name = actual["goalie_name"] if actual else None
+            self.store.execute(
+                """UPDATE goalie_starts SET actual_goalie_name=?, conversion_checked_at=?
+                    WHERE id=?""", (actual_name, utcnow(), r["id"]))
+            checked += 1
+            if actual_name is None:
+                no_log += 1
+            elif _normalize_name(actual_name) == _normalize_name(r["goalie_name"] or ""):
+                matched += 1
+            else:
+                named_other += 1
+                # a probable that did not start is a fact about the feed, kept on both
+                # sides: the comparison above and this per-row entry
+                self.store.flag(
+                    "probable_starter_mismatch",
+                    f"game {r['game_id']} {r['team_abbrev']}: the probable was "
+                    f"'{r['goalie_name']}' but the NHL log credits the start to "
+                    f"'{actual_name}'. Both names stay in the ledger; nothing is corrected.",
+                    severity="info", entity_type="game",
+                    entity_id=f"{r['game_id']}:{r['team_abbrev']}",
+                    sources="espn.nhl_probables;nhl.stats_rest_game")
+        self.store.commit()
+        if checked:
+            body = (f"Of {checked} probable-starter rows on decided games, {matched} name the "
+                    f"goalie the NHL log credits with the start, {named_other} name someone "
+                    f"else, and {no_log} have no started=1 row in the goalie log yet. A "
+                    f"probable that converts is still only an 'expected' status observation; "
+                    f"this measures the feed, it does not upgrade it.")
+            self.store.execute(
+                """INSERT OR REPLACE INTO findings(finding_id, created_at, title, body,
+                                                     evidence, confidence, kind)
+                    VALUES(?,?,?,?,?,?,?)""",
+                ("FIND_STARTER_CONVERSION", utcnow(),
+                 "Probable-starter feed conversion: did the named goalie actually start?",
+                 body,
+                 json.dumps({"checked": checked, "matched": matched,
+                             "named_someone_else": named_other, "no_start_log": no_log}),
+                 "medium", "data_quality"))
+            self.store.commit()
+        out = {"checked": checked, "matched": matched,
+               "named_someone_else": named_other, "no_start_log": no_log}
+        self.report["goalie_conversion"] = out
+        self.log(f"goalie conversion: {json.dumps(out)}")
+        return out
+
     def stage_clv(self) -> int:
         """Attach the closing price (last pre-game candle) to FORWARD TEST bets.
 
@@ -1992,6 +2176,7 @@ class Pipeline:
         self.stage_backtest(rows)
         self.stage_forward(rows)
         self.stage_settle()
+        self.stage_goalie_conversion()
         self.stage_clv()
         self.stage_reconcile()
         self.stage_analysis()

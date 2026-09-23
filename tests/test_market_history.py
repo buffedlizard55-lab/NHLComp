@@ -571,9 +571,13 @@ class TestHistoryToBacktest(unittest.TestCase):
         self.assertEqual(strat.stake_mode, "flat")
         self.assertEqual(strat.use_model, "market")
         self.assertEqual(strat.min_edge, 0.0)
+        # the seed library is versioned: since 2026-09-22 GOALIE_EDGE v3 (probable-starter
+        # feed) is the newest, so v2 and v1 are both retired and only v3 trades
+        v3 = self.store.one("SELECT status FROM strategies WHERE strategy_id='NHL_GOALIE_EDGE' AND version=3")
         v2 = self.store.one("SELECT status FROM strategies WHERE strategy_id='NHL_GOALIE_EDGE' AND version=2")
         v1 = self.store.one("SELECT status FROM strategies WHERE strategy_id='NHL_GOALIE_EDGE' AND version=1")
-        self.assertEqual(v2["status"], "active")
+        self.assertEqual(v3["status"], "active")
+        self.assertEqual(v2["status"], "retired")
         self.assertEqual(v1["status"], "retired")
 
 

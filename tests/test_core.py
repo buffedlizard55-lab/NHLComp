@@ -360,10 +360,11 @@ class TestStatusGates(unittest.TestCase):
 
     FEATS = {"game_id": 1, "game_date": "2026-01-01", "home_id": 1, "away_id": 2, "f": 5.0}
 
-    def _ctx(self, quotes=(), preds=None, starters=None, injuries=None):
+    def _ctx(self, quotes=(), preds=None, starters=None, injuries=None, probables=None):
         return DecisionContext(decision_ts="2026-01-01T00:00:00Z", features=dict(self.FEATS),
                                predictions=preds if preds is not None else {"p_home_ml": 0.60},
                                quotes=list(quotes), starters=starters or {},
+                               probables=probables or {},
                                injuries=injuries or {}, bankroll=1000.0, open_exposure=0.0)
 
     def _quote(self, ask, bid=None, size=1000.0):
@@ -394,7 +395,31 @@ class TestStatusGates(unittest.TestCase):
         sig = self._strat(requires_goalie=True).evaluate(
             self._ctx(quotes=[self._quote(0.40)], starters={1: None, 2: None}))[0]
         self.assertEqual(sig.status, "WAITING FOR GOALIE")
-        self.assertIn("no verified public source", sig.blocking_reason)
+        # the strict gate names the feed and its 'expected' status, and says the rule
+        # waits rather than treats an expected starter as a confirmation
+        self.assertIn("CONFIRMED starter unknown", sig.blocking_reason)
+        self.assertIn("'expected'", sig.blocking_reason)
+
+    def test_probable_gate_blocks_until_the_feed_names_a_starter(self):
+        sig = self._strat(requires_probable_goalie=True).evaluate(
+            self._ctx(quotes=[self._quote(0.40)], probables={}))[0]
+        self.assertEqual(sig.status, "WAITING FOR GOALIE")
+        self.assertIn("probable starter not yet published", sig.blocking_reason)
+        # and the probable gate clears on an 'expected'-status row, which is the only
+        # status the verified feed has published so far
+        ok = self._strat(requires_probable_goalie=True).evaluate(
+            self._ctx(quotes=[self._quote(0.40)],
+                      probables={1: {"name": "G1", "confirmed": False, "status": "expected"},
+                                 2: {"name": "G2", "confirmed": False, "status": "expected"}}))[0]
+        self.assertEqual(ok.status, "READY TO BET")
+
+    def test_strict_gate_names_the_probable_it_refuses_to_confirm(self):
+        sig = self._strat(requires_goalie=True).evaluate(
+            self._ctx(quotes=[self._quote(0.40)],
+                      probables={1: {"name": "Expected Guy", "confirmed": False,
+                                     "status": "expected"}}))[0]
+        self.assertEqual(sig.status, "WAITING FOR GOALIE")
+        self.assertIn("Expected Guy", sig.blocking_reason)
 
     def test_goalie_gate_clears_when_a_starter_is_known(self):
         sig = self._strat(requires_goalie=True).evaluate(

@@ -632,6 +632,51 @@ class DiscoveryEngine:
         self.store.commit()
         return n
 
+    def record_candidate_outcomes(self, candidates: Sequence[Candidate]) -> int:
+        """One experiments row per scanned trigger, whatever the outcome.
+
+        ``promote`` records the survivors and ``record_failures`` records the loud
+        rejections; a candidate that neither survived nor failed loudly (verdict
+        'inconclusive', or a thin priced sample) used to leave no ledger trace at all --
+        the search silently narrowed to whoever was reading the logs.  Requirement 8 wants
+        every experiment permanently auditable, so the full scan lands in ``experiments``
+        with its train/validation numbers, its Holm-adjusted significance and its verdict.
+        Idempotent: the key is a hash of the trigger, so a re-run updates nothing.
+        """
+        import hashlib
+        n = 0
+        for c in candidates:
+            exp_id = "EXP_SCAN_" + hashlib.sha1(c.key.encode()).hexdigest()[:12]
+            verdict = ("edge" if c.verdict == "edge" and c.price_verdict == "market_edge"
+                       else "rejected" if c.verdict == "edge"
+                       else "no_edge" if c.verdict == "no_edge" else "inconclusive")
+            conclusion = ("Survived the chronological split but not the price test."
+                          if verdict == "rejected"
+                          else f"{c.verdict} on the train->validation split"
+                          if verdict in ("no_edge", "inconclusive")
+                          else "Survived train->validation and the priced test")
+            cur = self.store.execute(
+                """INSERT OR IGNORE INTO experiments(exp_id, created_at, hypothesis,
+                                                     strategy_id, version, kind,
+                                                     payload_json, result_json,
+                                                     conclusion, verdict)
+                    VALUES(?,?,?,NULL,NULL,'feature_scan',?,?,?,?)""",
+                (exp_id, utcnow(), c.key,
+                 json.dumps({"operator": c.operator, "threshold": c.threshold,
+                             "bet_side": c.bet_side, "family": c.family}),
+                 json.dumps({"train": [c.train_n, round(c.train_hit, 4), round(c.train_lift, 4)],
+                             "valid": [c.valid_n, round(c.valid_hit, 4), round(c.valid_lift, 4)],
+                             "priced": [c.train_priced_n,
+                                        round(c.train_roi, 4) if c.train_roi is not None else None,
+                                        c.valid_priced_n,
+                                        round(c.valid_roi, 4) if c.valid_roi is not None else None],
+                             "valid_p": c.valid_p, "alpha_holm": c.alpha_holm,
+                             "price_verdict": c.price_verdict}),
+                 conclusion, verdict))
+            n += cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
+        self.store.commit()
+        return n
+
     def search_size_caveat(self) -> str:
         sig = self.significance or {}
         thr = sig.get("holm_threshold_first") or sig.get("holm_threshold_strongest")
