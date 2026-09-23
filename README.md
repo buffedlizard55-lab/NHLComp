@@ -96,6 +96,12 @@ src/nhlcomp/
                    reuse candidate that was tested and rejected
   research.py      the autonomous research log: verified/rejected sources and status notes,
                    written to the findings ledger with their evidence
+  (2026-09-22)     probable-starter feed (espn.nhl_probables) + club rosters: NhlApi.schedule /
+                   roster parsers, Ingestor.rosters / espn_probables / resolve_injury_players,
+                   Pipeline._starter_books (confirmed vs expected books) and
+                   stage_goalie_conversion, probable_starter_* features (forward rows only),
+                   OUT-OF-SCOPE signal recording, and the full discovery scan written to
+                   experiments (record_candidate_outcomes)
   analysis.py      P&L, ROI, drawdown, CLV, Wilson intervals, per-mode leaderboards
   verify.py        irregularity queue and cross-source validation
   site.py          static GitHub Pages generator
@@ -198,6 +204,9 @@ recorded as free.
 | `api-web.nhle.com/v1/edge/*` | team tracking aggregates (skating distance, speed bursts, shot speed) | SOURCE (season-to-date snapshots, forward only) |
 | `site.api.espn.com/.../nhl/injuries` | injury list | SOURCE (cross-check only) |
 | `site.api.espn.com/.../nhl/scoreboard?dates=` | any past date: results, period linescores, three stars, winning/losing goalie | SOURCE (cross-check only; **no odds block on completed games**) |
+| `site.api.espn.com/.../nhl/scoreboard?dates=` on a **future** date | **probable starting goalie per competitor** (`probables[]`, status `expected`) — verified 2026-09-22, the first pre-game starter source this project found | SOURCE (forward only; no announcement timestamp is published) |
+| `api-web.nhle.com/v1/roster/{club}/{season}` (alias `/current`) | club roster snapshot: player ids, names, positions, sweater numbers — fills the `players` table (empty since v1 until 2026-09-22) and gives injuries / probables an id join | SOURCE (snapshot, not a roster history) |
+| `api-web.nhle.com/v1/schedule/{date}` | the day's slate **with `homeSplitSquad` / `awaySplitSquad` flags** the scoreboard feed does not publish | SOURCE |
 
 ### Corrected verdicts
 
@@ -279,9 +288,14 @@ application-level error so a rejected request cannot be mistaken for "no markets
   backtestable — and its settlement rule is still shootout-unverified. Both stay flagged
   (`overtime_price_coverage`, `settlement_rule_unverified`) rather than being silently
   traded or silently dropped.
-* **Starting goalies for upcoming games have no verified pre-game source.** Goalie-gated
-  strategies forward-test only when a starter is known; their backtests rely on the post-game
-  log (an explicit ASSUMPTION recorded on the strategy).
+* **Starting goalies: probable is not confirmed.** Since 2026-09-22 a verified pre-game feed
+  exists (`espn.nhl_probables`: ESPN publishes a probable starter per competitor, status
+  `expected`). Rules requiring a CONFIRMED starter keep waiting by design; probable-starter
+  versions (GOALIE_EDGE v3, GOALIE_FATIGUE v2, GOALIE_NEWS v3) trade FORWARD TEST only — the feed
+  has no history and publishes no announcement time, so nothing about it can be backtested. The
+  feed's accuracy is measured post-game against the NHL goalie log
+  (finding `FIND_STARTER_CONVERSION`); the older goalie-gated strategies keep the post-game-log
+  ASSUMPTION for their backtests, recorded on each strategy.
 * **No period-level model yet.** KXNHL1P / KXNHLOVERTIME exist on Kalshi and are registered,
   but their prices are not ingested and nothing is bet on them.
 * **In-game candles are stored for research only.** The pipeline runs on a batch schedule and

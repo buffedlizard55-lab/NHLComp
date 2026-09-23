@@ -86,6 +86,31 @@ single quoted level.</li>
 carrying a <code>blocked_reason</code>.</li>
 </ul>
 
+<h2>3c. Starting goalies: probable is not confirmed</h2>
+<p>Until 2026-09-22 this project had <b>no</b> verified pre-game starter source: the NHL endpoints
+publish nothing before puck drop (probes recorded), so every goalie-gated rule sat in
+<code>WAITING FOR GOALIE</code>. That changed when ESPN's public scoreboard was found to publish a
+<code>probableStartingGoalie</code> per competitor of a scheduled game (registered as
+<code>espn.nhl_probables</code>, capture in <code>data/captured/</code>). The handling is
+deliberately split three ways:</p>
+<ul>
+<li><b>Confirmed-gated rules</b> (<code>requires_goalie</code>) keep waiting. The feed's observed
+status is <code>expected</code>; if it ever publishes <code>confirmed</code> these rules unlock
+automatically, and while it does not, the blocking reason names the probable it refused to treat
+as a confirmation.</li>
+<li><b>Probable-gated rules</b> (<code>requires_probable_goalie</code> — GOALIE_EDGE v3,
+GOALIE_FATIGUE v2, GOALIE_NEWS v3) trade forward on the expected starter. They are FORWARD TEST
+only: the feed publishes no announcement time and has no history, so no honest backtest price
+exists and none is reconstructed.</li>
+<li><b>The feed itself is measured</b>: after each game, the probable name is compared against the
+NHL's own goalie log (who was credited with the start) and the running conversion counts are
+published in the Research Lab. A mismatch is kept, never corrected away.</li>
+</ul>
+<p>Identity plumbing: the ESPN name is resolved to an NHL <code>player_id</code> through the club's
+published roster (a table that existed since schema v1 but was empty until the roster ingest was
+wired up on 2026-09-22). Every resolution carries its match basis; an unresolved name is stored
+without an id rather than borrowed.</p>
+
 <h2>4. Execution model</h2>
 <p>Buys happen at the <b>offer</b>, never the mid. Size is capped by the quoted
 <code>yes_ask_size_fp</code>; if the desired stake needs more contracts than are offered the order
@@ -133,7 +158,7 @@ ASSUMPTION or UNVERIFIED. Bets are append-only; corrections go through
 <h2>8. Current state</h2>
 <p>83 strategies. FORWARD TEST: 0 simulated bets · 0
 settled · 0 open · P&amp;L 0.00 · ROI —. BACKTEST (reported
-separately, never merged): 3922 priced wagers · P&amp;L 1,015.59 · ROI
+separately, never merged): 3921 priced wagers · P&amp;L 1,012.43 · ROI
 0.8%.</p>
 
 <h2>9. Known limitations</h2>
@@ -144,13 +169,17 @@ closing candle only; the DraftKings reference exists only from the day collectio
 scheduled start, so it may include trades from the final minutes before puck drop. Kalshi's NHL
 books are thin outside the playoffs; the candle's <code>yes_ask</code> is a price, not a
 guarantee of size, and the fee model assumes the general schedule.</li>
-<li>Starting goalies for <i>upcoming</i> games have no verified pre-game source, so goalie-gated
-strategies forward-test only when a starter becomes known; their backtests rely on the post-game
-log (an explicit ASSUMPTION).</li>
+<li>Starting goalies: since 2026-09-22 a verified pre-game feed exists (ESPN's scoreboard
+publishes a <i>probable</i> starting goalie per competitor, status <code>expected</code>). Rules
+that require a CONFIRMED starter still wait by design; probable-starter rules (GOALIE_EDGE v3,
+GOALIE_FATIGUE v2) trade forward only — the feed publishes no announcement time, so it can never
+price a historical decision and there is nothing to backtest it against. Their backtests rely on
+the post-game log (an explicit ASSUMPTION); the feed's conversion is measured against that log in
+the Research Lab, not asserted.</li>
 <li>Arena latitude/longitude is unavailable: the legacy NHL venue host could not be reached, so
 travel is derived from published venue UTC offsets rather than invented coordinates.</li>
-<li>Line combinations, goalie announcements and player props have no verified feed. EDGE tracking
-is snapshotted forward only (season-to-date aggregates, no per-game history).</li>
+<li>Line combinations, goalie-announcement <i>times</i> and player props have no verified feed.
+EDGE tracking is snapshotted forward only (season-to-date aggregates, no per-game history).</li>
 <li>Preseason Kalshi markets are thin; contracts with zero size on both sides are recorded as
 <code>insufficient_liquidity</code> instead of being traded.</li>
 <li>In-game candles (60/120 minutes after the start) are stored for research; the pipeline runs on
@@ -158,6 +187,6 @@ a batch schedule and cannot execute during a game, so no in-game bet is simulate
 </ul>
 </main>
 <footer>NHLComp · paper-trading research platform · no real money is ever wagered ·
-generated 2026-09-22T18:08:03Z from the SQLite ledger. Every figure is read from the database;
+generated 2026-09-22T23:46:51Z from the SQLite ledger. Every figure is read from the database;
 values that could not be verified from a source are shown as — with a caveat.</footer>
 </body></html>

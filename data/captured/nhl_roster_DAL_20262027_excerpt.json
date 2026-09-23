@@ -1,0 +1,147 @@
+{
+  "_capture": {
+    "source_url": "https://api-web.nhle.com/v1/roster/DAL/20262027",
+    "alias_url_verified": "https://api-web.nhle.com/v1/roster/TOR/current  ->  served as /v1/roster/TOR/20262027 (the `current` alias resolves to the live season)",
+    "retrieved_at": "2026-09-22T23:06:00Z",
+    "method": "fetched with the Arena fetch tool (no key, no auth), 3 response chunks. The development sandbox has no outbound network to this host; CI does.",
+    "completeness": "FIELD-PRESERVING EXCERPT. The Dallas 2026-27 roster returned 3 arrays (`forwards`, `defensemen`, `goalies`); this file retains 2 forwards, 2 defensemen and ALL 4 goalies verbatim for the fields this project stores (id, firstName.default, lastName.default, sweaterNumber, positionCode, shootsCatches, height/weight, birthDate, birthCity/birthCountry/birthStateProvince). Headshots were dropped. No retained value was edited.",
+    "why_it_matters": [
+      "The `players` table has existed since schema v1 and has been EMPTY in every committed ledger: `NhlApi.roster()` was implemented but never called by any ingest stage. Requirement 10 asks for normalized storage of players and rosters, and requirement 2 asks for player/roster research; an empty table satisfies neither. This capture is the evidence that the feed is keyless, free, JSON and per-season, so the ingest can be wired up.",
+      "It also gives the injury feed something to join to. `injuries` rows carry a NAME and a team abbrev only (`Ryan Poehling`, `ANA`), so an injury could never be tied to a player_id; the roster publishes both, per club, per season.",
+      "Goalie names in the roster are the vocabulary the NHL's own per-game goalie log uses, so a probable starter read from ESPN (a different id space: ESPN player 3069285 = Linus Ullmark) can be resolved to an NHL player_id BY NAME, and that resolution is recorded as DERIVED with its match basis rather than asserted."
+    ],
+    "caveats": [
+      "Shape is not uniform: `sweaterNumber` is absent for some players (Teddy Blueger, Brendan Brisson, Brandon Buhr on the TOR roster) and `shootsCatches` is absent for at least one defenseman (Jack Anderson, retained below). The parser must tolerate both.",
+      "This is a PRESEASON roster (retrieved 2026-09-22): it lists camp invitees and prospects (e.g. Jaxon Fuder, born 2006-04-02, on the Dallas roster) alongside NHL regulars. It is not the opening-night roster and must not be read as one.",
+      "The endpoint has no documented licence or rate limit; it is the same unofficial api-web host this project already depends on for schedules and results."
+    ]
+  },
+  "forwards": [
+    {
+      "id": 8473994,
+      "firstName": { "default": "Jamie" },
+      "lastName": { "default": "Benn" },
+      "sweaterNumber": 14,
+      "positionCode": "L",
+      "shootsCatches": "L",
+      "heightInInches": 75,
+      "weightInPounds": 210,
+      "heightInCentimeters": 191,
+      "weightInKilograms": 95,
+      "birthDate": "1989-07-18",
+      "birthCity": { "default": "Victoria" },
+      "birthCountry": "CAN",
+      "birthStateProvince": { "default": "BC" }
+    },
+    {
+      "id": 8478449,
+      "firstName": { "default": "Roope" },
+      "lastName": { "default": "Hintz" },
+      "sweaterNumber": 24,
+      "positionCode": "C",
+      "shootsCatches": "L",
+      "heightInInches": 75,
+      "weightInPounds": 217,
+      "heightInCentimeters": 191,
+      "weightInKilograms": 98,
+      "birthDate": "1996-11-17",
+      "birthCity": { "default": "Nokia" },
+      "birthCountry": "FIN"
+    }
+  ],
+  "defensemen": [
+    {
+      "id": 8480036,
+      "firstName": { "default": "Miro" },
+      "lastName": { "default": "Heiskanen" },
+      "sweaterNumber": 4,
+      "positionCode": "D",
+      "shootsCatches": "L",
+      "heightInInches": 74,
+      "weightInPounds": 197,
+      "heightInCentimeters": 188,
+      "weightInKilograms": 89,
+      "birthDate": "1999-07-18",
+      "birthCity": { "default": "Espoo", "sv": "Esbo" },
+      "birthCountry": "FIN"
+    },
+    {
+      "_note": "retained to document that `shootsCatches` is OPTIONAL in the real payload",
+      "id": 8486126,
+      "firstName": { "default": "Jack" },
+      "lastName": { "default": "Anderson" },
+      "sweaterNumber": 40,
+      "positionCode": "D",
+      "heightInInches": 78,
+      "weightInPounds": 225,
+      "heightInCentimeters": 198,
+      "weightInKilograms": 102,
+      "birthDate": "2002-11-14",
+      "birthCountry": "USA"
+    }
+  ],
+  "goalies": [
+    {
+      "id": 8479193,
+      "firstName": { "default": "Casey" },
+      "lastName": { "default": "DeSmith" },
+      "sweaterNumber": 1,
+      "positionCode": "G",
+      "shootsCatches": "L",
+      "heightInInches": 72,
+      "weightInPounds": 188,
+      "heightInCentimeters": 183,
+      "weightInKilograms": 85,
+      "birthDate": "1991-08-13",
+      "birthCity": { "default": "Rochester" },
+      "birthCountry": "USA",
+      "birthStateProvince": { "default": "NH" }
+    },
+    {
+      "id": 8477990,
+      "firstName": { "default": "Brandon" },
+      "lastName": { "default": "Halverson" },
+      "sweaterNumber": 33,
+      "positionCode": "G",
+      "shootsCatches": "L",
+      "heightInInches": 77,
+      "weightInPounds": 235,
+      "heightInCentimeters": 196,
+      "weightInKilograms": 107,
+      "birthDate": "1996-03-29",
+      "birthCity": { "default": "Traverse City" },
+      "birthCountry": "USA",
+      "birthStateProvince": { "default": "MI" }
+    },
+    {
+      "_note": "the response was truncated inside this record at `\"birthCity\":{\"default\":`, so the birthplace fields are OMITTED here rather than filled in. Everything retained was read off the payload.",
+      "id": 8479979,
+      "firstName": { "default": "Jake" },
+      "lastName": { "default": "Oettinger" },
+      "sweaterNumber": 29,
+      "positionCode": "G",
+      "shootsCatches": "L",
+      "heightInInches": 78,
+      "weightInPounds": 225,
+      "heightInCentimeters": 198,
+      "weightInKilograms": 102,
+      "birthDate": "1998-12-18"
+    },
+    {
+      "id": 8482465,
+      "firstName": { "default": "Rémi" },
+      "lastName": { "default": "Poirier" },
+      "sweaterNumber": 31,
+      "positionCode": "G",
+      "shootsCatches": "L",
+      "heightInInches": 75,
+      "weightInPounds": 211,
+      "heightInCentimeters": 191,
+      "weightInKilograms": 96,
+      "birthDate": "2001-10-06",
+      "birthCity": { "default": "Farnham" },
+      "birthCountry": "CAN",
+      "birthStateProvince": { "default": "QC" }
+    }
+  ]
+}

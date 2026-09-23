@@ -91,23 +91,133 @@ RESEARCH_FINDINGS: tuple[dict[str, Any], ...] = (
     },
     {
         "finding_id": "FIND_NO_NHL_PROBABLE_GOALIE_ENDPOINT",
-        "title": "No verified pre-game starting-goalie source; NHL gamecenter probe 404s",
+        "title": "NHL endpoints publish no pre-game starter; the block was lifted via ESPN instead",
         "body": (
-            "Starting-goalie confirmation remains the largest blocked input. A further probe "
-            "of api-web.nhle.com for a probable/announced goalies endpoint on an upcoming "
-            "game (gamecenter 2026010051, NYR@NYI 2026-09-25) returned HTTP 404, consistent "
-            "with the documented API surface: the stats REST goalie log identifies the "
-            "starter only AFTER a game is final. Goalie-gated strategies therefore stay in "
-            "WAITING FOR STARTER for forward tests and carry the recorded post-game-log "
-            "ASSUMPTION in backtests. The block lifts only when a verified pre-game "
-            "announcement source is found and registered."),
+            "PROBE (2026-09-22): api-web.nhle.com exposes no probable/announced-goalies "
+            "endpoint -- gamecenter 2026010051 probable-goalies and the gamecenter landing "
+            "page for a future game both returned HTTP 404, consistent with the documented "
+            "API surface: the stats REST goalie log identifies the starter only AFTER a game "
+            "is final. RESOLUTION (2026-09-22, same day): the block lifted through a "
+            "DIFFERENT source -- ESPN's public scoreboard publishes a "
+            "probableStartingGoalie per competitor of a scheduled game; see "
+            "FIND_ESPN_PROBABLE_STARTERS. The NHL-side negative stands: within the NHL's "
+            "own endpoints the starter remains post-game only, so the post-game log stays "
+            "an ASSUMPTION-based identity source for backtests and the ESPN feed is the "
+            "only pre-game name this project has."),
         "evidence": {
             "url": "https://api-web.nhle.com/v1/gamecenter/2026010051/probable-goalies",
             "fetched": SESSION_DATE,
             "result": "HTTP 404 Not Found",
+            "also_probed": "https://api-web.nhle.com/v1/gamecentre/2026010034/landing -> 404 (future game)",
+            "resolution": "FIND_ESPN_PROBABLE_STARTERS",
         },
         "confidence": "high",
         "kind": "source_review",
+    },
+    {
+        "finding_id": "FIND_ESPN_PROBABLE_STARTERS",
+        "title": "VERIFIED: ESPN scoreboard publishes probable starting goalies before puck drop",
+        "body": (
+            "The largest blocked input in this project -- a pre-game starting-goalie name -- "
+            "was unblocked on 2026-09-22. ESPN's public NHL scoreboard "
+            "(site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=YYYYMMDD, "
+            "keyless) publishes, per competitor of a SCHEDULED game, a probables[] entry "
+            "named probableStartingGoalie with the athlete's name, ESPN player id and a "
+            "status object. Verified live on the 2026-09-23 slate: TOR at OTT (Canadian "
+            "Tire Centre) carried Linus Ullmark (OTT) and Anthony Stolarz (TOR), both with "
+            "status type 'expected'. Consequences, in order of caution: (1) the status "
+            "observed is EXPECTED, never confirmed -- strict goalie-gated rules keep "
+            "waiting; (2) no announcement timestamp is published, so the feed supports "
+            "FORWARD tests only and can never price a historical decision; (3) ESPN event "
+            "ids are not NHL game ids and the same two clubs can meet twice in an evening, "
+            "so the join is date + home/away + venue and an ambiguous event is stored "
+            "unmatched and flagged, never guessed; (4) names are resolved to NHL player_ids "
+            "through the club rosters, and that resolution is recorded as DERIVED with its "
+            "basis. Registered as espn.nhl_probables in the source registry; capture at "
+            "data/captured/espn_scoreboard_probable_goalies_20260923.json. New probable-"
+            "starter versions of the goalie strategies were seeded (GOALIE_EDGE v3, "
+            "GOALIE_FATIGUE v2, GOALIE_NEWS v3); all are FORWARD TEST only."),
+        "evidence": {
+            "url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20260923",
+            "fetched": SESSION_DATE,
+            "capture": "data/captured/espn_scoreboard_probable_goalies_20260923.json",
+            "status_observed": "type='expected' (both competitors)",
+            "join_key": "UTC date + home/away abbreviations, venue as tie-breaker",
+            "registry_id": "espn.nhl_probables",
+        },
+        "confidence": "high",
+        "kind": "source_review",
+    },
+    {
+        "finding_id": "FIND_SPLIT_SQUAD_FLAGS",
+        "title": "DISCOVERED: the NHL schedule payload publishes split-squad flags",
+        "body": (
+            "Reading the /v1/schedule/{date} payload (not the scoreboard feed) for the "
+            "2026-09-23 slate surfaced two fields this project had never stored: "
+            "awaySplitSquad and homeSplitSquad. Both OTT/TOR preseason games that evening "
+            "are split-squad (true/true) -- each club fields two squads that night -- while "
+            "MIN at DAL and LAK at ANA are false. A split-squad game is not played by the "
+            "club's NHL roster, which is a first-party scope fact rather than a heuristic: "
+            "such games are now stored on the games row and the strategy scope gate (which "
+            "already keeps preseason games out of the scored competition) has a per-game "
+            "flag it can consult. Capture at "
+            "data/captured/nhl_schedule_20260923_excerpt.json."),
+        "evidence": {
+            "url": "https://api-web.nhle.com/v1/schedule/2026-09-23",
+            "fetched": SESSION_DATE,
+            "capture": "data/captured/nhl_schedule_20260923_excerpt.json",
+            "fields": ["homeSplitSquad", "awaySplitSquad"],
+            "note": "the /v1/scoreboard feed does NOT publish these fields; only /v1/schedule does",
+        },
+        "confidence": "high",
+        "kind": "source_review",
+    },
+    {
+        "finding_id": "FIND_PLAYERS_TABLE_WAS_EMPTY",
+        "title": "VERIFIED GAP CLOSED: club rosters now ingested into the players table",
+        "body": (
+            "The players table existed since schema v1 and was EMPTY in every committed "
+            "ledger -- NhlApi.roster() was implemented and never called, so requirement 10's "
+            "normalized player/roster storage existed only as a schema. The feed was "
+            "re-verified live (keyless, free, per club per season; /v1/roster/DAL/20262027 "
+            "and the /current alias), captured, and the ingest now stores one snapshot row "
+            "per player with the roster's own grouping, sweater number and season. Two "
+            "downstream joins this enables, both recorded with their match basis: injury "
+            "rows (name + team abbrev only) resolve to player_ids, and ESPN probable-starter "
+            "names resolve to NHL goalie ids. The table is a SNAPSHOT, not a roster "
+            "history, and is labelled as one. Capture at "
+            "data/captured/nhl_roster_DAL_20262027_excerpt.json."),
+        "evidence": {
+            "url": "https://api-web.nhle.com/v1/roster/DAL/20262027",
+            "alias": "https://api-web.nhle.com/v1/roster/TOR/current serves the same shape",
+            "fetched": SESSION_DATE,
+            "capture": "data/captured/nhl_roster_DAL_20262027_excerpt.json",
+            "caveats": ["sweaterNumber and shootsCatches are optional in the real payload",
+                        "a September roster lists camp invitees; it is not an opening-night roster"],
+        },
+        "confidence": "high",
+        "kind": "status",
+    },
+    {
+        "finding_id": "FIND_DISCOVERY_FULL_SCAN_RECORDED",
+        "title": "AUDIT: every discovery trigger now lands in the experiments ledger",
+        "body": (
+            "The discovery scan previously wrote ledger rows for two outcomes -- promoted "
+            "candidates and loud rejections -- and let every other trigger (inconclusive "
+            "verdicts, thin priced samples) leave no trace, so the search's footprint could "
+            "not be reconstructed from the ledger. This pass records one experiments row "
+            "per scanned trigger with its train/validation hit rates, priced result, "
+            "one-sided p-value, Holm-adjusted threshold and verdict, keyed by a hash of the "
+            "trigger so re-runs are idempotent and nothing is duplicated. The scan is now "
+            "fully auditable end to end: hypotheses -> experiments -> strategies -> bets."),
+        "evidence": {
+            "table": "experiments",
+            "kind": "feature_scan",
+            "id_scheme": "EXP_SCAN_<sha1(trigger)>",
+            "fetched": SESSION_DATE,
+        },
+        "confidence": "high",
+        "kind": "audit",
     },
     {
         "finding_id": "FIND_QUEUE_RECOVERY_PASS",

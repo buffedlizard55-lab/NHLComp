@@ -872,7 +872,7 @@ class PaperEngine:
 
     PENDING_STATUSES = ('WATCHING', 'QUALIFIED', 'READY TO BET', 'PRICE TOO HIGH', 'PRICE TOO LOW',
                         'WAITING FOR GOALIE', 'WAITING FOR LINEUP', 'WAITING FOR INJURY',
-                        'WAITING FOR OTHER INFORMATION')
+                        'WAITING FOR OTHER INFORMATION', 'OUT OF SCOPE')
 
     def expire_started(self, now_iso: str) -> int:
         """A pending signal on a game that has already started can no longer be acted on;

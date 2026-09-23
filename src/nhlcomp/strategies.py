@@ -95,7 +95,11 @@ class DecisionContext:
     features: dict[str, Any]                 # one game's point-in-time features
     predictions: dict[str, float]            # model outputs for that game
     quotes: list[Quote] = field(default_factory=list)
-    starters: dict[int, str | None] = field(default_factory=dict)   # team_id -> goalie name/None
+    starters: dict[int, str | None] = field(default_factory=dict)   # team_id -> CONFIRMED goalie
+    #: probable starters from the verified pre-game feed (espn.nhl_probables), keyed
+    #: team_id -> {"name": str, "confirmed": bool, "status": str}.  Kept apart from
+    #: ``starters`` on purpose: 'expected' is not 'confirmed' and no rule may conflate them.
+    probables: dict[int, dict[str, Any]] = field(default_factory=dict)
     injuries: dict[int, list[str]] = field(default_factory=dict)
     bankroll: float = 0.0
     open_exposure: float = 0.0
@@ -170,6 +174,12 @@ class Strategy:
     min_sample_for_bet = 0
     stake_mode = "kelly"      # kelly | flat
     flat_pct = 0.02           # bankroll fraction per bet when stake_mode == "flat"
+    #: information dependencies, declared so the gate below can refuse to bet rather than
+    #: assume.  ``requires_goalie`` demands a CONFIRMED starter; ``requires_probable_goalie``
+    #: accepts the feed's 'expected' status.  No strategy may set neither and still read a
+    #: goalie feature -- the gate is the only path to the name.
+    requires_goalie = False
+    requires_probable_goalie = False
 
     def __init__(self, **overrides: Any):
         for k, v in overrides.items():
@@ -283,6 +293,7 @@ class ThresholdStrategy(Strategy):
     def __init__(self, *, feature: str, side_feature: str = "home", operator: str = ">=",
                  threshold: float = 0.0, bet_side: str = "home", market: str = "moneyline",
                  use_model: str = "poisson", requires_goalie: bool = False,
+                 requires_probable_goalie: bool = False,
                  requires_lineup: bool = False, injury_sensitive: bool = False,
                  min_price: float = 0.05, blocked_reason: str | None = None, **kw: Any):
         super().__init__(**kw)
@@ -294,6 +305,7 @@ class ThresholdStrategy(Strategy):
         self.market = market
         self.use_model = use_model
         self.requires_goalie = bool(requires_goalie)
+        self.requires_probable_goalie = bool(requires_probable_goalie)
         self.requires_lineup = bool(requires_lineup)
         self.injury_sensitive = bool(injury_sensitive)
         self.min_price = float(min_price)
@@ -311,6 +323,7 @@ class ThresholdStrategy(Strategy):
                        "threshold": threshold, "bet_side": bet_side, "market": market,
                        "use_model": use_model, "min_edge": self.min_edge,
                        "requires_goalie": self.requires_goalie,
+                       "requires_probable_goalie": self.requires_probable_goalie,
                        "requires_lineup": self.requires_lineup,
                        "injury_sensitive": self.injury_sensitive, "min_price": self.min_price,
                        "blocked_reason": self.blocked_reason,
@@ -383,12 +396,28 @@ class ThresholdStrategy(Strategy):
         sides = [t for t in (home, away) if t is not None]
 
         if self.requires_goalie:
+            # CONFIRMED starters only.  The verified pre-game feed (espn.nhl_probables,
+            # 2026-09-22) publishes probables with status 'expected'; an expected starter is
+            # a probable, not a confirmation, so the strict gate keeps waiting -- and names
+            # what the feed actually said instead of implying the data does not exist.
             unknown = [t for t in sides if not ctx.starters.get(t)]
             if unknown:
+                named = [f"{t}: {p.get('name')} ({p.get('status') or 'expected'})"
+                         for t, p in (ctx.probables or {}).items() if t in unknown]
                 return ("WAITING FOR GOALIE",
-                        f"confirmed starter unknown for team id(s) {unknown}; no verified "
-                        f"public source publishes starting goalies before game time, so this "
-                        f"strategy stays gated rather than assume a starter")
+                        f"CONFIRMED starter unknown for team id(s) {unknown}; the verified "
+                        f"pre-game feed (espn.nhl_probables) publishes probables with status "
+                        f"'expected' only"
+                        + (f" -- it names {'; '.join(named)}, which this rule deliberately "
+                           f"does not treat as a confirmation" if named else "")
+                        + ", so this rule waits")
+        if self.requires_probable_goalie:
+            unknown = [t for t in sides
+                       if not (ctx.probables or {}).get(t, {}).get("name")]
+            if unknown:
+                return ("WAITING FOR GOALIE",
+                        f"probable starter not yet published for team id(s) {unknown}; the "
+                        f"verified feed (espn.nhl_probables) has not named one yet")
 
         if self.requires_lineup:
             unknown = [t for t in sides if not ctx.features.get(f"lines_confirmed_{t}")]
@@ -419,13 +448,21 @@ class ThresholdStrategy(Strategy):
         f = ctx.features
         matchup = f"{f.get('away_id')}@{f.get('home_id')}"
         p = self._prob(ctx)
+        supporting = {"trigger": detail, "feature": self.feature,
+                      "feature_value": f.get(self.feature)}
+        for side in ("home", "away"):
+            if f.get(f"{side}_probable_starter_known"):
+                supporting[f"{side}_probable_starter"] = {
+                    "name": f.get(f"{side}_probable_starter_name"),
+                    "status": f.get(f"{side}_probable_starter_status"),
+                    "confirmed": int(bool(f.get(f"{side}_probable_starter_confirmed"))),
+                    "snapshot_ts": f.get(f"{side}_probable_starter_snapshot_ts")}
         base = dict(strategy_id=self.strategy_id, version=self.version, username=self.username,
                     game_id=int(f.get("game_id") or 0), game_date=f.get("game_date") or "",
                     matchup=matchup, market=self.market, selection=self.bet_side,
                     side="YES", model_prob=p if p is not None else float("nan"),
                     fair_price=float("nan"), required_price=float("nan"), stake=0.0,
-                    supporting={"trigger": detail, "feature": self.feature,
-                                "feature_value": f.get(self.feature)})
+                    supporting=supporting)
         if p is None:
             if self.use_model == "market":
                 if not ok:
@@ -1731,6 +1768,41 @@ def build_seed_strategies() -> list[Strategy]:
                    "on team strength. BACKTESTABLE with post-game starter logs; FORWARD gated "
                    "until a verified pre-game starter source exists.",
         entry_rule="diff_starter_sv_pct_l10 >= 0.010 with both starters known.")
+    # v3 (2026-09-22): a verified PRE-GAME probable-starter feed exists (espn.nhl_probables,
+    # status 'expected').  The matchup rule is re-defined onto the probable starter and gated
+    # on that feed, so it can finally evaluate in forward tests while the game is still
+    # bettable.  It is NOT backtestable -- no historical probable feed exists and none may be
+    # reconstructed -- so this version trades FORWARD TEST only.
+    add(strategy_id="NHL_GOALIE_EDGE", version=3, username="NHL_GOALIE_EDGE_011",
+        category="goaltending", name="Goaltending matchup edge (probable starter, forward)",
+        feature="diff_probable_starter_sv_pct_l10", operator=">=", threshold=0.010,
+        bet_side="home", requires_probable_goalie=True, min_edge=0.04,
+        data_used="espn.nhl_probables probable starters (verified 2026-09-22, status "
+                  "'expected'); api.nhle.com/stats/rest goalie/summary per-game form; kalshi "
+                  "live quotes. NOT backtestable: no historical probable-starter feed exists.",
+        hypothesis="A home probable starter whose last-10-starts save percentage exceeds the "
+                   "away probable starter's by a full point is under-priced, as in v2 -- now "
+                   "evaluated before puck drop from a verified feed instead of after the game "
+                   "from the post-game log.",
+        entry_rule="diff_probable_starter_sv_pct_l10 >= 0.010 with both probable starters "
+                   "named by the feed.")
+
+    # v2 (2026-09-22): the same consecutive-start fade, keyed to the probable starter named
+    # by the verified pre-game feed instead of the post-game log, so it can fire while the
+    # market is still open.  Forward test only: probable starters have no history.
+    add(strategy_id="NHL_GOALIE_FATIGUE", version=2, username="NHL_GOALIE_FATIGUE_022",
+        category="goaltending", name="Fade the probable starter on consecutive nights",
+        feature="away_probable_starter_b2b", operator=">=", threshold=1, bet_side="home",
+        requires_probable_goalie=True, min_edge=0.04,
+        data_used="espn.nhl_probables probable starters (verified 2026-09-22, status "
+                  "'expected'); api.nhle.com/stats/rest goalie/summary per-game form; kalshi "
+                  "live quotes. NOT backtestable: no historical probable-starter feed exists.",
+        hypothesis="A probable starter who also started last night (form from the goalie log, "
+                   "identity from the verified pre-game feed) saves worse than his baseline, "
+                   "and the moneyline prices the team, not the goalie's workload.",
+        entry_rule="away_probable_starter_b2b == 1: the away probable starter's previous "
+                   "start was the day before this game.")
+
     add(strategy_id="NHL_GOALIE_FATIGUE", username="NHL_GOALIE_FATIGUE_022",
         category="goaltending", name="Fade the goalie on consecutive-night starts",
         feature="away_starter_b2b", operator=">=", threshold=1, bet_side="home",
@@ -1764,6 +1836,27 @@ def build_seed_strategies() -> list[Strategy]:
         data_used="NO VERIFIED SOURCE for goalie announcements or announcement timing.",
         hypothesis="A starter announcement moves the price, and the first mover is paid. "
                    "UNTESTED and not backtestable with current sources.",
+        entry_rule="Blocked: requires the announcement time and a pre-announcement price.")
+
+    # v3 (2026-09-22): the GOALIE NAME is now published pre-game by a verified source
+    # (espn.nhl_probables, status 'expected'), but the ANNOUNCEMENT TIME still is not -- the
+    # feed carries no timestamp, and without one there is no pre-announcement price to
+    # measure a reaction against.  The rule stays blocked; the reason is now narrower, and
+    # narrowing it is progress worth recording.
+    add(strategy_id="NHL_GOALIE_NEWS", version=3, username="NHL_GOALIE_NEWS_012",
+        category="goalie_news", name="Market reaction to a goalie announcement (partially unblocked)",
+        feature="home_n_prior", operator=">=", threshold=10, bet_side="home",
+        requires_probable_goalie=True, injury_sensitive=True, min_edge=0.06,
+        blocked_reason="a probable starter NAME is now published before puck drop "
+                       "(espn.nhl_probables, verified 2026-09-22, status 'expected') but the "
+                       "TIME of the announcement is not, so there is no verifiable "
+                       "pre-announcement price to buy. This rule needs a timestamped "
+                       "announcement feed or an intraday price series keyed to it; neither "
+                       "exists in a verified source.",
+        data_used="espn.nhl_probables probable starters (verified, no timestamp); kalshi "
+                  "hourly candles (too coarse to date an announcement).",
+        hypothesis="A starter announcement moves the price, and the first mover is paid. "
+                   "Still UNTESTED: the announcement time remains unverifiable.",
         entry_rule="Blocked: requires the announcement time and a pre-announcement price.")
 
     add(strategy_id="NHL_LINE_COMBO", username="NHL_LINE_COMBO_013", category="player_lines",

@@ -97,6 +97,14 @@ class NhlApi:
     def scoreboard_now(self) -> dict:
         return self._get("/scoreboard/now")
 
+    def schedule(self, day: str) -> dict:
+        """``/v1/schedule/{YYYY-MM-DD}`` -- the week around ``day`` with split-squad flags.
+
+        Unlike ``/scoreboard/{day}`` this payload publishes ``homeSplitSquad``/``
+        awaySplitSquad`` (verified 2026-09-22), which is why the ingest reads both.
+        """
+        return self._get(f"/schedule/{day}")
+
     def club_schedule_season(self, abbrev: str, season: int) -> dict:
         """Full season schedule for one club, including final scores and winning goalie."""
         return self._get(f"/club-schedule-season/{abbrev}/{season}")
@@ -249,6 +257,15 @@ def normalize_game(g: dict) -> dict | None:
         "away_abbrev": away.get("abbrev"),
         "winning_goalie_id": ((g.get("winningGoalie") or {}).get("playerId")),
     }
+    # Split-squad flags are published by /v1/schedule/{date} and club-schedule payloads but
+    # NOT by /v1/scoreboard, so they are emitted only when the payload carried them: a row
+    # built from a payload without the field stays without the keys, and the games upsert
+    # (which writes only the keys present) leaves any earlier value untouched rather than
+    # overwriting a published ``false`` with an absent ``null``.
+    if "homeSplitSquad" in home:
+        row["split_squad_home"] = int(bool(home.get("homeSplitSquad")))
+    if "awaySplitSquad" in away:
+        row["split_squad_away"] = int(bool(away.get("awaySplitSquad")))
     if row["last_period_type"] == "REG" and pd.get("periodType") == "OT":
         # defensive: the two fields disagree, prefer the explicit gameOutcome
         row["last_period_type"] = "REG"
@@ -411,4 +428,112 @@ def parse_partner_odds(payload: dict) -> list[dict]:
                 "away_qualifier": vals.get("away_qualifier", ""),
                 "source_updated_utc": updated,
             })
+    return out
+
+# ------------------------------------------------------------- roster / schedule parsers
+def parse_schedule_games(payload: dict) -> list[dict]:
+    """Flatten ``/v1/schedule/{date}`` (``gameWeek[].games[]``) into normalized rows.
+
+    The same ``normalize_game`` is used as for the scoreboard feed because the per-game
+    object shape is the same -- but only this endpoint publishes the split-squad flags, so
+    this is the source that populates ``games.split_squad_*``.
+    """
+    out: list[dict] = []
+    for week in payload.get("gameWeek", []):
+        for g in week.get("games", []):
+            row = normalize_game(g)
+            if row is not None:
+                out.append(row)
+    return out
+
+
+def parse_roster(payload: dict, *, abbrev: str, season: int | None,
+                 retrieved_at: str) -> list[dict]:
+    """Normalize one club roster payload into ``players`` rows.
+
+    The feed's own grouping (forwards / defensemen / goalies) is kept in ``roster_group``
+    and the position letter in ``position`` so a disagreement between the two stays
+    visible.  Both ``sweaterNumber`` and ``shootsCatches`` are optional in the real
+    payload (verified 2026-09-22 on /v1/roster/DAL/20262027 and /v1/roster/TOR/current),
+    so neither is required and neither is guessed.
+    """
+    out: list[dict] = []
+    for group in ("forwards", "defensemen", "goalies"):
+        for p in payload.get(group) or []:
+            pid = p.get("id")
+            first = _txt(p.get("firstName") or {}, "default")
+            last = _txt(p.get("lastName") or {}, "default")
+            if pid is None or not first or not last:
+                continue
+            pos = p.get("positionCode") or {"forwards": None, "defensemen": "D",
+                                            "goalies": "G"}[group]
+            out.append({
+                "player_id": int(pid),
+                "full_name": f"{first} {last}".strip(),
+                "position": pos,
+                "shoots": p.get("shootsCatches"),
+                "birth_date": p.get("birthDate"),
+                "team_abbrev": abbrev,
+                "season": season,
+                "sweater": p.get("sweaterNumber"),
+                "roster_group": {"forwards": "forwards", "defensemen": "defensemen",
+                                 "goalies": "goalies"}[group],
+                "source_id": "nhl.roster",
+                "retrieved_at": retrieved_at,
+                "provenance": "SOURCE",
+            })
+    return out
+
+
+#: ESPN publishes `probables[].name == "probableStartingGoalie"`; anything else in that
+#: array is ignored rather than interpreted.
+ESPN_PROBABLE_GOALIE = "probableStartingGoalie"
+
+
+def parse_espn_events(payload: dict) -> list[dict]:
+    """Flatten an ESPN scoreboard payload into per-event rows with their probables.
+
+    Only the identifying fields this project joins on are kept: event id, start time,
+    venue, each competitor's home/away tag, abbreviation and -- when published -- its
+    ``probables[]`` entry.  The goalie's status object is kept verbatim (``status_type``,
+    ``status_name``): the observed value is ``type='expected'``, and whether the feed ever
+    publishes ``confirmed`` is an open question this project records instead of assuming.
+    """
+    out: list[dict] = []
+    for ev in payload.get("events", []) or []:
+        comps = ev.get("competitions") or []
+        comp = comps[0] if comps else None
+        if comp is None:
+            continue
+        venue = _txt(comp.get("venue") or {}, "fullName")
+        event = {
+            "event_id": str(ev.get("id") or ""),
+            "start_utc": comp.get("date") or ev.get("date"),
+            "venue": venue,
+            "status_state": ((comp.get("status") or {}).get("type") or {}).get("state"),
+            "season_type": (ev.get("season") or {}).get("type"),
+            "probables": [],
+        }
+        for c in comp.get("competitors") or []:
+            team = c.get("team") or {}
+            row = {
+                "home_away": c.get("homeAway"),
+                "abbrev": team.get("abbreviation"),
+                "team_name": team.get("displayName"),
+                "espn_team_id": team.get("id"),
+            }
+            for pr in c.get("probables") or []:
+                if pr.get("name") != ESPN_PROBABLE_GOALIE:
+                    continue
+                ath = pr.get("athlete") or {}
+                event["probables"].append({
+                    **row,
+                    "goalie_name": ath.get("fullName") or pr.get("displayName"),
+                    "espn_player_id": ath.get("id") or pr.get("playerId"),
+                    "position": ath.get("position"),
+                    "status_type": (pr.get("status") or {}).get("type"),
+                    "status_name": (pr.get("status") or {}).get("name"),
+                })
+            event.setdefault("competitors", []).append(row)
+        out.append(event)
     return out

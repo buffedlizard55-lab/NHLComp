@@ -602,6 +602,54 @@ SOURCES: tuple[SourceSpec, ...] = (
                     "?dates=20251115&limit=1",),
     ),
     SourceSpec(
+        source_id="espn.nhl_probables",
+        name="ESPN NHL scoreboard -- probable starting goalies (pre-game)",
+        url="https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=YYYYMMDD",
+        data_type="per-competitor `probables[]` naming a probable starting goalie with the "
+                  "feed's own status object, on games that have not started yet",
+        nhl_relevance="The FIRST verified public source this project has found that names a "
+                      "starting goalie BEFORE puck drop. Every goalie-gated strategy in this "
+                      "ledger had been permanently gated WAITING FOR GOALIE because the NHL "
+                      "endpoints publish nothing pre-game (gamecentre probable-goalies probe: "
+                      "404). This feed unlocks probable-starter versions of those rules.",
+        historical_depth="Date-addressable, but a probable read on a PAST date says nothing "
+                         "about when the name first appeared, so this feed is FORWARD-ONLY "
+                         "for pricing by this project's own rule",
+        live_available=True,
+        update_frequency="Continuous; the snapshot observed 2026-09-22 named starters for the "
+                         "2026-09-23 slate",
+        api_available=True,
+        auth_required="none",
+        cost="free",
+        genuinely_free="yes",
+        usage_limits="Undocumented; keyless; same host as the verified espn.nhl_scoreboard feed",
+        licensing="not published",
+        provenance="ESPN (second party)",
+        reliability="medium",
+        accuracy="editorial feed; status observed is EXPECTED, not confirmed -- never treated "
+                 "as a confirmed starter",
+        granularity="per team per game",
+        automated_access="yes (plain HTTPS GET, JSON, no key)",
+        known_limits="1) Status observed 2026-09-22 was type='expected' for every competitor; "
+                     "whether 'confirmed' is ever published for NHL games is NOT verified and "
+                     "is re-probed every run. 2) No announcement timestamp is published, so "
+                     "the feed can never support a backtest price or an announcement-timing "
+                     "claim. 3) ESPN event ids are not NHL game ids: the join is date + "
+                     "home/away abbreviations, disambiguated by venue, because the same two "
+                     "clubs can meet twice in one evening (verified on the 2026-09-23 split-"
+                     "squad slate). An event that cannot be matched is recorded unmatched, "
+                     "never attached to a plausible game. 4) The goalie name must be resolved "
+                     "to an NHL player_id through the club roster; that resolution is DERIVED "
+                     "and carries its match basis.",
+        notes="Verified 2026-09-22 on ?dates=20260923: both competitors of TOR at OTT "
+              "(Canadian Tire Centre) carry probables[0] = probableStartingGoalie -- "
+              "Linus Ullmark (ESPN id 3069285) for OTT and Anthony Stolarz (ESPN id "
+              "3067313) for TOR, status type 'expected'. Capture retained at "
+              "data/captured/espn_scoreboard_probable_goalies_20260923.json.",
+        probe_urls=("https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard"
+                    "?dates=20260923",),
+    ),
+    SourceSpec(
         source_id="openmeteo.archive",
         name="Open-Meteo Historical Weather Archive",
         url="https://archive-api.open-meteo.com/v1/archive",
